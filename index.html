@@ -128,6 +128,7 @@
   tr.row.hide{display:none}
   td.calcv{font-weight:500}
   .neg{color:var(--red)}
+  .pos{color:var(--green)}
 
   td.st{text-align:center}
   .dot{
@@ -163,9 +164,7 @@
 <body>
 <div class="wrap">
 
-  <div class="eyebrow">Crop Year 2026</div>
   <h1>Yield Assumption Using Field&nbsp;Weights&nbsp;Turnout</h1>
-  <div class="sub">Live from the field weights sheet. Update the sheet and refresh to see new numbers.</div>
 
   <div class="banner" id="banner"></div>
 
@@ -177,7 +176,6 @@
     </div>
     <div class="stat"><div class="k">Field weight · lbs</div><div class="v" id="sFW">—</div></div>
     <div class="stat"><div class="k">Forecast · lbs</div><div class="v" id="sFcst">—</div></div>
-    <div class="stat"><div class="k">Final · lbs</div><div class="v" id="sFin">—</div></div>
   </div>
 
   <div class="tools">
@@ -197,55 +195,65 @@
           <th>Farm</th>
           <th class="c">All Pickups?</th>
           <th class="c">All Tickets Submitted?</th>
+          <th>Acres</th>
           <th>Field Weight</th>
+          <th>lbs/acre</th>
           <th>Var vs '25</th>
           <th>Assumption</th>
-          <th>Actual Turnout</th>
           <th>Forecast</th>
-          <th>Final</th>
         </tr>
       </thead>
       <tbody id="tbody"></tbody>
       <tfoot>
         <tr>
           <td colspan="3">Total</td>
+          <td id="tAc">—</td>
           <td id="tFW">—</td>
           <td></td><td></td><td></td>
           <td id="tFcst">—</td>
-          <td id="tFin">—</td>
         </tr>
       </tfoot>
     </table>
   </div>
 
-  <p class="note">Read-only view of the master sheet. To change any number, edit the Google Sheet, then click Refresh here. Data is cached in this browser so the page still loads if the connection drops.</p>
-
 </div>
 
 <script>
 /* ============================================================
-   1. PASTE YOUR APPS SCRIPT WEB APP URL BETWEEN THE QUOTES:
-      Deploy the sheet's Apps Script as a Web app ("Anyone"),
-      copy the /exec URL, and drop it here.
+   1. PASTE YOUR APPS SCRIPT WEB APP URL BELOW.
+      In the Google Sheet: Extensions ▸ Apps Script, paste AppsScript_Code.gs,
+      Deploy ▸ Web app (Execute as: Me · Access: Anyone), copy the /exec URL.
+      The script returns only the raw columns; this page computes
+      lbs/acre, variance vs '25, and forecast itself.
    ============================================================ */
-const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbxGXrlVo5n-AMDc8ai6yf0bzD7DkIO15b22mKYXkDTIv0o9zNL0NWGRejhHDB0lLoWd/exec"
+const API_URL = "PASTE_YOUR_WEB_APP_URL_HERE";
 
 const CACHE_KEY = "glf-fw-2026-cache";
-let ROWS = [];                 // [{farm,variety,pickup,tickets,fw,varAc,assump,actual}, ...]
+let ROWS = [];
 let openFarms = new Set();     // remember which farms are expanded across refreshes
 
 const fmt0 = new Intl.NumberFormat("en-US",{maximumFractionDigits:0});
+const fmt1 = new Intl.NumberFormat("en-US",{maximumFractionDigits:1});
 function parseNum(s){
   if(s === "" || s == null) return null;
   const n = parseFloat(String(s).replace(/[,%\s]/g,""));
   return isNaN(n) ? null : n;
 }
 const fmtLbs = n => n == null ? "—" : fmt0.format(Math.round(n));
+
+/* forecast = field weight × assumption / 100 */
 function calc(r){
-  const fw = parseNum(r.fw), a = parseNum(r.assump), act = parseNum(r.actual);
-  return { fw,
-    fcst:(fw!=null && a!=null)? fw*a/100 : null,
-    fin:(fw!=null && act!=null)? fw*act/100 : null };
+  const fw = parseNum(r.fw), a = parseNum(r.assump);
+  return { fw, fcst:(fw!=null && a!=null)? fw*a/100 : null };
+}
+/* derive lbs/acre and per-acre variance vs '25 for each row (client-side) */
+function derive(r){
+  const fw = parseNum(r.fw), fw25 = parseNum(r.fw25), ac = parseNum(r.acres);
+  r.lbsAc = (fw!=null && ac!=null && ac!==0) ? fw/ac : "";
+  if(fw!=null && fw25!=null && fw25!==0 && ac!=null && ac!==0){
+    const per26 = fw/ac, per25 = fw25/ac;
+    r.varAc = per25!==0 ? ((per26-per25)/per25*100) : "";  // percent value
+  } else r.varAc = "";
 }
 
 function setNote(msg, isErr){
@@ -259,37 +267,60 @@ function showBanner(msg){
   b.textContent = msg; b.classList.add("show");
 }
 
-/* ---------- data loading ---------- */
+/* ---------- data loading (Apps Script JSON) ---------- */
 async function loadData(initial){
-  if(SHEET_API_URL === "PASTE_YOUR_WEB_APP_URL_HERE"){
-    showBanner("No sheet connected yet — paste your Apps Script Web App URL into index.html (SHEET_API_URL).");
+  // 1) INSTANT: paint from cache and don't wait on anything.
+  let hadCache = false;
+  if(initial){
     const cached = readCache();
-    if(cached){ ROWS = cached.rows; render(); }
+    if(cached && cached.rows && cached.rows.length){
+      ROWS = cached.rows; ROWS.forEach(derive); render();
+      hadCache = true;
+      // show when this cached copy is from, quietly — no "refreshing" spinner
+      if(cached.updated) setNote("As of " + new Date(cached.updated).toLocaleTimeString());
+    }
+  }
+
+  if(API_URL === "PASTE_YOUR_WEB_APP_URL_HERE"){
+    if(!hadCache) showBanner("No sheet connected yet — paste your Apps Script Web App URL into index.html (API_URL).");
     return;
   }
-  setNote("Loading…");
+
+  // 2) BACKGROUND: fetch fresh data without blocking the painted view.
+  //    Only a manual Refresh shows a working state; initial load stays silent.
+  if(!initial) setNote("Refreshing…");
   try{
-    const res = await fetch(SHEET_API_URL, {cache:"no-store"});
+    const url = API_URL + (API_URL.includes("?") ? "&" : "?") + (initial ? "" : "bust=1&") + "_=" + Date.now();
+    const res = await fetch(url, {cache:"no-store"});
     if(!res.ok) throw new Error("HTTP "+res.status);
     const data = await res.json();
-    ROWS = data.rows || [];
-    writeCache(data);
+    const rows = data.rows || [];
+    if(!rows.length) throw new Error("empty");
+
+    // 3) Only touch the DOM if the data actually changed vs what's shown.
+    const fresh = JSON.stringify(rows);
+    const shown = JSON.stringify(ROWS.map(stripDerived));
+    writeCache({ updated: data.updated || new Date().toISOString(), rows });
+    if(fresh !== shown){
+      ROWS = rows; ROWS.forEach(derive); render();
+    }
     showBanner("");
-    render();
-    const when = data.updated ? new Date(data.updated).toLocaleString() : "";
-    setNote("Loaded" + (when ? " · sheet as of "+when : ""));
+    const when = data.updated ? new Date(data.updated).toLocaleTimeString() : new Date().toLocaleTimeString();
+    setNote("Updated " + when);
   }catch(err){
-    const cached = readCache();
-    if(cached){
-      ROWS = cached.rows; render();
-      showBanner("Couldn't reach the sheet — showing the last version saved on this device"
-        + (cached.updated ? " ("+new Date(cached.updated).toLocaleString()+")." : "."));
-      setNote("Offline — cached data", true);
+    if(ROWS.length){
+      // we're already showing cached data — keep it, note quietly, don't alarm
+      setNote("Showing saved copy", true);
     }else{
       showBanner("Couldn't load the sheet and no cached copy is available. Check the Web App URL and that it's deployed to \u201cAnyone\u201d.");
       setNote("Load failed", true);
     }
   }
+}
+/* strip client-derived fields so cache-vs-fresh comparison is apples-to-apples */
+function stripDerived(r){
+  const {lbsAc, varAc, ...raw} = r;
+  return raw;
 }
 function readCache(){
   try{ const raw = localStorage.getItem(CACHE_KEY); return raw ? JSON.parse(raw) : null; }
@@ -330,12 +361,12 @@ function render(){
         <td class="var">${r.variety}</td>
         <td class="st"><span class="dot" data-state="${r.pickup}" title="${statusLabel(r.pickup)}"></span></td>
         <td class="st"><span class="dot" data-state="${r.tickets}" title="${statusLabel(r.tickets)}"></span></td>
+        <td>${r.acres!=="" && r.acres!=null ? fmt1.format(r.acres) : "—"}</td>
         <td>${r.fw!=="" && r.fw!=null ? fmt0.format(r.fw) : "—"}</td>
-        <td class="${vn!=null&&vn<0?"neg":""}">${r.varAc!=="" && r.varAc!=null ? r.varAc+"%" : "—"}</td>
+        <td class="calcv">${r.lbsAc!=="" && r.lbsAc!=null ? fmt0.format(r.lbsAc) : "—"}</td>
+        <td class="${vn!=null&&vn<0?"neg":(vn!=null&&vn>0?"pos":"")}">${r.varAc!=="" && r.varAc!=null ? fmt1.format(r.varAc)+"%" : "—"}</td>
         <td>${r.assump!=="" && r.assump!=null ? r.assump+"%" : "—"}</td>
-        <td>${r.actual!=="" && r.actual!=null ? r.actual+"%" : "—"}</td>
-        <td class="calcv">${fmtLbs(c.fcst)}</td>
-        <td class="calcv">${fmtLbs(c.fin)}</td>`;
+        <td class="calcv">${fmtLbs(c.fcst)}</td>`;
       tbody.appendChild(tr);
     });
   });
@@ -345,31 +376,31 @@ function statusLabel(s){ return ["Not done","In progress","Done"][s] || "Not don
 
 function refreshTotals(){
   const n = ROWS.length || 1;
-  let pick=0, fw=0, fcst=0, fin=0, aFW=false, aFc=false, aFn=false;
-  const gFin={}, gDone={}, gN={};
+  let pick=0, fw=0, fcst=0, acres=0, aFW=false, aFc=false, aAc=false;
+  const gFcst={}, gDone={}, gN={};
   ROWS.forEach(r => {
     const c = calc(r);
     gN[r.farm]=(gN[r.farm]||0)+1;
     if(r.pickup==2) pick++;
     if(r.pickup==2 && r.tickets==2) gDone[r.farm]=(gDone[r.farm]||0)+1;
+    const ac = parseNum(r.acres); if(ac!=null){acres+=ac;aAc=true}
     if(c.fw!=null){fw+=c.fw;aFW=true}
-    if(c.fcst!=null){fcst+=c.fcst;aFc=true}
-    if(c.fin!=null){fin+=c.fin;aFn=true;gFin[r.farm]=(gFin[r.farm]||0)+c.fin}
+    if(c.fcst!=null){fcst+=c.fcst;aFc=true;gFcst[r.farm]=(gFcst[r.farm]||0)+c.fcst}
   });
   document.getElementById("sPick").innerHTML = pick+`<small> / ${ROWS.length}</small>`;
   document.getElementById("mPick").style.width = (pick/n*100)+"%";
   document.getElementById("sFW").textContent = aFW? fmtLbs(fw):"—";
   document.getElementById("sFcst").textContent = aFc? fmtLbs(fcst):"—";
-  document.getElementById("sFin").textContent = aFn? fmtLbs(fin):"—";
+  const tAc = document.getElementById("tAc");
+  if(tAc) tAc.textContent = aAc? fmt1.format(acres):"—";
   document.getElementById("tFW").textContent = aFW? fmtLbs(fw):"—";
   document.getElementById("tFcst").textContent = aFc? fmtLbs(fcst):"—";
-  document.getElementById("tFin").textContent = aFn? fmtLbs(fin):"—";
   document.querySelectorAll("[data-fdone]").forEach(el=>{
     const f = el.dataset.fdone; el.textContent = (gDone[f]||0)+"/"+gN[f]+" done";
   });
   document.querySelectorAll("[data-flbs]").forEach(el=>{
     const f = el.dataset.flbs;
-    el.innerHTML = gFin[f]!=null ? fmtLbs(gFin[f])+" <small>lbs</small>" : "";
+    el.innerHTML = gFcst[f]!=null ? fmtLbs(gFcst[f])+" <small>lbs</small>" : "";
   });
 }
 
@@ -413,11 +444,11 @@ document.getElementById("filter").addEventListener("input", e => {
 document.getElementById("exportBtn").onclick = () => {
   const S = v => (v==null||v==="")? "": v;
   const label = s => ["Not done","In progress","Done"][s] || "Not done";
-  const lines = ['Farm,Variety,All Pickups?,All Tickets Submitted?,Field Weight,Var vs 25 per acre %,Turnout Assumption %,Actual Turnout %,Forecasted Lbs,Final Lbs'];
+  const lines = ['Farm,Variety,Acres,All Pickups?,All Tickets Submitted?,Field Weight,lbs per acre,Var vs 25 per acre %,Turnout Assumption %,Forecasted Lbs'];
   ROWS.forEach(r=>{
     const c = calc(r);
-    lines.push([r.farm,r.variety,label(r.pickup),label(r.tickets),S(r.fw),S(r.varAc),S(r.assump),S(r.actual),
-      c.fcst==null? "": Math.round(c.fcst), c.fin==null? "": Math.round(c.fin)].join(","));
+    lines.push([r.farm,r.variety,S(r.acres),label(r.pickup),label(r.tickets),S(r.fw),S(r.lbsAc),S(r.varAc),S(r.assump),
+      c.fcst==null? "": Math.round(c.fcst)].join(","));
   });
   const blob = new Blob([lines.join("\n")], {type:"text/csv"});
   const a = document.createElement("a");
