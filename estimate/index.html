@@ -169,7 +169,7 @@
     <h2><span class="step">2</span><span data-t="h2">What you hauled</span></h2>
     <div class="grid">
       <div class="f">
-        <label for="loads" data-t="lLoads">Number of loads</label>
+        <label for="loads" id="loadsLabel" data-t="lLoads">Number of loads</label>
         <input type="number" id="loads" min="0" step="1" inputmode="numeric" placeholder="0">
       </div>
       <div class="f">
@@ -178,6 +178,13 @@
         <div class="hint" id="avgHint"></div>
       </div>
 
+      <div class="f full">
+        <label data-t="lMode">Is this…</label>
+        <div class="seg" role="group" id="modeSeg">
+          <button data-m="partial" aria-pressed="true" data-t="mPartial">Loads so far</button>
+          <button data-m="total" aria-pressed="false" data-t="mTotal">My total estimate</button>
+        </div>
+      </div>
       <div class="f full">
         <label data-t="lBasis">Turnout to use</label>
         <div class="seg" role="group" id="basisSeg">
@@ -208,6 +215,7 @@ const T = {
     h1:"Your block", h2:"What you hauled",
     lFarm:"Ranch", oFarm:"Select ranch…", lVar:"Variety", oVar:"Select variety…",
     lLoads:"Number of loads", lAvg:"Avg lbs per load",
+    lMode:"Is this…", mPartial:"Number of loads", mTotal:"Number of total loads",
     lBasis:"Turnout to use", b25:"2025 actual", bcustom:"Custom",
     lCustom:"Custom turnout %", empty:"Select a ranch and variety to begin.",
     needLoads:"Enter your number of loads to see the estimate.",
@@ -233,6 +241,7 @@ const T = {
     h1:"Tu bloque", h2:"Lo que llevaste",
     lFarm:"Rancho", oFarm:"Elegir rancho…", lVar:"Variedad", oVar:"Elegir variedad…",
     lLoads:"Número de cargas", lAvg:"Libras promedio por carga",
+    lMode:"Esto es…", mPartial:"Número de cargas", mTotal:"Número total de cargas",
     lBasis:"Turnout a usar", b25:"Real 2025", bcustom:"Personalizado",
     lCustom:"Turnout personalizado %", empty:"Elige un rancho y una variedad para empezar.",
     needLoads:"Ingresa tu número de cargas para ver el estimado.",
@@ -258,6 +267,7 @@ const t = () => T[lang];
 
 /* ---------- state ---------- */
 let basis="25";
+let estMode="partial";
 const $ = id => document.getElementById(id);
 const nf0 = new Intl.NumberFormat("en-US",{maximumFractionDigits:0});
 const nf1 = new Intl.NumberFormat("en-US",{minimumFractionDigits:1,maximumFractionDigits:1});
@@ -321,6 +331,7 @@ function render(){
     return;
   }
 
+  $("loadsLabel").textContent = estMode==="total" ? t().mTotal : t().mPartial;
   $("blockHint").innerHTML=t().blockHint(r.loads25, n0(r.avgFW), n0(r.lbsAc25));
   if(!$("avg").value || $("avg").dataset.auto==="1"){
     $("avg").value=r.avgFW; $("avg").dataset.auto="1";
@@ -337,7 +348,7 @@ function render(){
   }
 
   const meats=fw*to.v, perAc=meats/r.acres;
-  const partial = r.loads25>0 && n < r.loads25;
+  const partial = estMode==="partial" && r.loads25>0 && n < r.loads25;
   const paceAc = partial ? (r.loads25*a*to.v)/r.acres : perAc;
   const dPace=(paceAc-r.lbsAc25)/r.lbsAc25*100;
   const dNow=(perAc-r.lbsAc25)/r.lbsAc25*100;
@@ -404,6 +415,12 @@ $("variety").onchange = () => { $("avg").dataset.auto="1"; render(); };
 ["loads","custom"].forEach(id=>$(id).oninput=render);
 $("avg").oninput = () => { $("avg").dataset.auto="0"; render(); };
 
+$("modeSeg").addEventListener("click", e=>{
+  const b=e.target.closest("button"); if(!b) return;
+  estMode=b.dataset.m;
+  [...$("modeSeg").children].forEach(x=>x.setAttribute("aria-pressed", x.dataset.m===estMode));
+  render();
+});
 $("basisSeg").addEventListener("click", e=>{
   const b=e.target.closest("button"); if(!b) return;
   basis=b.dataset.b;
