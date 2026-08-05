@@ -258,9 +258,89 @@
       In the Google Sheet: Extensions ▸ Apps Script, paste AppsScript_Code.gs,
       Deploy ▸ Web app (Execute as: Me · Access: Anyone), copy the /exec URL.
       The script returns only the raw columns; this page computes
-      lbs/acre, variance vs '25, and forecast itself.
+      lbs/acre, variance vs '25, forecast, and the yield signal itself.
+
+      2025 MEATS are baked in below (MEATS25). 2025 is closed, so they are
+      static — nothing to add to the sheet and no redeploy needed. If you ever
+      do return meats25 from Apps Script, that value wins over the table.
    ============================================================ */
 const API_URL = "https://script.google.com/macros/s/AKfycbz8grVMeVnQK33sRaCTtOBGLDCZiHgJ4YIqowivfd3Lr4vaaqrF21KJBkKhv5U-VAi6/exec";
+
+const MEATS25 = {
+  "glf1|monterey":28357,
+  "glf1|nonpareil":53432,
+  "glf1|woodcolony":24641,
+  "glf3|aldrich":222019,
+  "glf3|monterey":155634,
+  "glf3|nonpareil":560129,
+  "glf3|woodcolony":142850,
+  "glf4|buttepadre":524264,
+  "glf4|montereycarmel":320438,
+  "glf5|independence":null,   // GLF5 2025 never closed out — excluded on purpose
+  "glf5|monterey":null,   // GLF5 2025 never closed out — excluded on purpose
+  "glf6|independence":487547,
+  "glf7|aldrich":139998,
+  "glf7|carmel":18463,
+  "glf7|fritz":32577,
+  "glf7|monterey":425307,
+  "glf7|nonpareil":690060,
+  "glf7|supareil":97639,
+  "glf7|woodcolony":425926,
+  "glf10|independence":67104,
+  "glf10|monterey":96294,
+  "glf10|nonpareil":171726,
+  "glf13|monterey":87409,
+  "glf13|nonpareil":115667,
+  "glf14|independence":222737,
+  "glf17|aldrich":25631,
+  "glf17|independence":656503,
+  "glf17|liberty":30294,
+  "glf17|monterey":100063,
+  "glf17|nonpareil":102274,
+  "glf17|yorizane":38089,
+  "glf18|aldrich":15647,
+  "glf18|buttepadre":168360,
+  "glf18|carmel":18468,
+  "glf18|independence":147723,
+  "glf18|monterey":46308,
+  "glf18|nonpareil":123320,
+  "glf18|woodcolony":39841,
+  "glf19o|monterey":81990,
+  "glf19o|nonpareil":84214,
+  "glf23|monterey":138236,
+  "glf23|nonpareil":104817,
+  "glf23|woodcolony":129821,
+  "glf24|aldrich":57168,
+  "glf24|monterey":67218,
+  "glf24|nonpareil":104585,
+  "glf25|independence":72762,
+  "glf25|monterey":249847,
+  "glf25|nonpareil":327441,
+  "glf26|monterey":453774,
+  "glf26|nonpareil":362599,
+  "glf27|carmel":34059,
+  "glf27|monterey":49513,
+  "glf27|nonpareil":87490,
+  "glf19|monterey":81990,  // source mislabels this as GLF19O
+};
+
+/* Settled 2025 meats, keyed farm|variety. Organic and conventional are rolled
+   together, matching how they settle, so a split sheet row resolves to the same
+   entry and is counted once. */
+function vkey(farm, variety){
+  const f = String(farm||"").toLowerCase().replace(/[^a-z0-9]/g,"");
+  const v = String(variety||"").toLowerCase()
+              .replace(/-(organic|conventional)$/,"").replace(/[^a-z0-9]/g,"");
+  return f+"|"+v;
+}
+/* sheet value wins if it ever shows up; otherwise fall back to the table */
+function meats25Of(r){
+  const fromSheet = parseNum(r.meats25);
+  if(fromSheet != null) return {v:fromSheet, key:null};
+  const k = vkey(r.farm, r.variety);
+  const t = Object.prototype.hasOwnProperty.call(MEATS25,k) ? MEATS25[k] : undefined;
+  return {v:(t==null? null : t), key:k};
+}
 
 const CACHE_KEY = "glf-fw-2026-cache";
 let ROWS = [];
@@ -431,7 +511,8 @@ function refreshTotals(){
   const n = ROWS.length || 1;
   let pick=0, tick=0, closed=0, fw=0, fw25=0, fcst=0, acres=0;
   let aFW=false, aFc=false, aAc=false, a25=false;
-  let fFW=0, fFW25=0, fFcst=0, fAc=0, fN=0;             // finished blocks only
+  let fFW=0, fFW25=0, fFcst=0, fAc=0, fN=0, fM25=0;     // finished blocks only
+  const seenM25 = new Set();                            // table entries count once per block
   const gFcst={}, gDone={}, gN={};
   ROWS.forEach(r => {
     const c = calc(r), f = isFin(r);
@@ -450,6 +531,10 @@ function refreshTotals(){
       if(p25!=null) fFW25+=p25;
       if(c.fcst!=null) fFcst+=c.fcst;
       if(ac!=null) fAc+=ac;
+      const m = meats25Of(r);
+      if(m.v!=null && (m.key==null || !seenM25.has(m.key))){
+        fM25 += m.v; if(m.key) seenM25.add(m.key);
+      }
     }
   });
   const set=(id,v)=>{const e=document.getElementById(id); if(e) e.textContent=v;};
@@ -467,19 +552,26 @@ function refreshTotals(){
   const vFin = (fFW25>0) ? (fFW-fFW25)/fFW25*100 : null;
   set("tFW25", a25? fmtLbs(fw25):"");
 
-  /* Yield signal: field weight per acre, '26 vs '25, finished blocks only.
-     Same acres sit on both sides, so this is the like-for-like read on whether
-     the crop is up or down — not a progress number. */
+  /* Yield signal: MEATS per acre, '26 vs '25, finished blocks only.
+       '26 = forecast meats (field weight x Assumption) — an assumption, not an actual
+       '25 = settled meats from MEATS25
+     Same acres on both sides. The '26 side moves if you edit an Assumption,
+     not only if the crop moves. */
   const yv = document.getElementById("sYield");
   const ys = document.getElementById("sYieldSub");
   if(yv){
-    if(vFin!=null && fAc>0){
-      yv.textContent = pctTxt(vFin);
-      yv.className = "v " + (vFin<0?"neg":"pos");
-      if(ys) ys.textContent = fmt0.format(fFW/fAc)+" vs "+fmt0.format(fFW25/fAc)+" lb/ac";
+    const per26 = (fFcst>0 && fAc>0) ? fFcst/fAc : null;
+    const per25 = (fM25 >0 && fAc>0) ? fM25 /fAc : null;
+    if(per26!=null && per25!=null){
+      const vY = (per26-per25)/per25*100;
+      yv.textContent = pctTxt(vY);
+      yv.className = "v " + (vY<0?"neg":"pos");
+      if(ys) ys.textContent = fmt0.format(per26)+" vs "+fmt0.format(per25)+" lb/ac meats";
     }else{
       yv.textContent = ""; yv.className = "v";
-      if(ys) ys.textContent = fN? "" : "no finished blocks yet";
+      if(ys) ys.textContent = !fN ? "no finished blocks yet"
+                            : (per25==null ? "no 2025 meats for these blocks"
+                                           : "needs an Assumption");
     }
   }
   set("tfFW",   fN? fmtLbs(fFW):"");
