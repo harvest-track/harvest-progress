@@ -27,7 +27,7 @@
     -webkit-font-smoothing:antialiased;
     padding:48px 24px 96px;
   }
-  .wrap{max-width:1220px;margin:0 auto}
+  .wrap{max-width:1140px;margin:0 auto}
 
   .eyebrow{
     font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
@@ -41,11 +41,11 @@
     background:var(--card);
     border-radius:18px;
     box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 24px rgba(0,0,0,.04);
-    margin:28px 0 14px;
+    margin:28px 0 24px;
     overflow:hidden;
   }
   .stat{
-    flex:1 1 150px;min-width:140px;
+    flex:1 1 160px;min-width:150px;
     padding:18px 22px 16px;
     border-right:1px solid var(--hairline-soft);
   }
@@ -65,27 +65,15 @@
     background:var(--green);transition:width .5s cubic-bezier(.25,.1,.25,1);
   }
   .meter i.amber{background:var(--amber)}
-  .meter i.blue{background:var(--blue)}
-
-  /* finished-only 26 vs 24 panel */
-  .fin24{
-    display:flex;flex-wrap:wrap;align-items:stretch;
-    background:var(--card);border-radius:18px;
-    box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 24px rgba(0,0,0,.04);
-    margin-bottom:24px;overflow:hidden;
-  }
-  .fin24 .lead{
-    flex:1 1 260px;padding:18px 22px;border-right:1px solid var(--hairline-soft);
-  }
-  .fin24 .lead .t{font-size:13px;font-weight:600}
-  .fin24 .lead .d{font-size:12px;color:var(--secondary);margin-top:4px;line-height:1.5}
-  .fin24 .cell{flex:1 1 140px;min-width:130px;padding:18px 22px;border-right:1px solid var(--hairline-soft)}
-  .fin24 .cell:last-child{border-right:none}
-  .fin24 .cell .k{font-size:12px;color:var(--secondary);font-weight:500}
-  .fin24 .cell .v{font-size:22px;font-weight:600;margin-top:4px;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
-  .fin24 .cell .v.pos{color:#1c7c33}
-  .fin24 .cell .v.negv{color:#c0261d}
-  .fin24.none .cell{opacity:.45}
+  .ysub{font-size:11px;color:var(--secondary);margin-top:10px;font-variant-numeric:tabular-nums;min-height:14px}
+  .stat .v.neg{color:var(--red)}
+  .stat .v.pos{color:var(--green)}
+  .chk{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--secondary);cursor:pointer}
+  .chk input{accent-color:var(--blue);width:15px;height:15px}
+  .fbar{flex:none;width:60px;height:4px;border-radius:2px;background:rgba(0,0,0,.07);overflow:hidden;margin-left:4px}
+  .fbar i{display:block;height:100%;background:var(--green);border-radius:2px;transition:width .4s ease}
+  tr.row.unfin td{opacity:.5}
+  tfoot tr.sub td{font-weight:500;color:var(--secondary);font-size:13px;border-top:1px solid var(--hairline-soft)}
 
   .tools{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
   input[type="search"]{
@@ -101,8 +89,6 @@
   }
   .link:hover{text-decoration:underline}
   .link:focus-visible{outline:2px solid var(--blue);outline-offset:2px;border-radius:4px}
-  .chk{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--secondary);cursor:pointer}
-  .chk input{accent-color:var(--blue);width:15px;height:15px}
   .spacer{flex:1}
   .savenote{font-size:12px;color:var(--secondary)}
   .savenote.err{color:var(--red)}
@@ -113,7 +99,7 @@
     box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 24px rgba(0,0,0,.04);
     overflow-x:auto;
   }
-  table{border-collapse:collapse;width:100%;min-width:1060px}
+  table{border-collapse:collapse;width:100%;min-width:920px}
   thead th{
     font-size:12px;font-weight:500;color:var(--secondary);
     padding:14px 12px 10px;text-align:right;white-space:nowrap;
@@ -121,7 +107,7 @@
     position:sticky;top:0;background:var(--card);z-index:2;
   }
   thead th:first-child{text-align:left;padding-left:20px}
-  thead th.c{text-align:center}
+  thead th.c{text-align:center;width:64px;white-space:normal;line-height:1.2}
 
   tr.farm td{padding:0;border-top:1px solid var(--hairline-soft)}
   tr.farm:first-child td{border-top:none}
@@ -138,14 +124,8 @@
   }
   tr.farm.open .chev{transform:rotate(45deg)}
   .fname{font-size:15px;font-weight:600;letter-spacing:-.01em}
-  .fbar{
-    flex:none;width:64px;height:4px;border-radius:2px;background:rgba(0,0,0,.07);
-    overflow:hidden;margin-left:4px;
-  }
-  .fbar i{display:block;height:100%;background:var(--green);border-radius:2px;transition:width .4s ease}
   .fright{margin-left:auto;display:flex;gap:20px;align-items:baseline}
   .fdone{font-size:12px;color:var(--secondary);font-variant-numeric:tabular-nums}
-  .fv24{font-size:12px;font-variant-numeric:tabular-nums;font-weight:600}
   .flbs{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
   .flbs small{font-weight:400;color:var(--secondary)}
 
@@ -156,13 +136,12 @@
   }
   tr.row td.var{text-align:left;padding-left:42px}
   tr.row.hide{display:none}
-  tr.row.dim td{opacity:.45}
   td.calcv{font-weight:500}
   .neg{color:var(--red)}
-  .pos{color:#1c7c33}
-  td.pend{color:var(--secondary)}
+  .pos{color:var(--green)}
+  td.prior{color:var(--secondary)}
 
-  td.st{text-align:center}
+  td.st{text-align:center;width:64px}
   .dot{
     display:inline-block;width:16px;height:16px;border-radius:50%;
     background:var(--red);vertical-align:middle;
@@ -176,7 +155,6 @@
     font-variant-numeric:tabular-nums;white-space:nowrap;
   }
   tfoot td:first-child{text-align:left;padding-left:20px}
-  tfoot tr.sub td{font-weight:500;color:var(--secondary);border-top:1px solid var(--hairline-soft);font-size:13px}
 
   .note{font-size:12px;color:var(--secondary);margin-top:14px;line-height:1.6}
   .banner{
@@ -198,52 +176,33 @@
 <body>
 <div class="wrap">
 
-  <div class="eyebrow">Crop Year 2026</div>
   <h1>Yield Assumption Using Field&nbsp;Weights&nbsp;Turnout</h1>
-  <div class="sub">Live from the published field weights sheet. Update the sheet, then Refresh to see new numbers.</div>
 
   <div class="banner" id="banner"></div>
 
   <div class="summary">
     <div class="stat">
-      <div class="k">Pickups done</div>
-      <div class="v" id="sPick">—</div>
+      <div class="k">Pickup</div>
+      <div class="v" id="sPick"></div>
       <div class="meter"><i id="mPick"></i></div>
     </div>
     <div class="stat">
       <div class="k">Tickets in</div>
-      <div class="v" id="sTick">—</div>
+      <div class="v" id="sTick"></div>
       <div class="meter"><i id="mTick" class="amber"></i></div>
     </div>
     <div class="stat">
       <div class="k">Blocks closed</div>
-      <div class="v" id="sClosed">—</div>
+      <div class="v" id="sClosed"></div>
       <div class="meter"><i id="mClosed"></i></div>
     </div>
     <div class="stat">
-      <div class="k">Crop in <small>by weight</small></div>
-      <div class="v" id="sCrop">—</div>
-      <div class="meter"><i id="mCrop" class="blue"></i></div>
+      <div class="k">Yield signal <small>finished blocks</small></div>
+      <div class="v" id="sYield"></div>
+      <div class="ysub" id="sYieldSub"></div>
     </div>
-    <div class="stat">
-      <div class="k">Ranches complete</div>
-      <div class="v" id="sRanch">—</div>
-      <div class="meter"><i id="mRanch"></i></div>
-    </div>
-    <div class="stat"><div class="k">Field weight · lbs</div><div class="v" id="sFW">—</div></div>
-    <div class="stat"><div class="k">Forecast · lbs</div><div class="v" id="sFcst">—</div></div>
-    <div class="stat"><div class="k">Final · lbs</div><div class="v" id="sFin">—</div></div>
-  </div>
-
-  <div class="fin24" id="fin24">
-    <div class="lead">
-      <div class="t">Finished blocks only · '26 vs '24</div>
-      <div class="d" id="f24Lead">Counts a block only once both pickups and tickets are green, so the comparison is like-for-like.</div>
-    </div>
-    <div class="cell"><div class="k">Blocks</div><div class="v" id="f24N">—</div></div>
-    <div class="cell"><div class="k">Field weight '26</div><div class="v" id="f24A">—</div></div>
-    <div class="cell"><div class="k">Field weight '24</div><div class="v" id="f24B">—</div></div>
-    <div class="cell"><div class="k">Variance</div><div class="v" id="f24D">—</div></div>
+    <div class="stat"><div class="k">Field weight · lbs</div><div class="v" id="sFW"></div></div>
+    <div class="stat"><div class="k">Forecast · lbs</div><div class="v" id="sFcst"></div></div>
   </div>
 
   <div class="tools">
@@ -264,96 +223,80 @@
           <th class="c">All Pickups?</th>
           <th class="c">All Tickets Submitted?</th>
           <th>Field Weight</th>
+          <th>FW '25</th>
           <th>Var vs '25</th>
-          <th>Field Wt '24</th>
-          <th>Var vs '24</th>
           <th>Assumption</th>
-          <th>Actual Turnout</th>
           <th>Forecast</th>
-          <th>Final</th>
+          <th>Forecast lb/acre</th>
         </tr>
       </thead>
       <tbody id="tbody"></tbody>
       <tfoot>
         <tr>
           <td colspan="3">Total</td>
-          <td id="tFW">—</td>
+          <td id="tFW"></td>
+          <td id="tFW25"></td><td></td><td></td>
+          <td id="tFcst"></td>
           <td></td>
-          <td id="tFW24">—</td>
-          <td></td>
-          <td></td><td></td>
-          <td id="tFcst">—</td>
-          <td id="tFin">—</td>
         </tr>
         <tr class="sub">
           <td colspan="3">Finished blocks only</td>
-          <td id="tfFW">—</td>
-          <td></td>
-          <td id="tfFW24">—</td>
-          <td id="tfVar">—</td>
-          <td></td><td></td>
-          <td id="tfFcst">—</td>
-          <td id="tfFin">—</td>
+          <td id="tfFW"></td>
+          <td id="tfFW25"></td><td id="tfVar"></td><td></td>
+          <td id="tfFcst"></td>
+          <td id="tfFcstAc"></td>
         </tr>
       </tfoot>
     </table>
   </div>
 
-  <p class="note">Read-only view of the published sheet. To change any number, edit the Google Sheet, then click Refresh here. The last load is cached in this browser, so the page appears instantly and still works if the connection drops. <b>Var vs '24</b> stays blank until a block has both pickups and tickets green &mdash; comparing a part-finished block against a full 2024 would read as a false decline.</p>
-
 </div>
 
 <script>
 /* ============================================================
-   1. PUBLISH YOUR SHEET AS CSV, THEN PASTE THE URL BELOW.
-      In the Google Sheet:
-        File ▸ Share ▸ Publish to web
-        ▸ pick the "FieldWeights" tab, format "Comma-separated values (.csv)"
-        ▸ Publish, then copy the link. It looks like:
-          https://docs.google.com/spreadsheets/d/e/2PACX-..../pub?gid=0&single=true&output=csv
-      Paste that whole URL between the quotes.
-      Note: publishing makes that tab readable by anyone with the link.
-
-   2. COLUMNS ARE MATCHED BY HEADER NAME, NOT POSITION, so you can add
-      or reorder columns in the sheet without touching this file.
-      Recognised headers (case and punctuation are ignored):
-        Farm | Variety | All Pickups? | All Tickets Submitted?
-        Field Weight | Var vs '25 | Field Weight '24 | Assumption | Actual Turnout
-      Add a "Field Weight '24" column to power the '26 vs '24 comparison.
-      Anything unrecognised is ignored. If no header row is found the old
-      fixed column order is used as a fallback.
+   1. PASTE YOUR APPS SCRIPT WEB APP URL BELOW.
+      In the Google Sheet: Extensions ▸ Apps Script, paste AppsScript_Code.gs,
+      Deploy ▸ Web app (Execute as: Me · Access: Anyone), copy the /exec URL.
+      The script returns only the raw columns; this page computes
+      lbs/acre, variance vs '25, and forecast itself.
    ============================================================ */
-const CSV_URL = "PASTE_YOUR_PUBLISHED_CSV_URL_HERE";
+const API_URL = "https://script.google.com/macros/s/AKfycbz8grVMeVnQK33sRaCTtOBGLDCZiHgJ4YIqowivfd3Lr4vaaqrF21KJBkKhv5U-VAi6/exec";
 
 const CACHE_KEY = "glf-fw-2026-cache";
-let ROWS = [];                 // [{farm,variety,pickup,tickets,fw,fw24,varAc,assump,actual}, ...]
-let openFarms = new Set();     // which farms are expanded
-let expandedOnce = false;      // expand-all applies on first paint only
-let onlyFinished = false;
+let ROWS = [];
+let openFarms = new Set();     // remember which farms are expanded across refreshes
+let expandedOnce = false;      // expand-all applies once, on the first painted data
+let onlyFinished = false;      // "Finished only" filter
 
 const fmt0 = new Intl.NumberFormat("en-US",{maximumFractionDigits:0});
-const fmt1 = new Intl.NumberFormat("en-US",{minimumFractionDigits:1,maximumFractionDigits:1});
+const fmt1 = new Intl.NumberFormat("en-US",{maximumFractionDigits:1});
 function parseNum(s){
   if(s === "" || s == null) return null;
   const n = parseFloat(String(s).replace(/[,%\s]/g,""));
   return isNaN(n) ? null : n;
 }
-const fmtLbs = n => n == null ? "—" : fmt0.format(Math.round(n));
-const pctTxt = v => (v>=0?"+":"") + fmt1.format(v) + "%";
+const fmtLbs = n => n == null ? "" : fmt0.format(Math.round(n));
+
+/* All ticket-gated calcs live here. Nothing computes until tickets == Done (2). */
 function calc(r){
-  const fw = parseNum(r.fw), a = parseNum(r.assump), act = parseNum(r.actual);
-  return { fw,
-    fcst:(fw!=null && a!=null)? fw*a/100 : null,
-    fin:(fw!=null && act!=null)? fw*act/100 : null };
+  const fw = parseNum(r.fw), a = parseNum(r.assump), ac = parseNum(r.acres);
+  const ticketsDone = Number(r.tickets) === 2;
+  const fcst = (ticketsDone && fw!=null && a!=null) ? fw*a/100 : null;
+  const fcstAc = (fcst!=null && ac!=null && ac!==0) ? fcst/ac : null;
+  return { fw, fcst, fcstAc, ticketsDone };
 }
-/* a block is finished only when both lights are green */
-const isFin = r => r.pickup === 2 && r.tickets === 2;
-/* 26 vs 24, only meaningful once the block is finished */
-function v24(r){
-  if(!isFin(r)) return null;
-  const a = parseNum(r.fw), b = parseNum(r.fw24);
-  if(a == null || b == null || b === 0) return null;
-  return (a - b) / b * 100;
+/* a block is finished when both lights are green */
+function isFin(r){ return Number(r.pickup) === 2 && Number(r.tickets) === 2; }
+const pctTxt = v => (v>=0?"+":"") + fmt1.format(v) + "%";
+
+/* per-acre variance vs '25 — also gated on tickets */
+function derive(r){
+  const fw = parseNum(r.fw), fw25 = parseNum(r.fw25), ac = parseNum(r.acres);
+  const ticketsDone = Number(r.tickets) === 2;
+  if(ticketsDone && fw!=null && fw25!=null && fw25!==0 && ac!=null && ac!==0){
+    const per26 = fw/ac, per25 = fw25/ac;
+    r.varAc = per25!==0 ? ((per26-per25)/per25*100) : "";
+  } else r.varAc = "";
 }
 
 function setNote(msg, isErr){
@@ -367,134 +310,60 @@ function showBanner(msg){
   b.textContent = msg; b.classList.add("show");
 }
 
-/* ---------- data loading ---------- */
-function normStatus(v){
-  const s = String(v==null?"":v).trim().toUpperCase();
-  if(s==="DONE"||s==="YES"||s==="Y"||s==="GREEN"||s==="TRUE"||s==="2") return 2;
-  if(s==="IN PROGRESS"||s==="PARTIAL"||s==="AMBER"||s==="WIP"||s==="1") return 1;
-  return 0;
-}
-function cleanNum(v){
-  if(v==null) return "";
-  const t = String(v).trim();
-  if(t==="") return "";
-  const n = parseFloat(t.replace(/[,%\s]/g,""));
-  return isNaN(n) ? "" : n;
-}
-
-/* minimal CSV parser (handles quoted fields + commas inside quotes) */
-function parseCSV(text){
-  const rows = [];
-  let field = "", row = [], inQ = false;
-  for(let i=0;i<text.length;i++){
-    const ch = text[i];
-    if(inQ){
-      if(ch === '"'){
-        if(text[i+1] === '"'){ field += '"'; i++; }
-        else inQ = false;
-      } else field += ch;
-    } else {
-      if(ch === '"') inQ = true;
-      else if(ch === ',') { row.push(field); field = ""; }
-      else if(ch === '\n'){ row.push(field); rows.push(row); field=""; row=[]; }
-      else if(ch === '\r'){ /* skip */ }
-      else field += ch;
-    }
-  }
-  if(field.length || row.length){ row.push(field); rows.push(row); }
-  return rows;
-}
-
-/* header matching: squash case, spaces, apostrophes, punctuation */
-const norm = h => String(h||"").toLowerCase().replace(/[^a-z0-9]/g,"");
-const ALIAS = {
-  farm:["farm","ranch","ranchrancho"],
-  variety:["variety","varietal"],
-  pickup:["allpickups","allpickup","pickups","pickupsdone"],
-  tickets:["allticketssubmitted","tickets","ticketssubmitted","allticketsin"],
-  fw:["fieldweight","fieldweight26","fieldwt","fieldwt26","fieldweight2026"],
-  varAc:["varvs25","variancevs25","varvs2025","vs25"],
-  fw24:["fieldweight24","fieldwt24","fieldweight2024","fw24"],
-  assump:["assumption","turnoutassumption","assumption26"],
-  actual:["actualturnout","actual","turnoutactual"]
-};
-function mapHeader(hrow){
-  const idx = {};
-  hrow.forEach((h,i)=>{
-    const n = norm(h);
-    for(const key in ALIAS) if(ALIAS[key].includes(n) && idx[key]==null) idx[key]=i;
-  });
-  return idx;
-}
-const FALLBACK = {farm:0,variety:1,pickup:2,tickets:3,fw:4,varAc:5,assump:6,actual:7,fw24:10};
-
-function rowsFromCSV(text){
-  const grid = parseCSV(text).filter(r => r.length && r.some(c => String(c).trim() !== ""));
-  const out = [];
-  let start = 0, idx = null;
-  for(let i=0;i<grid.length;i++){
-    if(ALIAS.farm.includes(norm(grid[i][0]))){ idx = mapHeader(grid[i]); start = i+1; break; }
-  }
-  if(!idx || idx.fw==null) idx = Object.assign({}, FALLBACK, idx||{});
-  const g = (r,k) => idx[k]==null ? "" : r[idx[k]];
-  for(let i=start;i<grid.length;i++){
-    const r = grid[i];
-    const farm = String(g(r,"farm")||"").trim();
-    const variety = String(g(r,"variety")||"").trim();
-    if(!farm || farm.toUpperCase() === "TOTAL") continue;
-    out.push({
-      farm, variety,
-      pickup:  normStatus(g(r,"pickup")),
-      tickets: normStatus(g(r,"tickets")),
-      fw:      cleanNum(g(r,"fw")),
-      varAc:   cleanNum(g(r,"varAc")),
-      fw24:    cleanNum(g(r,"fw24")),
-      assump:  cleanNum(g(r,"assump")),
-      actual:  cleanNum(g(r,"actual"))
-    });
-  }
-  return out;
-}
-
+/* ---------- data loading (Apps Script JSON) ---------- */
 async function loadData(initial){
+  // 1) INSTANT: paint from cache and don't wait on anything.
+  let hadCache = false;
   if(initial){
     const cached = readCache();
     if(cached && cached.rows && cached.rows.length){
-      ROWS = cached.rows; render();
-      setNote("Cached — refreshing…");
+      ROWS = cached.rows; ROWS.forEach(derive); render();
+      hadCache = true;
+      // show when this cached copy is from, quietly — no "refreshing" spinner
+      if(cached.updated) setNote("As of " + new Date(cached.updated).toLocaleTimeString());
     }
   }
 
-  if(CSV_URL === "PASTE_YOUR_PUBLISHED_CSV_URL_HERE"){
-    showBanner("No sheet connected yet — publish the sheet as CSV and paste the URL into index.html (CSV_URL).");
-    if(!ROWS.length){ const c = readCache(); if(c){ ROWS = c.rows; render(); } }
+  if(API_URL === "PASTE_YOUR_WEB_APP_URL_HERE"){
+    if(!hadCache) showBanner("No sheet connected yet — paste your Apps Script Web App URL into index.html (API_URL).");
     return;
   }
 
+  // 2) BACKGROUND: fetch fresh data without blocking the painted view.
+  //    Only a manual Refresh shows a working state; initial load stays silent.
   if(!initial) setNote("Refreshing…");
   try{
-    const url = CSV_URL + (CSV_URL.includes("?") ? "&" : "?") + "_=" + Date.now();
+    const url = API_URL + (API_URL.includes("?") ? "&" : "?") + (initial ? "" : "bust=1&") + "_=" + Date.now();
     const res = await fetch(url, {cache:"no-store"});
     if(!res.ok) throw new Error("HTTP "+res.status);
-    const text = await res.text();
-    const rows = rowsFromCSV(text);
+    const data = await res.json();
+    const rows = data.rows || [];
     if(!rows.length) throw new Error("empty");
-    ROWS = rows;
-    writeCache({ updated: new Date().toISOString(), rows });
+
+    // 3) Only touch the DOM if the data actually changed vs what's shown.
+    const fresh = JSON.stringify(rows);
+    const shown = JSON.stringify(ROWS.map(stripDerived));
+    writeCache({ updated: data.updated || new Date().toISOString(), rows });
+    if(fresh !== shown){
+      ROWS = rows; ROWS.forEach(derive); render();
+    }
     showBanner("");
-    render();
-    setNote("Updated " + new Date().toLocaleTimeString());
+    const when = data.updated ? new Date(data.updated).toLocaleTimeString() : new Date().toLocaleTimeString();
+    setNote("Updated " + when);
   }catch(err){
     if(ROWS.length){
-      const c = readCache();
-      showBanner("Couldn't reach the sheet — showing the last version saved on this device"
-        + (c && c.updated ? " ("+new Date(c.updated).toLocaleString()+")." : "."));
-      setNote("Offline — cached data", true);
+      // we're already showing cached data — keep it, note quietly, don't alarm
+      setNote("Showing saved copy", true);
     }else{
-      showBanner("Couldn't load the sheet and no cached copy is available. Check the CSV URL and that the sheet is published to the web.");
+      showBanner("Couldn't load the sheet and no cached copy is available. Check the Web App URL and that it's deployed to \u201cAnyone\u201d.");
       setNote("Load failed", true);
     }
   }
+}
+/* strip client-derived fields so cache-vs-fresh comparison is apples-to-apples */
+function stripDerived(r){
+  const {varAc, ...raw} = r;
+  return raw;
 }
 function readCache(){
   try{ const raw = localStorage.getItem(CACHE_KEY); return raw ? JSON.parse(raw) : null; }
@@ -510,24 +379,22 @@ function render(){
   tbody.innerHTML = "";
   const farms = [...new Set(ROWS.map(r=>r.farm))];
 
-  /* expand everything the first time data arrives */
+  /* first time real data lands, open every ranch */
   if(!expandedOnce && farms.length){
     farms.forEach(f=>openFarms.add(f));
     expandedOnce = true;
   }
 
   farms.forEach(farm => {
-    const open = openFarms.has(farm);
     const ftr = document.createElement("tr");
-    ftr.className = "farm" + (open ? " open" : "");
+    ftr.className = "farm" + (openFarms.has(farm) ? " open" : "");
     ftr.dataset.farm = farm;
-    ftr.innerHTML = `<td colspan="11">
-      <button class="band" aria-expanded="${open}" aria-label="Toggle ${farm}">
+    ftr.innerHTML = `<td colspan="10">
+      <button class="band" aria-expanded="${openFarms.has(farm)}" aria-label="Toggle ${farm}">
         <span class="chev" aria-hidden="true"></span>
         <span class="fname">${farm}</span>
         <span class="fbar" title="Share of blocks finished"><i data-fbar="${farm}"></i></span>
         <span class="fright">
-          <span class="fv24" data-fv24="${farm}"></span>
           <span class="fdone" data-fdone="${farm}"></span>
           <span class="flbs" data-flbs="${farm}"></span>
         </span>
@@ -537,24 +404,21 @@ function render(){
     ROWS.filter(r=>r.farm===farm).forEach(r => {
       const c = calc(r);
       const vn = parseNum(r.varAc);
-      const d24 = v24(r);
-      const fin = isFin(r);
       const tr = document.createElement("tr");
-      tr.className = "row" + (open ? "" : " hide") + (fin ? "" : " dim");
+      const fin = isFin(r);
+      tr.className = "row" + (openFarms.has(farm) ? "" : " hide") + (fin ? "" : " unfin");
       tr.dataset.farm = farm; tr.dataset.variety = r.variety;
       tr.dataset.fin = fin ? "1" : "0";
       tr.innerHTML = `
         <td class="var">${r.variety}</td>
         <td class="st"><span class="dot" data-state="${r.pickup}" title="${statusLabel(r.pickup)}"></span></td>
         <td class="st"><span class="dot" data-state="${r.tickets}" title="${statusLabel(r.tickets)}"></span></td>
-        <td>${r.fw!=="" && r.fw!=null ? fmt0.format(r.fw) : "—"}</td>
-        <td class="${vn!=null&&vn<0?"neg":""}">${r.varAc!=="" && r.varAc!=null ? r.varAc+"%" : "—"}</td>
-        <td>${r.fw24!=="" && r.fw24!=null ? fmt0.format(r.fw24) : "—"}</td>
-        <td class="${d24==null?"pend":(d24<0?"neg":"pos")}" title="${d24==null?"Needs both lights green":""}">${d24==null? (fin?"—":"pending") : pctTxt(d24)}</td>
-        <td>${r.assump!=="" && r.assump!=null ? r.assump+"%" : "—"}</td>
-        <td>${r.actual!=="" && r.actual!=null ? r.actual+"%" : "—"}</td>
+        <td>${r.fw!=="" && r.fw!=null ? fmt0.format(r.fw) : ""}</td>
+        <td class="prior">${r.fw25!=="" && r.fw25!=null ? fmt0.format(r.fw25) : ""}</td>
+        <td class="${vn!=null&&vn<0?"neg":(vn!=null&&vn>0?"pos":"")}">${r.varAc!=="" && r.varAc!=null ? fmt1.format(r.varAc)+"%" : ""}</td>
+        <td>${r.assump!=="" && r.assump!=null ? r.assump+"%" : ""}</td>
         <td class="calcv">${fmtLbs(c.fcst)}</td>
-        <td class="calcv">${fmtLbs(c.fin)}</td>`;
+        <td class="calcv">${c.fcstAc!=null ? fmt0.format(c.fcstAc) : ""}</td>`;
       tbody.appendChild(tr);
     });
   });
@@ -565,97 +429,81 @@ function statusLabel(s){ return ["Not done","In progress","Done"][s] || "Not don
 
 function refreshTotals(){
   const n = ROWS.length || 1;
-  let pick=0, tick=0, closed=0, fw=0, fw24=0, fcst=0, fin=0;
-  let aFW=false, aFW24=false, aFc=false, aFn=false;
-  let cropIn=0, cropTot=0;                    // weight-based progress, denominator = '24
-  let fFW=0, fFW24=0, fFcst=0, fFin=0, fN=0;  // finished-only
-  const gFin={}, gDone={}, gN={}, gA={}, gB={};
-
+  let pick=0, tick=0, closed=0, fw=0, fw25=0, fcst=0, acres=0;
+  let aFW=false, aFc=false, aAc=false, a25=false;
+  let fFW=0, fFW25=0, fFcst=0, fAc=0, fN=0;             // finished blocks only
+  const gFcst={}, gDone={}, gN={};
   ROWS.forEach(r => {
     const c = calc(r), f = isFin(r);
-    const b24 = parseNum(r.fw24);
+    const p25 = parseNum(r.fw25), ac = parseNum(r.acres);
     gN[r.farm]=(gN[r.farm]||0)+1;
-    if(r.pickup===2) pick++;
-    if(r.tickets===2) tick++;
+    if(r.pickup==2) pick++;
+    if(r.tickets==2) tick++;
     if(f){ closed++; gDone[r.farm]=(gDone[r.farm]||0)+1; }
+    if(ac!=null){acres+=ac;aAc=true}
     if(c.fw!=null){fw+=c.fw;aFW=true}
-    if(b24!=null){fw24+=b24;aFW24=true;cropTot+=b24; if(f) cropIn+=b24}
-    if(c.fcst!=null){fcst+=c.fcst;aFc=true}
-    if(c.fin!=null){fin+=c.fin;aFn=true;gFin[r.farm]=(gFin[r.farm]||0)+c.fin}
+    if(p25!=null){fw25+=p25;a25=true}
+    if(c.fcst!=null){fcst+=c.fcst;aFc=true;gFcst[r.farm]=(gFcst[r.farm]||0)+c.fcst}
     if(f){
       fN++;
-      if(c.fw!=null && b24!=null){ fFW+=c.fw; fFW24+=b24; gA[r.farm]=(gA[r.farm]||0)+c.fw; gB[r.farm]=(gB[r.farm]||0)+b24; }
+      if(c.fw!=null) fFW+=c.fw;
+      if(p25!=null) fFW25+=p25;
       if(c.fcst!=null) fFcst+=c.fcst;
-      if(c.fin!=null)  fFin+=c.fin;
+      if(ac!=null) fAc+=ac;
     }
   });
-
-  const set=(id,txt)=>{const e=document.getElementById(id); if(e) e.textContent=txt;};
-  const bar=(id,pct)=>{const e=document.getElementById(id); if(e) e.style.width=Math.max(0,Math.min(100,pct))+"%";};
+  const set=(id,v)=>{const e=document.getElementById(id); if(e) e.textContent=v;};
+  const bar=(id,p)=>{const e=document.getElementById(id); if(e) e.style.width=Math.max(0,Math.min(100,p))+"%";};
 
   document.getElementById("sPick").innerHTML   = pick+`<small> / ${ROWS.length}</small>`;
+  document.getElementById("mPick").style.width = (pick/n*100)+"%";
   document.getElementById("sTick").innerHTML   = tick+`<small> / ${ROWS.length}</small>`;
   document.getElementById("sClosed").innerHTML = closed+`<small> / ${ROWS.length}</small>`;
-  bar("mPick", pick/n*100); bar("mTick", tick/n*100); bar("mClosed", closed/n*100);
+  bar("mTick", tick/n*100); bar("mClosed", closed/n*100);
 
-  if(cropTot>0){
-    document.getElementById("sCrop").innerHTML = fmt1.format(cropIn/cropTot*100)+`<small>%</small>`;
-    bar("mCrop", cropIn/cropTot*100);
-  }else{ set("sCrop","—"); bar("mCrop",0); }
+  /* totals + finished-only subtotal, both on FW '26 vs FW '25 */
+  /* variance only on the finished subtotal — comparing a part-finished '26 against
+     a full '25 would read as a false decline, so the Total row leaves it blank */
+  const vFin = (fFW25>0) ? (fFW-fFW25)/fFW25*100 : null;
+  set("tFW25", a25? fmtLbs(fw25):"");
 
-  const ranches = Object.keys(gN);
-  const rDone = ranches.filter(f=>(gDone[f]||0)===gN[f]).length;
-  document.getElementById("sRanch").innerHTML = rDone+`<small> / ${ranches.length}</small>`;
-  bar("mRanch", ranches.length? rDone/ranches.length*100 : 0);
-
-  set("sFW",   aFW? fmtLbs(fw):"—");
-  set("sFcst", aFc? fmtLbs(fcst):"—");
-  set("sFin",  aFn? fmtLbs(fin):"—");
-  set("tFW",   aFW? fmtLbs(fw):"—");
-  set("tFW24", aFW24? fmtLbs(fw24):"—");
-  set("tFcst", aFc? fmtLbs(fcst):"—");
-  set("tFin",  aFn? fmtLbs(fin):"—");
-
-  /* finished-only footer + panel */
-  const hasCmp = fFW24>0;
-  const d = hasCmp ? (fFW-fFW24)/fFW24*100 : null;
-  set("tfFW",   fFW? fmtLbs(fFW):"—");
-  set("tfFW24", fFW24? fmtLbs(fFW24):"—");
-  set("tfFcst", fFcst? fmtLbs(fFcst):"—");
-  set("tfFin",  fFin? fmtLbs(fFin):"—");
+  /* Yield signal: field weight per acre, '26 vs '25, finished blocks only.
+     Same acres sit on both sides, so this is the like-for-like read on whether
+     the crop is up or down — not a progress number. */
+  const yv = document.getElementById("sYield");
+  const ys = document.getElementById("sYieldSub");
+  if(yv){
+    if(vFin!=null && fAc>0){
+      yv.textContent = pctTxt(vFin);
+      yv.className = "v " + (vFin<0?"neg":"pos");
+      if(ys) ys.textContent = fmt0.format(fFW/fAc)+" vs "+fmt0.format(fFW25/fAc)+" lb/ac";
+    }else{
+      yv.textContent = ""; yv.className = "v";
+      if(ys) ys.textContent = fN? "" : "no finished blocks yet";
+    }
+  }
+  set("tfFW",   fN? fmtLbs(fFW):"");
+  set("tfFW25", fFW25? fmtLbs(fFW25):"");
+  set("tfFcst", fFcst? fmtLbs(fFcst):"");
+  set("tfFcstAc", (fFcst&&fAc)? fmt0.format(fFcst/fAc):"");
   const tv=document.getElementById("tfVar");
-  tv.textContent = d==null? "—" : pctTxt(d);
-  tv.className = d==null? "" : (d<0?"neg":"pos");
+  if(tv){ tv.textContent = vFin==null? "" : pctTxt(vFin); tv.className = vFin==null? "" : (vFin<0?"neg":"pos"); }
 
-  document.getElementById("f24N").textContent = fN+" / "+ROWS.length;
-  set("f24A", fFW? fmtLbs(fFW):"—");
-  set("f24B", fFW24? fmtLbs(fFW24):"—");
-  const dv=document.getElementById("f24D");
-  dv.textContent = d==null? "—" : pctTxt(d);
-  dv.className = "v " + (d==null? "" : (d<0?"negv":"pos"));
-  document.getElementById("fin24").classList.toggle("none", !hasCmp);
-  document.getElementById("f24Lead").textContent = hasCmp
-    ? `${fN} of ${ROWS.length} blocks have both lights green. Part-finished blocks are held out so the comparison is like-for-like.`
-    : (aFW24 ? "No block has both lights green yet, so there is nothing to compare."
-             : "Add a \u201CField Weight '24\u201D column to the sheet to switch this on.");
-
-  document.querySelectorAll("[data-fdone]").forEach(el=>{
-    const f = el.dataset.fdone; el.textContent = (gDone[f]||0)+"/"+gN[f]+" done";
-  });
   document.querySelectorAll("[data-fbar]").forEach(el=>{
     const f = el.dataset.fbar; el.style.width = (gN[f]? (gDone[f]||0)/gN[f]*100 : 0)+"%";
   });
-  document.querySelectorAll("[data-fv24]").forEach(el=>{
-    const f = el.dataset.fv24;
-    if(gB[f]>0){
-      const v=(gA[f]-gB[f])/gB[f]*100;
-      el.textContent = pctTxt(v)+" vs '24";
-      el.className = "fv24 " + (v<0?"neg":"pos");
-    }else{ el.textContent=""; el.className="fv24"; }
+  document.getElementById("sFW").textContent = aFW? fmtLbs(fw):"";
+  document.getElementById("sFcst").textContent = aFc? fmtLbs(fcst):"";
+  const tAc = document.getElementById("tAc");
+  if(tAc) tAc.textContent = aAc? fmt1.format(acres):"";
+  document.getElementById("tFW").textContent = aFW? fmtLbs(fw):"";
+  document.getElementById("tFcst").textContent = aFc? fmtLbs(fcst):"";
+  document.querySelectorAll("[data-fdone]").forEach(el=>{
+    const f = el.dataset.fdone; el.textContent = (gDone[f]||0)+"/"+gN[f]+" done";
   });
   document.querySelectorAll("[data-flbs]").forEach(el=>{
     const f = el.dataset.flbs;
-    el.innerHTML = gFin[f]!=null ? fmtLbs(gFin[f])+" <small>lbs</small>" : "";
+    el.innerHTML = gFcst[f]!=null ? fmtLbs(gFcst[f])+" <small>lbs</small>" : "";
   });
 }
 
@@ -693,8 +541,8 @@ function applyFilters(){
     const rows = [...document.querySelectorAll(`tr.row[data-farm="${f}"]`)];
     const anyHit = rows.some(tr=>tr.dataset.filtered!=="1");
     ftr.style.display = anyHit ? "" : "none";
-    const open = anyHit && (openFarms.has(f) || !!q);
-    if(open) openFarms.add(f);
+    if(q && anyHit) openFarms.add(f);
+    const open = anyHit && openFarms.has(f);
     ftr.classList.toggle("open", open);
     ftr.querySelector(".band").setAttribute("aria-expanded", open);
     rows.forEach(tr => tr.classList.toggle("hide", !open || tr.dataset.filtered === "1"));
