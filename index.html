@@ -260,86 +260,89 @@
       The script returns only the raw columns; this page computes
       lbs/acre, variance vs '25, forecast, and the yield signal itself.
 
-      2025 MEATS are baked in below (MEATS25). 2025 is closed, so they are
-      static — nothing to add to the sheet and no redeploy needed. If you ever
-      do return meats25 from Apps Script, that value wins over the table.
+      2025 MEATS are baked in below (MEATS25), keyed on the FW '25 value each
+      row already carries. 2025 is closed so they are static — nothing to add to
+      the sheet and no redeploy. If you ever return meats25 from Apps Script,
+      that value wins over the table.
    ============================================================ */
 const API_URL = "https://script.google.com/macros/s/AKfycbz8grVMeVnQK33sRaCTtOBGLDCZiHgJ4YIqowivfd3Lr4vaaqrF21KJBkKhv5U-VAi6/exec";
 
+/* Settled 2025 meats, keyed on FW '25 — the same column your sheet already carries.
+   FW '25 is unique across all source rows, so this matches at exactly your row
+   granularity: organic and conventional stay separate, and GLF17's two monterey
+   rows resolve individually. A row whose FW '25 is blank, zero, or edited simply
+   drops out of the yield signal and shows in the coverage count. */
 const MEATS25 = {
-  "glf1|monterey":28357,
-  "glf1|nonpareil":53432,
-  "glf1|woodcolony":24641,
-  "glf3|aldrich":222019,
-  "glf3|monterey":155634,
-  "glf3|nonpareil":560129,
-  "glf3|woodcolony":142850,
-  "glf4|buttepadre":524264,
-  "glf4|montereycarmel":320438,
-  "glf5|independence":null,   // GLF5 2025 never closed out — excluded on purpose
-  "glf5|monterey":null,   // GLF5 2025 never closed out — excluded on purpose
-  "glf6|independence":487547,
-  "glf7|aldrich":139998,
-  "glf7|carmel":18463,
-  "glf7|fritz":32577,
-  "glf7|monterey":425307,
-  "glf7|nonpareil":690060,
-  "glf7|supareil":97639,
-  "glf7|woodcolony":425926,
-  "glf10|independence":67104,
-  "glf10|monterey":96294,
-  "glf10|nonpareil":171726,
-  "glf13|monterey":87409,
-  "glf13|nonpareil":115667,
-  "glf14|independence":222737,
-  "glf17|aldrich":25631,
-  "glf17|independence":656503,
-  "glf17|liberty":30294,
-  "glf17|monterey":100063,
-  "glf17|nonpareil":102274,
-  "glf17|yorizane":38089,
-  "glf18|aldrich":15647,
-  "glf18|buttepadre":168360,
-  "glf18|carmel":18468,
-  "glf18|independence":147723,
-  "glf18|monterey":46308,
-  "glf18|nonpareil":123320,
-  "glf18|woodcolony":39841,
-  "glf19o|monterey":81990,
-  "glf19o|nonpareil":84214,
-  "glf23|monterey":138236,
-  "glf23|nonpareil":104817,
-  "glf23|woodcolony":129821,
-  "glf24|aldrich":57168,
-  "glf24|monterey":67218,
-  "glf24|nonpareil":104585,
-  "glf25|independence":72762,
-  "glf25|monterey":249847,
-  "glf25|nonpareil":327441,
-  "glf26|monterey":453774,
-  "glf26|nonpareil":362599,
-  "glf27|carmel":34059,
-  "glf27|monterey":49513,
-  "glf27|nonpareil":87490,
-  "glf19|monterey":81990,  // source mislabels this as GLF19O
+  "339840":53432,       // GLF1 nonpareil, 810 lb/ac
+  "125960":24641,       // GLF1 wood colony, 747 lb/ac
+  "156820":28357,       // GLF1 monterey, 860 lb/ac
+  "329120":67104,       // GLF10 independence, 473 lb/ac
+  "870500":171726,      // GLF10 nonpareil, 605 lb/ac
+  "507040":96294,       // GLF10 monterey, 678 lb/ac
+  "490900":115667,      // GLF13 nonpareil, 2,422 lb/ac
+  "299500":87409,       // GLF13 monterey, 2,630 lb/ac
+  "1043435":222737,     // GLF14 Independence, 1,311 lb/ac
+  "303920":53966,       // GLF17 nonpareil-conventional, 967 lb/ac
+  "274760":48308,       // GLF17 nonpareil-organic, 788 lb/ac
+  "142380":38089,       // GLF17 yorizane, 2,005 lb/ac
+  "113000":30294,       // GLF17 liberty, 1,594 lb/ac
+  "2456260":656503,     // GLF17 independence, 1,695 lb/ac
+  "126720":25631,       // GLF17 aldrich, 836 lb/ac
+  "159300":26302,       // GLF17 monterey-organic, 858 lb/ac
+  "333380":73761,       // GLF17 monterey-conventional, 1,401 lb/ac
+  "625540":123320,      // GLF18 nonpareil, 1,055 lb/ac
+  "584800":147723,      // GLF18 independence-conventional, 1,210 lb/ac
+  "68980":15647,        // GLF18 aldrich, 1,320 lb/ac
+  "138960":39841,       // GLF18 wood colony, 1,070 lb/ac
+  "86700":18468,        // GLF18 carmel, 1,209 lb/ac
+  "772160":168360,      // GLF18 butte/padre, 2,245 lb/ac
+  "297960":46308,       // GLF18 monterey, 882 lb/ac
+  "435430":81990,       // GLF19O monterey, 1,458 lb/ac
+  "395100":84214,       // GLF19O nonpareil, 1,498 lb/ac
+  "448320":104817,      // GLF23 nonpareil, 2,156 lb/ac
+  "482780":129821,      // GLF23 wood colony, 2,671 lb/ac
+  "617100":138236,      // GLF23 monterey, 2,844 lb/ac
+  "508555":104585,      // GLF24 nonpareil, 1,340 lb/ac
+  "250919":57168,       // GLF24 aldrich, 1,465 lb/ac
+  "322935":67218,       // GLF24 monterey, 1,723 lb/ac
+  "288239":72762,       // GLF25 independence, 1,959 lb/ac
+  "1300144":327441,     // GLF25 nonpareil, 2,204 lb/ac
+  "972377":249847,      // GLF25 monterey, 2,242 lb/ac
+  "1594288":362599,     // GLF26 nonpareil, 2,193 lb/ac
+  "1634229":453774,     // GLF26 monterey, 2,745 lb/ac
+  "412100":87490,       // GLF27 nonpareil, 2,272 lb/ac
+  "145560":34059,       // GLF27 carmel, 1,769 lb/ac
+  "213380":49513,       // GLF27 monterey, 2,572 lb/ac
+  "2897147":560129,     // GLF3 nonpareil, 1,523 lb/ac
+  "592675":142850,      // GLF3 wood colony, 1,166 lb/ac
+  "940170":222019,      // GLF3 aldrich, 1,812 lb/ac
+  "777140":155634,      // GLF3 monterey, 1,270 lb/ac
+  "735980":135124,      // GLF4 butte/padre-organic, 1,664 lb/ac
+  "2032820":389140,     // GLF4 butte/padre, 1,711 lb/ac
+  "1517140":320438,     // GLF4 Monterey/Carmel, 1,384 lb/ac
+  "2620320":null,       // GLF5 independence — 2025 not closed out
+  "921940":null,        // GLF5 monterey — 2025 not closed out
+  "1968600":487547,     // GLF6 independence, 2,352 lb/ac
+  "1465320":237968,     // GLF7 nonpareil-organic, 1,377 lb/ac
+  "2715400":452092,     // GLF7 nonpareil-conventional, 1,549 lb/ac
+  "901100":200777,      // GLF7 wood colony-organic, 1,916 lb/ac
+  "84620":18463,        // GLF7 carmel, 1,034 lb/ac
+  "570580":97639,       // GLF7 supareil, 2,176 lb/ac
+  "586500":139998,      // GLF7 aldrich, 3,653 lb/ac
+  "1024600":225149,     // GLF7 wood colony-conventional, 2,087 lb/ac
+  "193800":12957,       // GLF7 fritz-organic, 881 lb/ac
+  "1003380":208920,     // GLF7 monterey-conventional, 1,919 lb/ac
+  "549800":216387,      // GLF7 monterey-organic, 2,065 lb/ac
 };
 
-/* Settled 2025 meats, keyed farm|variety. Organic and conventional are rolled
-   together, matching how they settle, so a split sheet row resolves to the same
-   entry and is counted once. */
-function vkey(farm, variety){
-  const f = String(farm||"").toLowerCase().replace(/[^a-z0-9]/g,"");
-  const v = String(variety||"").toLowerCase()
-              .replace(/-(organic|conventional)$/,"").replace(/[^a-z0-9]/g,"");
-  return f+"|"+v;
-}
-/* sheet value wins if it ever shows up; otherwise fall back to the table */
+/* sheet value wins if it ever shows up; otherwise look up on FW '25 */
 function meats25Of(r){
   const fromSheet = parseNum(r.meats25);
-  if(fromSheet != null) return {v:fromSheet, key:null};
-  const k = vkey(r.farm, r.variety);
-  const t = Object.prototype.hasOwnProperty.call(MEATS25,k) ? MEATS25[k] : undefined;
-  return {v:(t==null? null : t), key:k};
+  if(fromSheet != null) return fromSheet;
+  const k = parseNum(r.fw25);
+  if(k == null || k === 0) return null;
+  const t = MEATS25[String(Math.round(k))];
+  return (t == null) ? null : t;
 }
 
 const CACHE_KEY = "glf-fw-2026-cache";
@@ -511,8 +514,11 @@ function refreshTotals(){
   const n = ROWS.length || 1;
   let pick=0, tick=0, closed=0, fw=0, fw25=0, fcst=0, acres=0;
   let aFW=false, aFc=false, aAc=false, a25=false;
-  let fFW=0, fFW25=0, fFcst=0, fAc=0, fN=0, fM25=0;     // finished blocks only
-  const seenM25 = new Set();                            // table entries count once per block
+  let fFW=0, fFW25=0, fFcst=0, fAc=0, fN=0;             // finished blocks only
+  /* Yield signal runs on ONE population: finished blocks that have a 2026
+     forecast, acres, AND 2025 meats. Mixing populations diluted the denominator
+     and produced nonsense earlier. */
+  let yFcst=0, yM25=0, yAc=0, yN=0;
   const gFcst={}, gDone={}, gN={};
   ROWS.forEach(r => {
     const c = calc(r), f = isFin(r);
@@ -531,9 +537,9 @@ function refreshTotals(){
       if(p25!=null) fFW25+=p25;
       if(c.fcst!=null) fFcst+=c.fcst;
       if(ac!=null) fAc+=ac;
-      const m = meats25Of(r);
-      if(m.v!=null && (m.key==null || !seenM25.has(m.key))){
-        fM25 += m.v; if(m.key) seenM25.add(m.key);
+      const m25 = meats25Of(r);
+      if(c.fcst!=null && ac!=null && ac!==0 && m25!=null){
+        yFcst += c.fcst; yAc += ac; yM25 += m25; yN++;
       }
     }
   });
@@ -552,26 +558,23 @@ function refreshTotals(){
   const vFin = (fFW25>0) ? (fFW-fFW25)/fFW25*100 : null;
   set("tFW25", a25? fmtLbs(fw25):"");
 
-  /* Yield signal: MEATS per acre, '26 vs '25, finished blocks only.
-       '26 = forecast meats (field weight x Assumption) — an assumption, not an actual
-       '25 = settled meats from MEATS25
-     Same acres on both sides. The '26 side moves if you edit an Assumption,
-     not only if the crop moves. */
+  /* Yield signal: MEATS per acre, '26 forecast vs '25 settled, same blocks and
+     same acres both sides. The '26 side is field weight x Assumption, so it moves
+     when an Assumption is edited, not only when the crop moves. */
   const yv = document.getElementById("sYield");
   const ys = document.getElementById("sYieldSub");
   if(yv){
-    const per26 = (fFcst>0 && fAc>0) ? fFcst/fAc : null;
-    const per25 = (fM25 >0 && fAc>0) ? fM25 /fAc : null;
-    if(per26!=null && per25!=null){
+    if(yN>0 && yAc>0 && yM25>0){
+      const per26 = yFcst/yAc, per25 = yM25/yAc;
       const vY = (per26-per25)/per25*100;
       yv.textContent = pctTxt(vY);
       yv.className = "v " + (vY<0?"neg":"pos");
-      if(ys) ys.textContent = fmt0.format(per26)+" vs "+fmt0.format(per25)+" lb/ac meats";
+      /* coverage against ALL blocks, so a two-block read can never look complete */
+      if(ys) ys.textContent = fmt0.format(per26)+" vs "+fmt0.format(per25)
+                            +" lb/ac meats · "+yN+" of "+ROWS.length+" blocks";
     }else{
       yv.textContent = ""; yv.className = "v";
-      if(ys) ys.textContent = !fN ? "no finished blocks yet"
-                            : (per25==null ? "no 2025 meats for these blocks"
-                                           : "needs an Assumption");
+      if(ys) ys.textContent = !fN ? "no finished blocks yet" : "no 2025 meats matched";
     }
   }
   set("tfFW",   fN? fmtLbs(fFW):"");
