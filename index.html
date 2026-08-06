@@ -225,7 +225,7 @@
           <th>Field Weight</th>
           <th>FW '25</th>
           <th>Var vs '25</th>
-          <th>Assumption</th>
+          <th>Turnout Assumption</th>
           <th>Forecast</th>
           <th>Forecast lb/acre</th>
         </tr>
@@ -481,13 +481,11 @@ function refreshTotals(){
   const wsub = document.getElementById("sFWAcSub");
   if(wv){
     if(wN>0 && wAc>0 && wFW25>0){
-      const per26 = wFW/wAc, per25 = wFW25/wAc;
-      const vW = (per26-per25)/per25*100;
+      const vW = (wFW/wAc - wFW25/wAc) / (wFW25/wAc) * 100;
       wv.textContent = pctTxt(vW);
       wv.className = "v " + (vW<0?"neg":"pos");
       /* coverage against ALL blocks, so a thin read can never look complete */
-      if(wsub) wsub.textContent = fmt0.format(per26)+" vs "+fmt0.format(per25)
-                                +" lb/ac · "+wN+" of "+ROWS.length+" blocks";
+      if(wsub) wsub.textContent = wN+" of "+ROWS.length+" blocks";
     }else{
       wv.textContent = ""; wv.className = "v";
       if(wsub) wsub.textContent = fN? "no FW '25 to compare" : "no finished blocks yet";
