@@ -99,11 +99,13 @@
     box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 24px rgba(0,0,0,.04);
     overflow-x:auto;
   }
-  /* Rfcst comparison columns are off by default — the table already carries
-     nine columns without them. The summary tile stays up regardless: the
-     headline variance is worth seeing even when the block detail is collapsed. */
+  /* Everything reforecast — the two table columns AND the summary tile — is off
+     until "Compare with Reforecast Yields" is on. One switch, one mental model:
+     comparison mode is either on the page or it isn't. The tile keeps computing
+     while hidden, so ticking the box shows a finished number, not an empty one. */
   .rf{display:none}
   body.rf-on th.rf,body.rf-on td.rf{display:table-cell}
+  body.rf-on .stat.rf{display:block}
 
   /* the compare toggle reads as a control, not a footnote — filled when active */
   .cmp{
@@ -224,7 +226,7 @@
       <div class="v" id="sFWAc"></div>
       <div class="ysub" id="sFWAcSub"></div>
     </div>
-    <div class="stat">
+    <div class="stat rf">
       <div class="k">Forecast vs Rfcst <small>finished blocks</small></div>
       <div class="v" id="sRfVar"></div>
       <div class="ysub" id="sRfSub"></div>
@@ -548,7 +550,8 @@ function refreshTotals(){
 
   /* Turnout-adjusted forecast vs reforecast, finished blocks only, acre-weighted.
      Unlike the FW read above, this DOES move with the Assumption — it's a meats
-     comparison, so a turnout edit is supposed to show up here. */
+     comparison, so a turnout edit is supposed to show up here. Kept up to date
+     even while the tile is hidden, so the compare toggle reveals a live number. */
   const vRf = (rN>0 && rRfLbs>0) ? (rFcst - rRfLbs)/rRfLbs*100 : null;
   const rv = document.getElementById("sRfVar");
   const rsub = document.getElementById("sRfSub");
@@ -638,8 +641,9 @@ document.getElementById("onlyFin").addEventListener("change", e => {
 });
 
 /* ---------- compare with Reforecast Yields ---------- */
-/* The choice sticks, so someone who works in comparison mode isn't re-clicking
-   it every morning. Applied before the first paint — no flash of columns. */
+/* One switch for everything reforecast: the two table columns and the summary
+   tile. The choice sticks, so someone who works in comparison mode isn't
+   re-clicking it every morning. Applied before the first paint — no flash. */
 const RF_KEY = "glf-fw-2026-compare-rf";
 function setCompareRf(on){
   document.body.classList.toggle("rf-on", on);
