@@ -110,7 +110,6 @@
      finished number rather than an empty cell. */
   .rf,.lbs{display:none}
   body.rf-on th.rf,body.rf-on td.rf{display:table-cell}
-  body.rf-on .band .rf{display:inline-block}
   body.rf-on .stat.rf{display:block}
   body.lbs-on th.lbs,body.lbs-on td.lbs{display:table-cell}
 
@@ -118,9 +117,8 @@
      zone rather than more of the same */
   body.rf-on th.grpL,body.rf-on td.grpL{border-left:1px solid var(--hairline)}
 
-  /* the tile leads the summary row and runs larger than its neighbours */
-  body.rf-on .stat.rf{order:-1;background:rgba(0,113,227,.03)}
-  .stat.rf .v{font-size:30px}
+  /* the tile sits where it falls in the row — right after Field Weight YOY —
+     and reads as a peer of its neighbours, not a headline */
 
   /* the toggles read as controls, not footnotes — filled when active */
   .cmp{
@@ -171,8 +169,6 @@
   .fname{font-size:15px;font-weight:600;letter-spacing:-.01em}
   .fright{margin-left:auto;display:flex;gap:20px;align-items:baseline}
   .fdone{font-size:12px;color:var(--secondary);font-variant-numeric:tabular-nums}
-  .flbs{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
-  .flbs small{font-weight:400;color:var(--secondary)}
 
   tr.row td{
     padding:8px 12px;text-align:right;white-space:nowrap;
@@ -202,11 +198,6 @@
   .chip.big{font-weight:700}
   .chip.big.neg{background:rgba(255,59,48,.20)}
   .chip.big.pos{background:rgba(52,199,89,.24)}
-  .band .chip{font-size:12px;padding:2px 7px}
-
-  /* per-ranch variance on the band, so a collapsed table still shows the read */
-  .fvar{display:none;font-size:12px}
-  body.rf-on .fvar{display:inline-block}
 
   td.st{text-align:center;width:64px}
   .dot{
@@ -224,6 +215,49 @@
   tfoot td:first-child{text-align:left;padding-left:20px}
 
   .note{font-size:12px;color:var(--secondary);margin-top:14px;line-height:1.6}
+
+  /* Identity sheet — asked once per browser, then remembered. Sits over the
+     page rather than blocking it, so the data is visible behind the question. */
+  .sheet{
+    display:none;position:fixed;inset:0;z-index:50;
+    background:rgba(0,0,0,.28);
+    -webkit-backdrop-filter:saturate(120%) blur(6px);
+    backdrop-filter:saturate(120%) blur(6px);
+    align-items:center;justify-content:center;padding:24px;
+  }
+  .sheet.show{display:flex}
+  .sheetCard{
+    background:var(--card);border-radius:18px;
+    box-shadow:0 8px 40px rgba(0,0,0,.18);
+    padding:26px 26px 22px;max-width:380px;width:100%;
+  }
+  .sheetCard h2{font-size:20px;font-weight:600;letter-spacing:-.02em}
+  .sheetCard p{font-size:13px;color:var(--secondary);line-height:1.5;margin:8px 0 18px}
+  .sheetCard select,.sheetCard input[type="text"]{
+    font:inherit;font-size:15px;width:100%;
+    padding:10px 12px;border:1px solid var(--hairline);
+    border-radius:10px;background:var(--fill);color:var(--text);
+    outline:none;-webkit-appearance:none;appearance:none;
+  }
+  .sheetCard select:focus,.sheetCard input[type="text"]:focus{
+    box-shadow:0 0 0 3px rgba(0,113,227,.3);border-color:transparent;
+  }
+  .sheetCard input[type="text"]{margin-top:10px}
+  .sheetCard button{
+    font:inherit;font-size:15px;font-weight:500;
+    width:100%;margin-top:18px;padding:11px;
+    border:none;border-radius:10px;cursor:pointer;
+    background:var(--blue);color:#fff;
+  }
+  .sheetCard button:hover{background:#0062c4}
+  .sheetCard button:disabled{background:rgba(0,0,0,.12);color:var(--secondary);cursor:default}
+  .whoami{font-size:12px;color:var(--secondary)}
+  .whoami button{
+    font:inherit;font-size:12px;color:var(--blue);
+    background:none;border:none;cursor:pointer;padding:0 0 0 4px;
+  }
+  .whoami button:hover{text-decoration:underline}
+
   .banner{
     display:none;background:#fff4e5;color:#7a4b00;
     border:1px solid #ffd591;border-radius:12px;
@@ -241,6 +275,42 @@
 </style>
 </head>
 <body>
+
+<div class="sheet" id="idSheet" role="dialog" aria-modal="true" aria-labelledby="idTitle">
+  <div class="sheetCard">
+    <h2 id="idTitle">Field Weights 2026</h2>
+    <p>Pick your name, you won't have to enter it again.</p>
+    <select id="idSelect" aria-label="Select your name">
+      <option value="" selected>Select your name</option>
+      <optgroup label="AMs">
+        <option>Jimmy</option>
+        <option>Tom</option>
+        <option>Sawyer</option>
+        <option>Bia</option>
+      </optgroup>
+      <optgroup label="FMs">
+        <option>Oscar</option>
+        <option>Pablo</option>
+        <option>Armando</option>
+        <option>Gerardo</option>
+        <option>Amalia</option>
+        <option>Dave</option>
+      </optgroup>
+      <optgroup label="Office">
+        <option>Jack</option>
+        <option>Jackie</option>
+        <option>David</option>
+        <option>Carl</option>
+        <option>Santiago</option>
+        <option>Vasu</option>
+      </optgroup>
+      <option value="__other">Someone else…</option>
+    </select>
+    <input type="text" id="idOther" placeholder="Your name" hidden aria-label="Your name">
+    <button id="idSave" disabled>Continue</button>
+  </div>
+</div>
+
 <div class="wrap">
 
   <h1>Yield Assumption Using Field&nbsp;Weights&nbsp;Turnout</h1>
@@ -285,6 +355,7 @@
     <label class="chk"><input type="checkbox" id="cmpLbs"> Total lbs</label>
     <label class="cmp" id="cmpRfLabel"><input type="checkbox" id="cmpRf"> Compare with Reforecast Yields</label>
     <div class="spacer"></div>
+    <span class="whoami" id="whoami"></span>
     <button class="link" id="refreshBtn">Refresh</button>
     <span class="savenote" id="savenote"></span>
   </div>
@@ -406,6 +477,78 @@ function showBanner(msg){
   b.textContent = msg; b.classList.add("show");
 }
 
+/* ---------- who's viewing ----------
+   Asked once per browser and kept in localStorage, then sent with every request
+   so the sheet can log who opened the page and when. Not an auth check — nobody
+   signs in, and a determined person can type anything. It answers "has anyone
+   on the team looked at their numbers", which is the actual question. */
+const VIEWER_KEY = "glf-fw-2026-viewer";
+const LOGGED_KEY = "glf-fw-2026-logged";   // sessionStorage: one log per tab
+
+function getViewer(){
+  try{ return localStorage.getItem(VIEWER_KEY) || ""; }catch(e){ return ""; }
+}
+function setViewer(name){
+  try{ localStorage.setItem(VIEWER_KEY, name); }catch(e){}
+  paintViewer();
+}
+function paintViewer(){
+  const el = document.getElementById("whoami");
+  if(!el) return;
+  const v = getViewer();
+  el.innerHTML = v
+    ? `Viewing as ${v}<button type="button" id="notMe">Change</button>`
+    : "";
+  const btn = document.getElementById("notMe");
+  if(btn) btn.onclick = () => openSheet(true);
+}
+
+/* Fire-and-forget view log. Once per tab, so a manager parked on the page all
+   morning is one row rather than one per refresh. Failure is silent — a logging
+   problem should never keep the numbers off the screen. */
+function logView(){
+  const v = getViewer();
+  if(!v || API_URL === "PASTE_YOUR_WEB_APP_URL_HERE") return;
+  try{ if(sessionStorage.getItem(LOGGED_KEY)) return; }catch(e){}
+  const url = API_URL + (API_URL.includes("?") ? "&" : "?")
+    + "log=1&u=" + encodeURIComponent(v) + "&_=" + Date.now();
+  fetch(url, {cache:"no-store", mode:"no-cors"}).catch(()=>{});
+  try{ sessionStorage.setItem(LOGGED_KEY, "1"); }catch(e){}
+}
+
+function openSheet(force){
+  const sheet = document.getElementById("idSheet");
+  const sel   = document.getElementById("idSelect");
+  const other = document.getElementById("idOther");
+  const save  = document.getElementById("idSave");
+  if(!sheet) return;
+  if(getViewer() && !force) return;
+
+  sel.value = ""; other.value = ""; other.hidden = true; save.disabled = true;
+  sheet.classList.add("show");
+  sel.focus();
+
+  const chosen = () => sel.value === "__other" ? other.value.trim() : sel.value;
+  const sync = () => {
+    other.hidden = sel.value !== "__other";
+    save.disabled = !chosen();
+    if(sel.value === "__other" && document.activeElement === sel) other.focus();
+  };
+  sel.onchange = sync;
+  other.oninput = sync;
+  other.onkeydown = e => { if(e.key === "Enter" && chosen()) save.click(); };
+  save.onclick = () => {
+    const name = chosen();
+    if(!name) return;
+    setViewer(name);
+    sheet.classList.remove("show");
+    /* a fresh name is a fresh visit worth logging, even mid-session */
+    try{ sessionStorage.removeItem(LOGGED_KEY); }catch(e){}
+    logView();
+    loadData(false);
+  };
+}
+
 /* ---------- data loading (Apps Script JSON) ---------- */
 async function loadData(initial){
   // 1) INSTANT: paint from cache and don't wait on anything.
@@ -429,7 +572,9 @@ async function loadData(initial){
   //    Only a manual Refresh shows a working state; initial load stays silent.
   if(!initial) setNote("Refreshing…");
   try{
-    const url = API_URL + (API_URL.includes("?") ? "&" : "?") + (initial ? "" : "bust=1&") + "_=" + Date.now();
+    const who = getViewer();
+    const url = API_URL + (API_URL.includes("?") ? "&" : "?") + (initial ? "" : "bust=1&")
+      + (who ? "u=" + encodeURIComponent(who) + "&" : "") + "_=" + Date.now();
     const res = await fetch(url, {cache:"no-store"});
     if(!res.ok) throw new Error("HTTP "+res.status);
     const data = await res.json();
@@ -495,8 +640,6 @@ function render(){
         <span class="fbar" title="Share of blocks finished"><i data-fbar="${farm}"></i></span>
         <span class="fright">
           <span class="fdone" data-fdone="${farm}"></span>
-          <span class="fvar" data-fvar="${farm}"></span>
-          <span class="flbs" data-flbs="${farm}"></span>
         </span>
       </button></td>`;
     tbody.appendChild(ftr);
@@ -543,10 +686,8 @@ function refreshTotals(){
      by that block's acres before summing — otherwise big and small blocks
      would carry equal weight. */
   let rFcst=0, rRfLbs=0, rAc=0, rN=0;
-  const gFcst={}, gDone={}, gN={};
-  /* per-ranch Rfcst rollup, acre-weighted the same way the summary tile is, so
-     the band number and the tile can't disagree */
-  const gRfFcst={}, gRfLbs={};
+  /* per-farm counts only — the band shows progress, not figures */
+  const gDone={}, gN={};
   ROWS.forEach(r => {
     const c = calc(r), f = isFin(r);
     const p25 = parseNum(r.fw25), ac = parseNum(r.acres);
@@ -557,7 +698,7 @@ function refreshTotals(){
     if(ac!=null){acres+=ac;aAc=true}
     if(c.fw!=null){fw+=c.fw;aFW=true}
     if(p25!=null){fw25+=p25;a25=true}
-    if(c.fcst!=null){fcst+=c.fcst;aFc=true;gFcst[r.farm]=(gFcst[r.farm]||0)+c.fcst}
+    if(c.fcst!=null){fcst+=c.fcst;aFc=true}
     if(f){
       fN++;
       if(c.fw!=null) fFW+=c.fw;
@@ -569,8 +710,6 @@ function refreshTotals(){
       }
       if(c.fcst!=null && c.rf!=null && c.rf!==0 && ac!=null && ac!==0){
         rFcst += c.fcst; rRfLbs += c.rf*ac; rAc += ac; rN++;
-        gRfFcst[r.farm] = (gRfFcst[r.farm]||0) + c.fcst;
-        gRfLbs[r.farm]  = (gRfLbs[r.farm]||0)  + c.rf*ac;
       }
     }
   });
@@ -649,21 +788,6 @@ function refreshTotals(){
   document.getElementById("tFcst").textContent = aFc? fmtLbs(fcst):"";
   document.querySelectorAll("[data-fdone]").forEach(el=>{
     const f = el.dataset.fdone; el.textContent = (gDone[f]||0)+"/"+gN[f]+" done";
-  });
-  document.querySelectorAll("[data-fvar]").forEach(el=>{
-    const f = el.dataset.fvar;
-    const base = gRfLbs[f];
-    if(base > 0){
-      const v = (gRfFcst[f] - base) / base * 100;
-      el.innerHTML = varRfHtml(v);
-      el.title = "Forecast vs Rfcst, finished blocks, acre-weighted";
-    }else{
-      el.innerHTML = "";
-    }
-  });
-  document.querySelectorAll("[data-flbs]").forEach(el=>{
-    const f = el.dataset.flbs;
-    el.innerHTML = gFcst[f]!=null ? fmtLbs(gFcst[f])+" <small>lbs</small>" : "";
   });
 }
 
@@ -754,7 +878,11 @@ wireToggle("cmpRf",  "cmpRfLabel",  "rf-on",  "glf-fw-2026-compare-rf", true);
 /* ---------- refresh ---------- */
 document.getElementById("refreshBtn").onclick = () => loadData(false);
 
+/* Data first, then the question. The table paints from cache behind the sheet,
+   so the page never looks like it's gating the numbers behind a form. */
 loadData(true);
+paintViewer();
+if(getViewer()) logView(); else openSheet(false);
 </script>
 </body>
 </html>
