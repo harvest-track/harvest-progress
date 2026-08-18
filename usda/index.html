@@ -600,13 +600,7 @@ function render(){
     th.innerHTML = th.textContent.replace(/[▲▼]/g,"").trim() +
       (th.dataset.s===S.sort ? ` <span class="caret">${S.dir>0?"▲":"▼"}</span>` : "");
   });
-  document.getElementById("footnote").innerHTML =
-    `<b>Every 2026 figure comes from the GLF Yield Master sheet</b> — column S, total field lbs — via its Apps Script feed; lb/ac is computed here from acres. This page is read-only, so the sheet stays the single source of truth. Hit Refresh to pull the latest. A block with no weight yet reads “—” and sits out of the comparison entirely. ` +
-    `Variance counts only blocks with a 2026 entry, on both sides — a part-entered book measured against the full plan would read as a false collapse. ` +
-    `Click any variety row for block detail, including the huller and processor an outstanding weight is sitting with. The 2026 delivery plan is baked into this file — 144 of 180 block-varieties matched it; GLF12-1/2-GH and GLF17-3 (CM/MT/NP) are on this dashboard but have no plan entry yet. ` +
-    `Reforecast and Budget come from the source file's 2026 columns; 2025 Actual is the USDA column. Lbs = acres × lb/ac at block-variety level. ` +
-    `Out of scope here but present in the workbook: the 28 non-bearing block-varieties (GLF15, GLF21, the GLF23 pistachios, GLF5-3 nonpareil, GLF9 pecans) and GLF8 dates.`;
-}
+
 document.getElementById("groupSeg").onclick=e=>{
   const b=e.target.closest("button"); if(!b) return; S.group=b.dataset.g; render();
 };
