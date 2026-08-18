@@ -65,7 +65,9 @@
     background:var(--green);transition:width .5s cubic-bezier(.25,.1,.25,1);
   }
   .meter i.amber{background:var(--amber)}
-  .ysub{font-size:11px;color:var(--secondary);margin-top:10px;font-variant-numeric:tabular-nums;min-height:14px}
+  /* subline is now empty-state only, so it collapses instead of holding a gap */
+  .ysub{font-size:11px;color:var(--secondary);margin-top:10px;font-variant-numeric:tabular-nums}
+  .ysub:empty{display:none}
   .stat .v.neg{color:var(--red)}
   .stat .v.pos{color:var(--green)}
   .chk{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--secondary);cursor:pointer}
@@ -99,15 +101,28 @@
     box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 24px rgba(0,0,0,.04);
     overflow-x:auto;
   }
-  /* Everything reforecast — the two table columns AND the summary tile — is off
-     until "Compare with Reforecast Yields" is on. One switch, one mental model:
-     comparison mode is either on the page or it isn't. The tile keeps computing
-     while hidden, so ticking the box shows a finished number, not an empty one. */
-  .rf{display:none}
+  /* Two independent column groups, same mental model each time: a group is
+     either on the page or it isn't, and the choice sticks.
+       .rf  — everything reforecast (2 columns + its summary tile)
+       .lbs — the Forecast column stated in total pounds, plus its two
+              footer figures
+     Both keep computing while hidden, so flipping a switch reveals a
+     finished number rather than an empty cell. */
+  .rf,.lbs{display:none}
   body.rf-on th.rf,body.rf-on td.rf{display:table-cell}
+  body.rf-on .band .rf{display:inline-block}
   body.rf-on .stat.rf{display:block}
+  body.lbs-on th.lbs,body.lbs-on td.lbs{display:table-cell}
 
-  /* the compare toggle reads as a control, not a footnote — filled when active */
+  /* a hairline where the reforecast group starts, so the two columns read as a
+     zone rather than more of the same */
+  body.rf-on th.grpL,body.rf-on td.grpL{border-left:1px solid var(--hairline)}
+
+  /* the tile leads the summary row and runs larger than its neighbours */
+  body.rf-on .stat.rf{order:-1;background:rgba(0,113,227,.03)}
+  .stat.rf .v{font-size:30px}
+
+  /* the toggles read as controls, not footnotes — filled when active */
   .cmp{
     display:inline-flex;align-items:center;gap:8px;
     font-size:14px;font-weight:500;color:var(--blue);
@@ -119,12 +134,17 @@
   .cmp:hover{background:rgba(0,113,227,.16)}
   .cmp:focus-within{box-shadow:0 0 0 3px rgba(0,113,227,.3)}
   .cmp input{accent-color:var(--blue);width:16px;height:16px;margin:0}
-  body.rf-on .cmp{background:var(--blue);color:#fff}
-  body.rf-on .cmp:hover{background:#0062c4}
-  body.rf-on .cmp input{accent-color:#fff}
+  /* state lives on the label itself so the two toggles light independently */
+  .cmp.on{background:var(--blue);color:#fff}
+  .cmp.on:hover{background:#0062c4}
+  .cmp.on input{accent-color:#fff}
 
-  table{border-collapse:collapse;width:100%;min-width:920px}
-  body.rf-on table{min-width:1080px}
+  /* min-width tracks which column groups are showing, so the default view
+     doesn't inherit a scrollbar it no longer needs */
+  table{border-collapse:collapse;width:100%;min-width:840px}
+  body.lbs-on table{min-width:920px}
+  body.rf-on table{min-width:1020px}
+  body.rf-on.lbs-on table{min-width:1100px}
   thead th{
     font-size:12px;font-weight:500;color:var(--secondary);
     padding:14px 12px 10px;text-align:right;white-space:nowrap;
@@ -165,6 +185,28 @@
   .neg{color:var(--red)}
   .pos{color:var(--green)}
   td.prior{color:var(--secondary)}
+
+  /* the header stops being grey filler once the column is on screen */
+  body.rf-on th.varrf{color:var(--text);font-weight:600}
+
+  /* Every variance in this column is a chip, so the column reads as a row of
+     verdicts rather than more figures. Two levels: a light fill for everything,
+     a heavier one past the material threshold, so real misses still separate
+     themselves without the column shouting all the way down. */
+  .chip{
+    display:inline-block;padding:3px 9px;border-radius:7px;
+    font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;
+  }
+  .chip.neg{background:rgba(255,59,48,.10);color:#c9251c}
+  .chip.pos{background:rgba(52,199,89,.12);color:#1a7f37}
+  .chip.big{font-weight:700}
+  .chip.big.neg{background:rgba(255,59,48,.20)}
+  .chip.big.pos{background:rgba(52,199,89,.24)}
+  .band .chip{font-size:12px;padding:2px 7px}
+
+  /* per-ranch variance on the band, so a collapsed table still shows the read */
+  .fvar{display:none;font-size:12px}
+  body.rf-on .fvar{display:inline-block}
 
   td.st{text-align:center;width:64px}
   .dot{
@@ -222,7 +264,7 @@
       <div class="meter"><i id="mClosed"></i></div>
     </div>
     <div class="stat">
-      <div class="k">Field weight /acre <small>finished blocks</small></div>
+      <div class="k">Field Weight YOY</div>
       <div class="v" id="sFWAc"></div>
       <div class="ysub" id="sFWAcSub"></div>
     </div>
@@ -240,7 +282,8 @@
     <button class="link" id="expandAll">Expand all</button>
     <button class="link" id="collapseAll">Collapse all</button>
     <label class="chk"><input type="checkbox" id="onlyFin"> Finished only</label>
-    <label class="cmp"><input type="checkbox" id="cmpRf"> Compare with Reforecast Yields</label>
+    <label class="chk"><input type="checkbox" id="cmpLbs"> Total lbs</label>
+    <label class="cmp" id="cmpRfLabel"><input type="checkbox" id="cmpRf"> Compare with Reforecast Yields</label>
     <div class="spacer"></div>
     <button class="link" id="refreshBtn">Refresh</button>
     <span class="savenote" id="savenote"></span>
@@ -254,13 +297,13 @@
           <th class="c">All Pickups?</th>
           <th class="c">All Tickets Submitted?</th>
           <th>Field Weight</th>
-          <th>FW '25</th>
-          <th>Var vs '25</th>
+          <th class="y25">FW '25</th>
+          <th class="y25">Var vs '25</th>
           <th>Turnout Assumption</th>
-          <th>Forecast</th>
+          <th class="lbs">Forecast</th>
           <th>Forecast lb/acre</th>
-          <th class="rf">Rfcst lb/acre</th>
-          <th class="rf">Var vs Rfcst</th>
+          <th class="rf varrf">Var vs Rfcst</th>
+          <th class="rf grpL">Rfcst lb/acre</th>
         </tr>
       </thead>
       <tbody id="tbody"></tbody>
@@ -268,18 +311,18 @@
         <tr>
           <td colspan="3">Total</td>
           <td id="tFW"></td>
-          <td id="tFW25"></td><td></td><td></td>
-          <td id="tFcst"></td>
+          <td class="y25" id="tFW25"></td><td class="y25"></td><td></td>
+          <td class="lbs" id="tFcst"></td>
           <td></td>
-          <td class="rf"></td><td class="rf"></td>
+          <td class="rf varrf"></td><td class="rf grpL"></td>
         </tr>
         <tr class="sub">
           <td colspan="3">Finished blocks only</td>
           <td id="tfFW"></td>
-          <td id="tfFW25"></td><td id="tfVar"></td><td></td>
-          <td id="tfFcst"></td>
+          <td class="y25" id="tfFW25"></td><td class="y25" id="tfVar"></td><td></td>
+          <td class="lbs" id="tfFcst"></td>
           <td id="tfFcstAc"></td>
-          <td class="rf" id="tfRfAc"></td><td class="rf" id="tfRfVar"></td>
+          <td class="rf varrf" id="tfRfVar"></td><td class="rf grpL" id="tfRfAc"></td>
         </tr>
       </tfoot>
     </table>
@@ -331,6 +374,16 @@ function calc(r){
 function isFin(r){ return Number(r.pickup) === 2 && Number(r.tickets) === 2; }
 const pctTxt = v => (v>=0?"+":"") + fmt1.format(v) + "%";
 const signCls = v => v==null ? "" : (v<0 ? "neg" : (v>0 ? "pos" : ""));
+
+/* Anything this far off the reforecast is worth a second look; inside it is
+   noise you don't want shouting. Single knob — raise or lower to taste. */
+const MATERIAL_VAR = 5;
+function varRfHtml(v){
+  if(v == null) return "";
+  const cls = v < 0 ? "neg" : "pos";
+  const big = Math.abs(v) >= MATERIAL_VAR ? " big" : "";
+  return `<span class="chip ${cls}${big}">${pctTxt(v)}</span>`;
+}
 
 /* per-acre variance vs '25 — also gated on tickets */
 function derive(r){
@@ -442,6 +495,7 @@ function render(){
         <span class="fbar" title="Share of blocks finished"><i data-fbar="${farm}"></i></span>
         <span class="fright">
           <span class="fdone" data-fdone="${farm}"></span>
+          <span class="fvar" data-fvar="${farm}"></span>
           <span class="flbs" data-flbs="${farm}"></span>
         </span>
       </button></td>`;
@@ -460,13 +514,13 @@ function render(){
         <td class="st"><span class="dot" data-state="${r.pickup}" title="${statusLabel(r.pickup)}"></span></td>
         <td class="st"><span class="dot" data-state="${r.tickets}" title="${statusLabel(r.tickets)}"></span></td>
         <td>${r.fw!=="" && r.fw!=null ? fmt0.format(r.fw) : ""}</td>
-        <td class="prior">${r.fw25!=="" && r.fw25!=null ? fmt0.format(r.fw25) : ""}</td>
-        <td class="${signCls(vn)}">${r.varAc!=="" && r.varAc!=null ? fmt1.format(r.varAc)+"%" : ""}</td>
+        <td class="y25 prior">${r.fw25!=="" && r.fw25!=null ? fmt0.format(r.fw25) : ""}</td>
+        <td class="y25 ${signCls(vn)}">${r.varAc!=="" && r.varAc!=null ? fmt1.format(r.varAc)+"%" : ""}</td>
         <td>${r.assump!=="" && r.assump!=null ? r.assump+"%" : ""}</td>
-        <td class="calcv">${fmtLbs(c.fcst)}</td>
+        <td class="lbs calcv">${fmtLbs(c.fcst)}</td>
         <td class="calcv">${c.fcstAc!=null ? fmt0.format(c.fcstAc) : ""}</td>
-        <td class="rf prior">${c.rf!=null ? fmt0.format(c.rf) : ""}</td>
-        <td class="rf ${signCls(c.varRf)}">${c.varRf!=null ? pctTxt(c.varRf) : ""}</td>`;
+        <td class="rf varrf">${varRfHtml(c.varRf)}</td>
+        <td class="rf grpL prior">${c.rf!=null ? fmt0.format(c.rf) : ""}</td>`;
       tbody.appendChild(tr);
     });
   });
@@ -490,6 +544,9 @@ function refreshTotals(){
      would carry equal weight. */
   let rFcst=0, rRfLbs=0, rAc=0, rN=0;
   const gFcst={}, gDone={}, gN={};
+  /* per-ranch Rfcst rollup, acre-weighted the same way the summary tile is, so
+     the band number and the tile can't disagree */
+  const gRfFcst={}, gRfLbs={};
   ROWS.forEach(r => {
     const c = calc(r), f = isFin(r);
     const p25 = parseNum(r.fw25), ac = parseNum(r.acres);
@@ -512,6 +569,8 @@ function refreshTotals(){
       }
       if(c.fcst!=null && c.rf!=null && c.rf!==0 && ac!=null && ac!==0){
         rFcst += c.fcst; rRfLbs += c.rf*ac; rAc += ac; rN++;
+        gRfFcst[r.farm] = (gRfFcst[r.farm]||0) + c.fcst;
+        gRfLbs[r.farm]  = (gRfLbs[r.farm]||0)  + c.rf*ac;
       }
     }
   });
@@ -532,7 +591,9 @@ function refreshTotals(){
 
   /* Field weight per acre, '26 vs '25, finished blocks only. Same acres on both
      sides. No turnout involved, so this is a pure volume read — it does not move
-     when an Assumption is edited. Field weight, not meats. */
+     when an Assumption is edited. Field weight, not meats.
+     The subline is empty-state only now: a number needs no caption, but a blank
+     tile would read as broken, so the reason for the blank still gets said. */
   const wv = document.getElementById("sFWAc");
   const wsub = document.getElementById("sFWAcSub");
   if(wv){
@@ -540,8 +601,7 @@ function refreshTotals(){
       const vW = (wFW/wAc - wFW25/wAc) / (wFW25/wAc) * 100;
       wv.textContent = pctTxt(vW);
       wv.className = "v " + (vW<0?"neg":"pos");
-      /* coverage against ALL blocks, so a thin read can never look complete */
-      if(wsub) wsub.textContent = wN+" of "+ROWS.length+" blocks";
+      if(wsub) wsub.textContent = "";
     }else{
       wv.textContent = ""; wv.className = "v";
       if(wsub) wsub.textContent = fN? "no FW '25 to compare" : "no finished blocks yet";
@@ -559,7 +619,7 @@ function refreshTotals(){
     if(vRf!=null){
       rv.textContent = pctTxt(vRf);
       rv.className = "v " + (vRf<0?"neg":"pos");
-      if(rsub) rsub.textContent = rN+" of "+ROWS.length+" blocks";
+      if(rsub) rsub.textContent = "";
     }else{
       rv.textContent = ""; rv.className = "v";
       if(rsub) rsub.textContent = fN? "no Rfcst to compare" : "no finished blocks yet";
@@ -572,9 +632,11 @@ function refreshTotals(){
   set("tfFcstAc", (fFcst&&fAc)? fmt0.format(fFcst/fAc):"");
   set("tfRfAc", (rN>0 && rAc>0)? fmt0.format(rRfLbs/rAc):"");
   const tv=document.getElementById("tfVar");
-  if(tv){ tv.textContent = vFin==null? "" : pctTxt(vFin); tv.className = vFin==null? "" : (vFin<0?"neg":"pos"); }
+  if(tv){ tv.textContent = vFin==null? "" : pctTxt(vFin); tv.className = "y25 " + (vFin==null? "" : (vFin<0?"neg":"pos")); }
+  /* the footer read gets the same chip treatment as the cells above it, so the
+     column reads consistently top to bottom */
   const trv=document.getElementById("tfRfVar");
-  if(trv){ trv.textContent = vRf==null? "" : pctTxt(vRf); trv.className = vRf==null? "" : (vRf<0?"neg":"pos"); }
+  if(trv){ trv.innerHTML = varRfHtml(vRf); }
 
   document.querySelectorAll("[data-fbar]").forEach(el=>{
     const f = el.dataset.fbar; el.style.width = (gN[f]? (gDone[f]||0)/gN[f]*100 : 0)+"%";
@@ -587,6 +649,17 @@ function refreshTotals(){
   document.getElementById("tFcst").textContent = aFc? fmtLbs(fcst):"";
   document.querySelectorAll("[data-fdone]").forEach(el=>{
     const f = el.dataset.fdone; el.textContent = (gDone[f]||0)+"/"+gN[f]+" done";
+  });
+  document.querySelectorAll("[data-fvar]").forEach(el=>{
+    const f = el.dataset.fvar;
+    const base = gRfLbs[f];
+    if(base > 0){
+      const v = (gRfFcst[f] - base) / base * 100;
+      el.innerHTML = varRfHtml(v);
+      el.title = "Forecast vs Rfcst, finished blocks, acre-weighted";
+    }else{
+      el.innerHTML = "";
+    }
   });
   document.querySelectorAll("[data-flbs]").forEach(el=>{
     const f = el.dataset.flbs;
@@ -640,21 +713,43 @@ document.getElementById("onlyFin").addEventListener("change", e => {
   onlyFinished = e.target.checked; applyFilters();
 });
 
-/* ---------- compare with Reforecast Yields ---------- */
-/* One switch for everything reforecast: the two table columns and the summary
-   tile. The choice sticks, so someone who works in comparison mode isn't
-   re-clicking it every morning. Applied before the first paint — no flash. */
-const RF_KEY = "glf-fw-2026-compare-rf";
-function setCompareRf(on){
-  document.body.classList.toggle("rf-on", on);
-  try{ localStorage.setItem(RF_KEY, on ? "1" : "0"); }catch(e){}
+/* ---------- column-group toggles ---------- */
+/* One helper for both switches. Each owns a body class (which columns show) and
+   optionally a label class (whether the control fills in) and a storage key
+   (whether the choice sticks between visits). Applied before the first paint,
+   so no flash. */
+function wireToggle(boxId, labelId, bodyClass, storageKey, defaultOn){
+  const box = document.getElementById(boxId);
+  /* labelId is optional — pass null for a plain checkbox that shouldn't fill in */
+  const label = labelId ? document.getElementById(labelId) : null;
+  /* storageKey is optional too — pass null for a toggle that shouldn't stick,
+     so every load starts from defaultOn */
+  const apply = on => {
+    document.body.classList.toggle(bodyClass, on);
+    if(label) label.classList.toggle("on", on);
+    if(storageKey){ try{ localStorage.setItem(storageKey, on ? "1" : "0"); }catch(e){} }
+  };
+  let saved = defaultOn;
+  if(storageKey){
+    try{
+      const v = localStorage.getItem(storageKey);
+      if(v !== null) saved = (v === "1");
+    }catch(e){}
+  }
+  box.checked = saved;
+  apply(saved);
+  box.addEventListener("change", e => apply(e.target.checked));
 }
-const rfBox = document.getElementById("cmpRf");
-let rfSaved = false;
-try{ rfSaved = localStorage.getItem(RF_KEY) === "1"; }catch(e){}
-rfBox.checked = rfSaved;
-setCompareRf(rfSaved);
-rfBox.addEventListener("change", e => setCompareRf(e.target.checked));
+
+/* Total lbs starts unchecked every load — Forecast lb/acre is the everyday read,
+   and the pound column is a peek, not a working mode. Plain checkbox, no fill,
+   no persistence. The clear-out below drops any preference saved by an earlier
+   version of this page, so a stale "1" can't bring the column back. */
+try{ localStorage.removeItem("glf-fw-2026-total-lbs"); }catch(e){}
+wireToggle("cmpLbs", null, "lbs-on", null, false);
+/* Compare mode is on by default through harvest — Forecast vs Reforecast is the
+   everyday read, not the peek. Anyone who turns it off keeps it off. */
+wireToggle("cmpRf",  "cmpRfLabel",  "rf-on",  "glf-fw-2026-compare-rf", true);
 
 /* ---------- refresh ---------- */
 document.getElementById("refreshBtn").onclick = () => loadData(false);
