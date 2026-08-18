@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>2026 USDA Harvest Results</title>
+<style>
+  :root{
+    --bg:#f5f5f7;
+    --card:#ffffff;
+    --text:#1d1d1f;
+    --secondary:#86868b;
+    --hairline:rgba(0,0,0,.08);
+    --hairline-soft:rgba(0,0,0,.05);
+    --green:#34c759;
+    --amber:#ff9f0a;
+    --red:#ff3b30;
+    --blue:#0071e3;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:14px;-webkit-font-smoothing:antialiased;
+    padding:48px 24px 96px;
+  }
+  .wrap{max-width:1240px;margin:0 auto}
+
+  .head{display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between}
+  h1{font-size:34px;font-weight:700;letter-spacing:-.025em;line-height:1.1}
+
+  /* segmented control — the one place a choice is made */
+  .seg{display:inline-flex;background:rgba(0,0,0,.05);border-radius:10px;padding:2px}
+  .seg button{
+    font:inherit;font-size:13px;font-weight:500;color:var(--text);
+    border:none;background:none;padding:7px 15px;border-radius:8px;cursor:pointer;
+    white-space:nowrap;transition:background .15s ease,box-shadow .15s ease;
+  }
+  .seg button:hover{color:#000}
+  .seg button[aria-pressed="true"]{background:var(--card);box-shadow:0 1px 2px rgba(0,0,0,.1)}
+  .seg button:focus-visible{outline:2px solid var(--blue);outline-offset:1px}
+  .seglab{font-size:12px;font-weight:500;color:var(--secondary);margin-right:10px}
+
+  /* summary tiles */
+  .summary{
+    display:flex;flex-wrap:wrap;background:var(--card);border-radius:18px;
+    box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 24px rgba(0,0,0,.04);
+    margin:26px 0 22px;overflow:hidden;
+  }
+  .stat{flex:1 1 230px;min-width:200px;padding:18px 22px 17px;border-right:1px solid var(--hairline-soft)}
+  .stat:last-child{border-right:none}
+  .stat .k{font-size:12px;font-weight:500;color:var(--secondary)}
+  .stat .v{font-size:25px;font-weight:600;letter-spacing:-.02em;margin-top:5px;font-variant-numeric:tabular-nums}
+  .stat .v small{font-size:14px;font-weight:400;color:var(--secondary);margin-left:3px}
+  .stat .v.mute{color:var(--secondary);font-weight:500}
+  .ysub{font-size:11.5px;color:var(--secondary);margin-top:9px;font-variant-numeric:tabular-nums;min-height:14px}
+  .neg{color:var(--red)} .pos{color:var(--green)}
+  .stat .k small{font-weight:400;color:var(--secondary)}
+  .meter{height:4px;background:rgba(0,0,0,.06);border-radius:2px;margin-top:11px;overflow:hidden}
+  .meter i{display:block;height:100%;border-radius:2px;background:var(--green);
+    transition:width .5s cubic-bezier(.25,.1,.25,1)}
+
+  .cols{display:grid;grid-template-columns:minmax(0,318px) minmax(0,1fr);gap:22px;align-items:start}
+  .card{
+    background:var(--card);border-radius:18px;min-width:0;
+    box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 24px rgba(0,0,0,.04);
+  }
+  .card>header{padding:17px 20px 4px;display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+  .card h2{font-size:16px;font-weight:600;letter-spacing:-.01em}
+  .card h2 span{color:var(--secondary);font-weight:500}
+  .cap{font-size:12px;color:var(--secondary)}
+
+  /* variance ladder */
+  .ladder{padding:8px 8px 6px}
+  .rung{
+    all:unset;display:grid;grid-template-columns:54px 1fr 74px;align-items:center;gap:10px;
+    width:100%;box-sizing:border-box;padding:5px 12px;border-radius:8px;cursor:pointer;
+  }
+  .rung:hover{background:rgba(0,0,0,.03)}
+  .rung:focus-visible{outline:2px solid var(--blue);outline-offset:-2px}
+  .rung .code{font-size:13px;font-weight:600;color:var(--text);letter-spacing:-.01em}
+  .track{position:relative;height:12px}
+  .track:before{content:"";position:absolute;left:50%;top:-6px;bottom:-6px;width:1px;background:var(--hairline-soft)}
+  .bar{position:absolute;top:2px;height:8px;border-radius:4px;transition:width .4s cubic-bezier(.25,.1,.25,1)}
+  .rung .num{font-size:12px;text-align:right;font-variant-numeric:tabular-nums;color:var(--secondary)}
+  .ladfoot{display:flex;justify-content:space-between;font-size:11px;color:var(--secondary);
+    padding:8px 20px 16px;font-variant-numeric:tabular-nums}
+
+  /* tools */
+  .tools{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:14px 20px 12px}
+  select,input[type=search]{
+    font:inherit;font-size:13.5px;color:var(--text);
+    border:none;border-radius:10px;background:rgba(0,0,0,.05);
+    padding:8px 12px;outline:none;-webkit-appearance:none;appearance:none;cursor:pointer;
+  }
+  select{padding-right:26px;max-width:168px;text-overflow:ellipsis;background-image:linear-gradient(45deg,transparent 50%,var(--secondary) 50%),linear-gradient(135deg,var(--secondary) 50%,transparent 50%);
+    background-position:calc(100% - 14px) 55%,calc(100% - 9px) 55%;background-size:5px 5px,5px 5px;background-repeat:no-repeat}
+  input[type=search]{cursor:text;width:150px}
+  select:focus-visible,input:focus-visible{box-shadow:0 0 0 3px rgba(0,113,227,.3)}
+  .link{font:inherit;font-size:13.5px;color:var(--blue);background:none;border:none;cursor:pointer;padding:4px 2px}
+  .link:hover{text-decoration:underline}
+  .link:focus-visible{outline:2px solid var(--blue);outline-offset:2px;border-radius:4px}
+  .chk{display:inline-flex;align-items:center;gap:6px;font-size:13.5px;color:var(--secondary);cursor:pointer;white-space:nowrap}
+  .chk input{accent-color:var(--blue);width:15px;height:15px;margin:0}
+  .tools .right{margin-left:auto;display:inline-flex;gap:14px;align-items:center}
+  @media (max-width:1100px){.tools .right{margin-left:0}}
+
+  /* table — lines only where a line means something */
+  .scroll{overflow-x:auto;min-width:0;border-radius:0 0 18px 18px}
+  table{border-collapse:collapse;width:100%;min-width:780px}
+  thead th{
+    font-size:12px;font-weight:500;color:var(--secondary);
+    padding:12px 14px 10px;text-align:right;white-space:nowrap;
+    border-bottom:1px solid var(--hairline);
+    position:sticky;top:0;background:var(--card);z-index:2;cursor:pointer;
+  }
+  thead th:first-child{text-align:left;padding-left:20px}
+  thead th:hover{color:var(--text)}
+  thead th .caret{color:var(--blue);font-size:9px;vertical-align:1px}
+
+  td{padding:7px 14px;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+  td:first-child{text-align:left}
+  tr.lv1 td{padding-top:12px;padding-bottom:12px;border-top:1px solid rgba(0,0,0,.04);cursor:pointer}
+  tr.lv1:first-child td{border-top:none}
+  tr.lv1 td:first-child{font-size:15px;font-weight:600;letter-spacing:-.01em;padding-left:20px}
+  tr.lv1:hover td{background:rgba(0,0,0,.02)}
+  tr.lv2 td{cursor:pointer}
+  tr.lv2 td:first-child{padding-left:38px;font-weight:500}
+  tr.lv2:hover td{background:rgba(0,0,0,.02)}
+  tr.lv3 td{color:var(--secondary)}
+  tr.lv3 td:first-child{padding-left:58px}
+  tr.lv3 td.hold{color:var(--text);font-weight:500}
+  tr.pend td{color:var(--secondary)}
+  tr.pend td:first-child{font-weight:500}
+  .chev{display:inline-block;width:6px;height:6px;margin-right:9px;vertical-align:1px;
+    border-right:1.5px solid var(--secondary);border-bottom:1.5px solid var(--secondary);
+    transform:rotate(-45deg);transition:transform .18s ease}
+  tr.open>td .chev{transform:rotate(45deg)}
+  .chev.none{border:none}
+  .tag{font-size:11px;color:var(--secondary);margin-left:8px;font-weight:400}
+  .yin{
+    width:66px;font:inherit;font-size:13px;font-variant-numeric:tabular-nums;
+    text-align:right;color:var(--blue);background:rgba(0,113,227,.08);
+    border:none;border-radius:7px;padding:3px 7px;-moz-appearance:textfield;
+  }
+  .yin:hover{background:rgba(0,113,227,.14)}
+  .yin:focus{outline:none;box-shadow:0 0 0 3px rgba(0,113,227,.3)}
+  .yin::-webkit-outer-spin-button,.yin::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+  tfoot td{padding:14px;font-weight:600;border-top:1px solid var(--hairline);background:rgba(0,0,0,.015)}
+  tfoot td:first-child{padding-left:20px}
+  .empty{padding:34px 20px;color:var(--secondary)}
+  .banner{display:none;background:#fff4e5;color:#7a4b00;border:1px solid #ffd591;
+    border-radius:12px;padding:11px 15px;font-size:13px;line-height:1.5;margin:22px 0 -4px}
+  .banner.show{display:block}
+  .banner code{background:rgba(0,0,0,.06);border-radius:4px;padding:1px 5px;font-size:12px}
+  .savenote{font-size:12px;color:var(--secondary);white-space:nowrap}
+  .savenote.err{color:var(--red)}
+  .yin.mine{color:var(--amber);background:rgba(255,159,10,.12)}
+  .yin.mine:hover{background:rgba(255,159,10,.2)}
+  .note{font-size:12px;color:var(--secondary);margin-top:16px;line-height:1.7;max-width:860px}
+  .note b{color:var(--text);font-weight:500}
+
+  @media (max-width:980px){
+    .cols{grid-template-columns:minmax(0,1fr)}
+    body{padding:24px 12px 60px}
+    h1{font-size:27px}
+  }
+  @media (max-width:700px){
+    .head{align-items:flex-start}
+    .head>div{flex-direction:column;align-items:flex-start!important;gap:8px;width:100%}
+    .seglab{margin:0}
+    .seg{width:100%}
+    .seg button{flex:1;padding:8px 6px;font-size:12.5px}
+    .summary{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--hairline-soft)}
+    .stat{background:var(--card);border-right:none;padding:14px 16px;min-width:0}
+    .stat .v{font-size:21px}
+    input[type=search]{width:100%}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="head">
+    <h1>2026 USDA Harvest Results</h1>
+    <div style="display:flex;align-items:center">
+      <span class="seglab">Compare with</span>
+      <div class="seg" id="basis" role="group" aria-label="Comparison basis">
+        <button data-b="y25" aria-pressed="false">2025 Actual</button>
+        <button data-b="yrf" aria-pressed="true">2026 Reforecast</button>
+        <button data-b="ybd" aria-pressed="false">2026 Budget</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="banner" id="banner"></div>
+
+  <div class="summary" id="tote"></div>
+
+  <div class="cols">
+    <section class="card">
+      <header><h2>Variance by ranch <span id="ladderCount"></span></h2></header>
+      <div class="ladder" id="ladder"></div>
+      <div class="ladfoot"><span id="scaleL"></span><span id="ladderNote"></span><span id="scaleR"></span></div>
+    </section>
+
+    <section class="card">
+      <div class="tools">
+        <input type="search" id="q" placeholder="Search" aria-label="Search block or variety">
+        <select id="fFund"></select>
+        <select id="fClass"></select>
+        <select id="fAM"></select>
+        <select id="fFM"></select>
+        <button class="link" id="tExpand">Expand all</button>
+        <span class="right">
+          <span class="savenote" id="status"></span>
+          <button class="link" id="refreshBtn">Refresh</button>
+          <button class="link" id="reset" hidden>Clear my edits</button>
+          <button class="link" id="dl">Export CSV</button>
+        </span>
+      </div>
+      <div class="scroll">
+        <table id="grid">
+          <thead><tr>
+            <th data-s="name">Ranch / block / variety</th>
+            <th data-s="ac">Acres</th>
+            <th data-s="y26">2026 lb/ac</th>
+            <th data-s="yb">Basis lb/ac</th>
+            <th data-s="l26">2026 lbs</th>
+            <th data-s="dl">Var lbs</th>
+            <th data-s="dp">Var %</th>
+          </tr></thead>
+          <tbody id="body"></tbody>
+          <tfoot id="foot"></tfoot>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <p class="note" id="footnote"></p>
+</div>
+
+<script>
+/* ============================================================
+   1. PASTE YOUR APPS SCRIPT WEB APP URL BELOW.
+      In the GLF Yield Master sheet: Extensions ▸ Apps Script, paste
+      AppsScript_Code.gs, Deploy ▸ Web app (Execute as: Me · Access: Anyone),
+      copy the /exec URL.
+
+      The script exposes only two fields — Block-Variety and 2026 Harvest lbs.
+      Acres, budget, reforecast and everything else in the workbook stay
+      private; this page already holds its own copy of the reference data and
+      computes lb/ac from acres itself.
+   ============================================================ */
+const API_URL = "https://script.google.com/macros/s/AKfycbzbw0AVIEqM_y2zRXyGf8mFuGi4KBM2HGw5gn7UAAFN7fM_046DzmpkByhG9jnqDGEB/exec";
+const KEY_HEADER = "Block-Variety";
+const LBS_HEADER = "2026 Harvest lbs";
+const CACHE_KEY = "glf-usda-harvest-2026-v1";
+
+/* Block-varieties that live in the master but not on this dashboard: the
+   non-bearing plantings and GLF8 dates. Silently skipped — but if a real weight
+   shows up against one, that's lbs going missing, so we say so. */
+const OUT_OF_SCOPE = new Set(["GLF15-2A-GH","GLF15-2B-GH","GLF15-2C-GH","GLF15-2D-GH","GLF15-3A-GH","GLF15-3B-GH","GLF15-3C-GH","GLF15-3D-GH","GLF21-4A-KR","GLF21-4B-KR","GLF21-4C-KR","GLF21-4D-KR","GLF21-5A-KR","GLF21-5B-KR","GLF21-5C-KR","GLF21-5D-KR","GLF21-6A-KR","GLF21-6B-KR","GLF21-6C-KR","GLF21-6D-KR","GLF21-7-KR","GLF23-1-GH","GLF23-2-GH","GLF23-3-GH","GLF23-4-GH","GLF23-6-GH","GLF5-3-BH","GLF8-N30E-MJ","GLF8-N30W-MJ","GLF8-P7E-MJ","GLF8-P7W-MJ","GLF9-1AP-PC"]);
+
+const DATA = [{"rn":"GLF1","hb":"GLF1-1","bv":"GLF1-1-MT","vr":"monterey","fd":"GLF LP","cl":"Rollback Almonds","am":"Jimmy Gill","fm":"Oscar","ac":32.98,"y25":860,"ybd":1600,"yrf":1800,"y26":null},{"rn":"GLF1","hb":"GLF1-1","bv":"GLF1-1-NP","vr":"nonpareil","fd":"GLF LP","cl":"Rollback Almonds","am":"Jimmy Gill","fm":"Oscar","ac":65.95,"y25":810,"ybd":1600,"yrf":1600,"y26":null},{"rn":"GLF1","hb":"GLF1-1","bv":"GLF1-1-WC","vr":"wood colony","fd":"GLF LP","cl":"Rollback Almonds","am":"Jimmy Gill","fm":"Oscar","ac":32.98,"y25":747,"ybd":1600,"yrf":1450,"y26":null},{"rn":"GLF10","hb":"GLF10-NE","bv":"GLF10-NE-ID","vr":"independence","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Pablo","ac":34.03,"y25":487,"ybd":1200,"yrf":1100,"y26":null},{"rn":"GLF10","hb":"GLF10-NE","bv":"GLF10-NE-MT","vr":"monterey","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Pablo","ac":34.03,"y25":728,"ybd":1400,"yrf":1300,"y26":null},{"rn":"GLF10","hb":"GLF10-NE","bv":"GLF10-NE-NP","vr":"nonpareil","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Pablo","ac":68.05,"y25":603,"ybd":1200,"yrf":1300,"y26":null},{"rn":"GLF10","hb":"GLF10-NW","bv":"GLF10-NW-ID","vr":"independence","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Pablo","ac":39.39,"y25":375,"ybd":1200,"yrf":1100,"y26":null},{"rn":"GLF10","hb":"GLF10-NW","bv":"GLF10-NW-MT","vr":"monterey","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Pablo","ac":39.39,"y25":652,"ybd":1400,"yrf":1400,"y26":null},{"rn":"GLF10","hb":"GLF10-NW","bv":"GLF10-NW-NP","vr":"nonpareil","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Pablo","ac":78.8,"y25":479,"ybd":1200,"yrf":1350,"y26":null},{"rn":"GLF10","hb":"GLF10-SE","bv":"GLF10-SE-ID","vr":"independence","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Pablo","ac":35.3,"y25":453,"ybd":1000,"yrf":1200,"y26":null},{"rn":"GLF10","hb":"GLF10-SE","bv":"GLF10-SE-MT","vr":"monterey","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Pablo","ac":35.3,"y25":488,"ybd":1200,"yrf":1400,"y26":null},{"rn":"GLF10","hb":"GLF10-SE","bv":"GLF10-SE-NP","vr":"nonpareil","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Pablo","ac":70.61,"y25":524,"ybd":1200,"yrf":1350,"y26":null},{"rn":"GLF10","hb":"GLF10-SW","bv":"GLF10-SW-ID","vr":"independence","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Pablo","ac":33.26,"y25":595,"ybd":1000,"yrf":1100,"y26":null},{"rn":"GLF10","hb":"GLF10-SW","bv":"GLF10-SW-MT","vr":"monterey","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Pablo","ac":33.26,"y25":860,"ybd":1200,"yrf":1400,"y26":null},{"rn":"GLF10","hb":"GLF10-SW","bv":"GLF10-SW-NP","vr":"nonpareil","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Pablo","ac":66.52,"y25":841,"ybd":1200,"yrf":1400,"y26":null},{"rn":"GLF11","hb":"GLF11-N","bv":"GLF11-N-KR","vr":"Kerman","fd":"GLF LP","cl":"Conventional Pistachios","am":"Jimmy Gill","fm":"Amalia","ac":191.42,"y25":2003,"ybd":1500,"yrf":1800,"y26":null},{"rn":"GLF11","hb":"GLF11-S","bv":"GLF11-S-KR","vr":"Kerman","fd":"GLF LP","cl":"Conventional Pistachios","am":"Jimmy Gill","fm":"Amalia","ac":132.82,"y25":3140,"ybd":2000,"yrf":1600,"y26":null},{"rn":"GLF12","hb":"GLF12-1","bv":"GLF12-1-GH","vr":"Golden Hills","fd":"GLF OZ","cl":"Immature Conventional Pistachios","am":"Jimmy Gill","fm":"Amalia","ac":113.75,"y25":0,"ybd":200,"yrf":0,"y26":null},{"rn":"GLF12","hb":"GLF12-2","bv":"GLF12-2-GH","vr":"Golden Hills","fd":"GLF OZ","cl":"Immature Conventional Pistachios","am":"Jimmy Gill","fm":"Amalia","ac":164.12,"y25":0,"ybd":200,"yrf":0,"y26":null},{"rn":"GLF13","hb":"GLF13-AN","bv":"GLF13-AN-MT","vr":"monterey","fd":"GLF LP","cl":"Conventional Almonds","am":"Saskia","fm":"Amalia","ac":18.69,"y25":2696,"ybd":2900,"yrf":2650,"y26":null},{"rn":"GLF13","hb":"GLF13-AN","bv":"GLF13-AN-NP","vr":"nonpareil","fd":"GLF LP","cl":"Conventional Almonds","am":"Saskia","fm":"Amalia","ac":27.0,"y25":2629,"ybd":2800,"yrf":2500,"y26":null},{"rn":"GLF13","hb":"GLF13-AS","bv":"GLF13-AS-MT","vr":"monterey","fd":"GLF LP","cl":"Conventional Almonds","am":"Saskia","fm":"Amalia","ac":14.54,"y25":2547,"ybd":2800,"yrf":2700,"y26":null},{"rn":"GLF13","hb":"GLF13-AS","bv":"GLF13-AS-NP","vr":"nonpareil","fd":"GLF LP","cl":"Conventional Almonds","am":"Saskia","fm":"Amalia","ac":20.77,"y25":2152,"ybd":2700,"yrf":2550,"y26":null},{"rn":"GLF13","hb":"GLF13-P","bv":"GLF13-P-GH","vr":"Golden Hills","fd":"GLF LP","cl":"Conventional Pistachios","am":"Saskia","fm":"Amalia","ac":145.55,"y25":5368,"ybd":4000,"yrf":3533,"y26":null},{"rn":"GLF14","hb":"GLF14-E","bv":"GLF14-E-ID","vr":"Independence","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Amalia","ac":84.95,"y25":1367,"ybd":2000,"yrf":1850,"y26":null},{"rn":"GLF14","hb":"GLF14-W","bv":"GLF14-W-ID","vr":"Independence","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Amalia","ac":84.95,"y25":1255,"ybd":2000,"yrf":2000,"y26":null},{"rn":"GLF16","hb":"GLF16-1","bv":"GLF16-1-KR","vr":"Kerman","fd":"GLF LP","cl":"Conventional Pistachios","am":"Saskia","fm":"Amalia","ac":74.56,"y25":3941,"ybd":2600,"yrf":2133,"y26":null},{"rn":"GLF16","hb":"GLF16-2","bv":"GLF16-2-KR","vr":"Kerman","fd":"GLF LP","cl":"Conventional Pistachios","am":"Saskia","fm":"Amalia","ac":79.53,"y25":4224,"ybd":2900,"yrf":2133,"y26":null},{"rn":"GLF16","hb":"GLF16-3","bv":"GLF16-3-KR","vr":"Kerman","fd":"GLF LP","cl":"Conventional Pistachios","am":"Saskia","fm":"Amalia","ac":79.53,"y25":3531,"ybd":2200,"yrf":2167,"y26":null},{"rn":"GLF17","hb":"GLF17-7","bv":"GLF17-7-ID","vr":"independence","fd":"GLF OZ","cl":"Immature Conventional Almonds","am":"Jimmy Gill","fm":"Oscar","ac":90.73,"y25":1232,"ybd":1750,"yrf":1750,"y26":null},{"rn":"GLF17","hb":"GLF17-8","bv":"GLF17-8-ID","vr":"independence","fd":"GLF OZ","cl":"Immature Conventional Almonds","am":"Jimmy Gill","fm":"Oscar","ac":118.08,"y25":1710,"ybd":2200,"yrf":2000,"y26":null},{"rn":"GLF17","hb":"GLF17-8","bv":"GLF17-8-LB","vr":"liberty","fd":"GLF OZ","cl":"Immature Conventional Almonds","am":"Jimmy Gill","fm":"Oscar","ac":19.0,"y25":1594,"ybd":2000,"yrf":1633,"y26":null},{"rn":"GLF17","hb":"GLF17-8","bv":"GLF17-8-YZ","vr":"yorizane","fd":"GLF OZ","cl":"Immature Conventional Almonds","am":"Jimmy Gill","fm":"Oscar","ac":19.0,"y25":2005,"ybd":2200,"yrf":2000,"y26":null},{"rn":"GLF17","hb":"GLF17-S","bv":"GLF17-S-ID","vr":"independence","fd":"GLF OZ","cl":"Immature Conventional Almonds","am":"Jimmy Gill","fm":"Oscar","ac":137.01,"y25":1770,"ybd":2100,"yrf":1800,"y26":null},{"rn":"GLF17","hb":"GLF17-9","bv":"GLF17-9-AD","vr":"aldrich","fd":"GLF OZ","cl":"Organic Almonds","am":"Jimmy Gill","fm":"Oscar","ac":30.66,"y25":836,"ybd":1400,"yrf":1200,"y26":null},{"rn":"GLF17","hb":"GLF17-9","bv":"GLF17-9-MT","vr":"monterey","fd":"GLF OZ","cl":"Organic Almonds","am":"Jimmy Gill","fm":"Oscar","ac":30.66,"y25":858,"ybd":1400,"yrf":1200,"y26":null},{"rn":"GLF17","hb":"GLF17-9","bv":"GLF17-9-NP","vr":"nonpareil","fd":"GLF OZ","cl":"Organic Almonds","am":"Jimmy Gill","fm":"Oscar","ac":61.32,"y25":788,"ybd":1400,"yrf":1200,"y26":null},{"rn":"GLF17","hb":"GLF17-1","bv":"GLF17-1-ID","vr":"independence","fd":"GLF OZ","cl":"Rollback Almonds","am":"Jimmy Gill","fm":"Oscar","ac":41.54,"y25":2413,"ybd":2400,"yrf":2400,"y26":null},{"rn":"GLF17","hb":"GLF17-2","bv":"GLF17-2-MT","vr":"monterey","fd":"GLF OZ","cl":"Rollback Almonds","am":"Jimmy Gill","fm":"Oscar","ac":50.45,"y25":1462,"ybd":1700,"yrf":1700,"y26":null},{"rn":"GLF17","hb":"GLF17-2","bv":"GLF17-2-NP","vr":"nonpareil","fd":"GLF OZ","cl":"Rollback Almonds","am":"Jimmy Gill","fm":"Oscar","ac":51.43,"y25":1049,"ybd":1700,"yrf":1700,"y26":null},{"rn":"GLF17","hb":"GLF17-3","bv":"GLF17-3-CM","vr":"carmel","fd":"GLF OZ","cl":"Rollback Almonds","am":"Jimmy Gill","fm":"Oscar","ac":2.2,"y25":null,"ybd":1700,"yrf":1300,"y26":null},{"rn":"GLF17","hb":"GLF17-3","bv":"GLF17-3-MT","vr":"monterey","fd":"GLF OZ","cl":"Rollback Almonds","am":"Jimmy Gill","fm":"Oscar","ac":2.2,"y25":null,"ybd":1700,"yrf":1600,"y26":null},{"rn":"GLF17","hb":"GLF17-3","bv":"GLF17-3-NP","vr":"nonpareil","fd":"GLF OZ","cl":"Rollback Almonds","am":"Jimmy Gill","fm":"Oscar","ac":4.4,"y25":null,"ybd":1700,"yrf":1600,"y26":null},{"rn":"GLF18","hb":"GLF18-6","bv":"GLF18-6-ID","vr":"independence","fd":"GLF LP","cl":"Immature Conventional Almonds","am":"Jimmy Gill","fm":"Oscar","ac":122.05,"y25":1210,"ybd":1800,"yrf":1700,"y26":null},{"rn":"GLF18","hb":"GLF18-10","bv":"GLF18-10-MT","vr":"monterey","fd":"GLF LP","cl":"Rollback Almonds","am":"Jimmy Gill","fm":"Oscar","ac":37.25,"y25":734,"ybd":1500,"yrf":1500,"y26":null},{"rn":"GLF18","hb":"GLF18-10","bv":"GLF18-10-NP","vr":"nonpareil","fd":"GLF LP","cl":"Rollback Almonds","am":"Jimmy Gill","fm":"Oscar","ac":74.49,"y25":992,"ybd":1500,"yrf":1400,"y26":null},{"rn":"GLF18","hb":"GLF18-10","bv":"GLF18-10-WC","vr":"wood colony","fd":"GLF LP","cl":"Rollback Almonds","am":"Jimmy Gill","fm":"Oscar","ac":37.25,"y25":1070,"ybd":1200,"yrf":1100,"y26":null},{"rn":"GLF18","hb":"GLF18-3","bv":"GLF18-3-CM","vr":"carmel","fd":"GLF LP","cl":"Rollback Almonds","am":"Jimmy Gill","fm":"Oscar","ac":15.27,"y25":1209,"ybd":1700,"yrf":1300,"y26":null},{"rn":"GLF18","hb":"GLF18-3","bv":"GLF18-3-MT","vr":"monterey","fd":"GLF LP","cl":"Rollback Almonds","am":"Jimmy Gill","fm":"Oscar","ac":15.27,"y25":1242,"ybd":1700,"yrf":1600,"y26":null},{"rn":"GLF18","hb":"GLF18-3","bv":"GLF18-3-NP","vr":"nonpareil","fd":"GLF LP","cl":"Rollback Almonds","am":"Jimmy Gill","fm":"Oscar","ac":30.54,"y25":1169,"ybd":1700,"yrf":1500,"y26":null},{"rn":"GLF18","hb":"GLF18-4","bv":"GLF18-4-BT","vr":"butte","fd":"GLF LP","cl":"Rollback Almonds","am":"Jimmy Gill","fm":"Oscar","ac":37.5,"y25":2245,"ybd":2000,"yrf":1800,"y26":null},{"rn":"GLF18","hb":"GLF18-4","bv":"GLF18-4-PD","vr":"padre","fd":"GLF LP","cl":"Rollback Almonds","am":"Jimmy Gill","fm":"Oscar","ac":37.5,"y25":2245,"ybd":2000,"yrf":1800,"y26":null},{"rn":"GLF18","hb":"GLF18-5","bv":"GLF18-5-AD","vr":"aldrich","fd":"GLF LP","cl":"Rollback Almonds","am":"Jimmy Gill","fm":"Oscar","ac":11.85,"y25":1321,"ybd":1500,"yrf":1400,"y26":null},{"rn":"GLF18","hb":"GLF18-5","bv":"GLF18-5-NP","vr":"nonpareil","fd":"GLF LP","cl":"Rollback Almonds","am":"Jimmy Gill","fm":"Oscar","ac":11.85,"y25":1158,"ybd":1700,"yrf":1400,"y26":null},{"rn":"GLF19","hb":"GLF19-1","bv":"GLF19-1-MT","vr":"monterey","fd":"GLF LP","cl":"Organic Almonds","am":"Jimmy Gill","fm":"Gerardo","ac":56.22,"y25":1459,"ybd":2000,"yrf":2100,"y26":null},{"rn":"GLF19","hb":"GLF19-1","bv":"GLF19-1-NP","vr":"nonpareil","fd":"GLF LP","cl":"Organic Almonds","am":"Jimmy Gill","fm":"Gerardo","ac":56.22,"y25":1498,"ybd":2000,"yrf":2100,"y26":null},{"rn":"GLF20","hb":"GLF20-E","bv":"GLF20-E-GH","vr":"Golden Hills","fd":"GLF LP","cl":"Conventional Pistachios","am":"Jimmy Gill","fm":"Amalia","ac":150.94,"y25":2366,"ybd":2500,"yrf":2300,"y26":null},{"rn":"GLF20","hb":"GLF20-W","bv":"GLF20-W-GH","vr":"Golden Hills","fd":"GLF LP","cl":"Conventional Pistachios","am":"Jimmy Gill","fm":"Amalia","ac":150.94,"y25":2773,"ybd":2500,"yrf":2300,"y26":null},{"rn":"GLF22","hb":"GLF22-C","bv":"GLF22-C-GH","vr":"Golden Hills","fd":"GLF LP","cl":"Conventional Pistachios","am":"Jimmy Gill","fm":"Amalia","ac":118.1,"y25":2384,"ybd":2800,"yrf":2600,"y26":null},{"rn":"GLF22","hb":"GLF22-C","bv":"GLF22-O-GH","vr":"Golden Hills","fd":"GLF LP","cl":"Conventional Pistachios","am":"Jimmy Gill","fm":"Amalia","ac":82.26,"y25":3000,"ybd":3400,"yrf":2867,"y26":null},{"rn":"GLF23","hb":"GLF23-5","bv":"GLF23-5-MT","vr":"monterey","fd":"GLF OZ","cl":"Conventional Almonds","am":"Tom Barr","fm":"Armando","ac":48.61,"y25":2844,"ybd":2800,"yrf":2800,"y26":null},{"rn":"GLF23","hb":"GLF23-5","bv":"GLF23-5-NP","vr":"nonpareil","fd":"GLF OZ","cl":"Conventional Almonds","am":"Tom Barr","fm":"Armando","ac":48.61,"y25":2156,"ybd":2800,"yrf":2800,"y26":null},{"rn":"GLF23","hb":"GLF23-5","bv":"GLF23-5-WC","vr":"wood colony","fd":"GLF OZ","cl":"Conventional Almonds","am":"Tom Barr","fm":"Armando","ac":48.61,"y25":2671,"ybd":2800,"yrf":2800,"y26":null},{"rn":"GLF24","hb":"GLF24-1","bv":"GLF24-1-AD","vr":"aldrich","fd":"GLF LP","cl":"Conventional Almonds","am":"Jimmy Gill","fm":"Gerardo","ac":39.02,"y25":1465,"ybd":2000,"yrf":1600,"y26":null},{"rn":"GLF24","hb":"GLF24-1","bv":"GLF24-1-MT","vr":"monterey","fd":"GLF LP","cl":"Conventional Almonds","am":"Jimmy Gill","fm":"Gerardo","ac":39.02,"y25":1723,"ybd":2000,"yrf":1900,"y26":null},{"rn":"GLF24","hb":"GLF24-1","bv":"GLF24-1-NP","vr":"nonpareil","fd":"GLF LP","cl":"Conventional Almonds","am":"Jimmy Gill","fm":"Gerardo","ac":78.04,"y25":1340,"ybd":2000,"yrf":1600,"y26":null},{"rn":"GLF25","hb":"GLF25-A","bv":"GLF25-A-MT","vr":"monterey","fd":"GLF LP","cl":"Conventional Almonds","am":"Jimmy Gill","fm":"Gerardo","ac":74.28,"y25":2388,"ybd":2800,"yrf":2700,"y26":null},{"rn":"GLF25","hb":"GLF25-A","bv":"GLF25-A-NP","vr":"nonpareil","fd":"GLF LP","cl":"Conventional Almonds","am":"Jimmy Gill","fm":"Gerardo","ac":74.28,"y25":2237,"ybd":2800,"yrf":2700,"y26":null},{"rn":"GLF25","hb":"GLF25-B","bv":"GLF25-B-ID","vr":"independence","fd":"GLF LP","cl":"Conventional Almonds","am":"Jimmy Gill","fm":"Gerardo","ac":37.14,"y25":1959,"ybd":2800,"yrf":2500,"y26":null},{"rn":"GLF25","hb":"GLF25-B","bv":"GLF25-B-MT","vr":"monterey","fd":"GLF LP","cl":"Conventional Almonds","am":"Jimmy Gill","fm":"Gerardo","ac":37.14,"y25":1951,"ybd":2800,"yrf":2700,"y26":null},{"rn":"GLF25","hb":"GLF25-B","bv":"GLF25-B-NP","vr":"nonpareil","fd":"GLF LP","cl":"Conventional Almonds","am":"Jimmy Gill","fm":"Gerardo","ac":74.28,"y25":2172,"ybd":2800,"yrf":2300,"y26":null},{"rn":"GLF26","hb":"GLF26-1","bv":"GLF26-1-MT","vr":"monterey","fd":"GLF26","cl":"Conventional Almonds","am":"Jimmy Gill","fm":"Gerardo","ac":36.0,"y25":2497,"ybd":2800,"yrf":2800,"y26":null},{"rn":"GLF26","hb":"GLF26-1","bv":"GLF26-1-NP","vr":"nonpareil","fd":"GLF26","cl":"Conventional Almonds","am":"Jimmy Gill","fm":"Gerardo","ac":36.0,"y25":1909,"ybd":2800,"yrf":2600,"y26":null},{"rn":"GLF26","hb":"GLF26-2","bv":"GLF26-2-MT","vr":"monterey","fd":"GLF26","cl":"Conventional Almonds","am":"Jimmy Gill","fm":"Gerardo","ac":55.25,"y25":2554,"ybd":2800,"yrf":2800,"y26":null},{"rn":"GLF26","hb":"GLF26-2","bv":"GLF26-2-NP","vr":"nonpareil","fd":"GLF26","cl":"Conventional Almonds","am":"Jimmy Gill","fm":"Gerardo","ac":55.25,"y25":1922,"ybd":2800,"yrf":2700,"y26":null},{"rn":"GLF26","hb":"GLF26-3","bv":"GLF26-3-MT","vr":"monterey","fd":"GLF26","cl":"Conventional Almonds","am":"Jimmy Gill","fm":"Gerardo","ac":34.62,"y25":3008,"ybd":3000,"yrf":2800,"y26":null},{"rn":"GLF26","hb":"GLF26-3","bv":"GLF26-3-NP","vr":"nonpareil","fd":"GLF26","cl":"Conventional Almonds","am":"Jimmy Gill","fm":"Gerardo","ac":34.62,"y25":2688,"ybd":3000,"yrf":2500,"y26":null},{"rn":"GLF26","hb":"GLF26-4","bv":"GLF26-4-MT","vr":"monterey","fd":"GLF26","cl":"Conventional Almonds","am":"Jimmy Gill","fm":"Gerardo","ac":39.46,"y25":3006,"ybd":3000,"yrf":2800,"y26":null},{"rn":"GLF26","hb":"GLF26-4","bv":"GLF26-4-NP","vr":"nonpareil","fd":"GLF26","cl":"Conventional Almonds","am":"Jimmy Gill","fm":"Gerardo","ac":39.46,"y25":2398,"ybd":3000,"yrf":2700,"y26":null},{"rn":"GLF27","hb":"GLF27-1","bv":"GLF27-1-CM","vr":"carmel","fd":"GLF LP","cl":"Conventional Almonds","am":"Tom Barr","fm":"Armando","ac":19.25,"y25":1769,"ybd":2800,"yrf":2200,"y26":null},{"rn":"GLF27","hb":"GLF27-1","bv":"GLF27-1-MT","vr":"monterey","fd":"GLF LP","cl":"Conventional Almonds","am":"Tom Barr","fm":"Armando","ac":19.25,"y25":2572,"ybd":2800,"yrf":2400,"y26":null},{"rn":"GLF27","hb":"GLF27-1","bv":"GLF27-1-NP","vr":"nonpareil","fd":"GLF LP","cl":"Conventional Almonds","am":"Tom Barr","fm":"Armando","ac":38.5,"y25":2272,"ybd":2800,"yrf":2300,"y26":null},{"rn":"GLF3","hb":"GLF3-D","bv":"GLF3-D-AD","vr":"aldrich","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":23.49,"y25":2089,"ybd":2100,"yrf":750,"y26":null},{"rn":"GLF3","hb":"GLF3-D","bv":"GLF3-D-MT","vr":"monterey","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":23.49,"y25":1276,"ybd":2200,"yrf":1200,"y26":null},{"rn":"GLF3","hb":"GLF3-D","bv":"GLF3-D-NP","vr":"nonpareil","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":70.27,"y25":1496,"ybd":2100,"yrf":1300,"y26":null},{"rn":"GLF3","hb":"GLF3-D","bv":"GLF3-D-WC","vr":"wood colony","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":23.49,"y25":1211,"ybd":2100,"yrf":200,"y26":null},{"rn":"GLF3","hb":"GLF3-E","bv":"GLF3-E-AD","vr":"aldrich","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":23.49,"y25":2189,"ybd":2100,"yrf":750,"y26":null},{"rn":"GLF3","hb":"GLF3-E","bv":"GLF3-E-MT","vr":"monterey","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":23.49,"y25":1223,"ybd":2100,"yrf":1300,"y26":null},{"rn":"GLF3","hb":"GLF3-E","bv":"GLF3-E-NP","vr":"nonpareil","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":70.27,"y25":1272,"ybd":2000,"yrf":1400,"y26":null},{"rn":"GLF3","hb":"GLF3-E","bv":"GLF3-E-WC","vr":"wood colony","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":23.49,"y25":1261,"ybd":2000,"yrf":200,"y26":null},{"rn":"GLF3","hb":"GLF3-NW","bv":"GLF3-NW-AD","vr":"aldrich","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":35.75,"y25":1148,"ybd":2200,"yrf":550,"y26":null},{"rn":"GLF3","hb":"GLF3-NW","bv":"GLF3-NW-MT","vr":"monterey","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":35.75,"y25":1224,"ybd":2300,"yrf":1000,"y26":null},{"rn":"GLF3","hb":"GLF3-NW","bv":"GLF3-NW-NP","vr":"nonpareil","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":106.94,"y25":1705,"ybd":2300,"yrf":900,"y26":null},{"rn":"GLF3","hb":"GLF3-NW","bv":"GLF3-NW-WC","vr":"wood colony","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":35.75,"y25":957,"ybd":2100,"yrf":100,"y26":null},{"rn":"GLF3","hb":"GLF3-PP","bv":"GLF3-PP-AD","vr":"aldrich","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":23.49,"y25":1496,"ybd":1900,"yrf":600,"y26":null},{"rn":"GLF3","hb":"GLF3-PP","bv":"GLF3-PP-MT","vr":"monterey","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":23.49,"y25":1277,"ybd":1900,"yrf":1200,"y26":null},{"rn":"GLF3","hb":"GLF3-PP","bv":"GLF3-PP-NP","vr":"nonpareil","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":70.27,"y25":1625,"ybd":1800,"yrf":1200,"y26":null},{"rn":"GLF3","hb":"GLF3-PP","bv":"GLF3-PP-WC","vr":"wood colony","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":23.49,"y25":1305,"ybd":1800,"yrf":100,"y26":null},{"rn":"GLF3","hb":"GLF3-SW","bv":"GLF3-SW-AD","vr":"aldrich","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":16.34,"y25":2775,"ybd":2000,"yrf":500,"y26":null},{"rn":"GLF3","hb":"GLF3-SW","bv":"GLF3-SW-MT","vr":"monterey","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":16.34,"y25":1419,"ybd":2000,"yrf":1000,"y26":null},{"rn":"GLF3","hb":"GLF3-SW","bv":"GLF3-SW-NP","vr":"nonpareil","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":49.91,"y25":1385,"ybd":1800,"yrf":1000,"y26":null},{"rn":"GLF3","hb":"GLF3-SW","bv":"GLF3-SW-WC","vr":"wood colony","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":16.34,"y25":1219,"ybd":2000,"yrf":200,"y26":null},{"rn":"GLF4","hb":"GLF4-B14","bv":"GLF4-B14-BT","vr":"butte","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Pablo","ac":58.88,"y25":1730,"ybd":2000,"yrf":2100,"y26":null},{"rn":"GLF4","hb":"GLF4-B14","bv":"GLF4-B14-PD","vr":"padre","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Pablo","ac":58.88,"y25":1730,"ybd":2000,"yrf":2000,"y26":null},{"rn":"GLF4","hb":"GLF4-B5","bv":"GLF4-B5-BT","vr":"butte","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Pablo","ac":54.82,"y25":1691,"ybd":2000,"yrf":2100,"y26":null},{"rn":"GLF4","hb":"GLF4-B5","bv":"GLF4-B5-PD","vr":"padre","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Pablo","ac":54.82,"y25":1691,"ybd":2000,"yrf":2000,"y26":null},{"rn":"GLF4","hb":"GLF4-GHE","bv":"GLF4-GHE-CM","vr":"carmel","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Pablo","ac":154.32,"y25":1057,"ybd":1500,"yrf":1900,"y26":null},{"rn":"GLF4","hb":"GLF4-GHW","bv":"GLF4-GHW-MT","vr":"monterey","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Pablo","ac":77.16,"y25":2040,"ybd":1500,"yrf":2000,"y26":null},{"rn":"GLF4","hb":"GLF4-B69","bv":"GLF4-B69-BT","vr":"butte","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":40.61,"y25":1664,"ybd":1900,"yrf":1400,"y26":null},{"rn":"GLF4","hb":"GLF4-B69","bv":"GLF4-B69-PD","vr":"padre","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":40.61,"y25":1664,"ybd":1900,"yrf":1300,"y26":null},{"rn":"GLF5","hb":"GLF5-1","bv":"GLF5-1-ID","vr":"independence","fd":"GLF OZ","cl":"Conventional Almonds","am":"Jimmy Gill","fm":"Oscar","ac":144.51,"y25":2460,"ybd":2800,"yrf":2500,"y26":null},{"rn":"GLF5","hb":"GLF5-2","bv":"GLF5-2-ID","vr":"independence","fd":"GLF OZ","cl":"Conventional Almonds","am":"Jimmy Gill","fm":"Oscar","ac":149.49,"y25":2280,"ybd":2800,"yrf":2500,"y26":null},{"rn":"GLF5","hb":"GLF5-3","bv":"GLF5-3-MT","vr":"monterey","fd":"GLF OZ","cl":"Conventional Almonds","am":"Jimmy Gill","fm":"Oscar","ac":76.04,"y25":1182,"ybd":2800,"yrf":1900,"y26":null},{"rn":"GLF6","hb":"GLF6-1","bv":"GLF6-1-ID","vr":"independence","fd":"GLF OZ","cl":"Immature Conventional Almonds","am":"Jimmy Gill","fm":"Oscar","ac":207.27,"y25":2352,"ybd":2800,"yrf":2700,"y26":null},{"rn":"GLF7","hb":"GLF7-1","bv":"GLF7-1-AD","vr":"aldrich","fd":"GLF LP","cl":"Conventional Almonds","am":"Tom Barr","fm":"Armando","ac":38.32,"y25":3654,"ybd":3000,"yrf":2800,"y26":null},{"rn":"GLF7","hb":"GLF7-1","bv":"GLF7-1-NP","vr":"nonpareil","fd":"GLF LP","cl":"Conventional Almonds","am":"Tom Barr","fm":"Armando","ac":77.64,"y25":2132,"ybd":3000,"yrf":2800,"y26":null},{"rn":"GLF7","hb":"GLF7-1","bv":"GLF7-1-WC","vr":"wood colony","fd":"GLF LP","cl":"Conventional Almonds","am":"Tom Barr","fm":"Armando","ac":38.23,"y25":2869,"ybd":3000,"yrf":2700,"y26":null},{"rn":"GLF7","hb":"GLF7-2","bv":"GLF7-2-MT","vr":"monterey","fd":"GLF LP","cl":"Conventional Almonds","am":"Tom Barr","fm":"Armando","ac":47.5,"y25":1935,"ybd":2800,"yrf":2800,"y26":null},{"rn":"GLF7","hb":"GLF7-2","bv":"GLF7-2-NP","vr":"nonpareil","fd":"GLF LP","cl":"Conventional Almonds","am":"Tom Barr","fm":"Armando","ac":47.39,"y25":1331,"ybd":2800,"yrf":2700,"y26":null},{"rn":"GLF7","hb":"GLF7-2","bv":"GLF7-2-WC","vr":"wood colony","fd":"GLF LP","cl":"Conventional Almonds","am":"Tom Barr","fm":"Armando","ac":47.28,"y25":1620,"ybd":2800,"yrf":2700,"y26":null},{"rn":"GLF7","hb":"GLF7-10","bv":"GLF7-10-FT","vr":"fritz","fd":"GLF LP","cl":"Organic Almonds","am":"Tom Barr","fm":"Armando","ac":14.79,"y25":876,"ybd":1500,"yrf":1300,"y26":null},{"rn":"GLF7","hb":"GLF7-10","bv":"GLF7-10-MT","vr":"monterey","fd":"GLF LP","cl":"Organic Almonds","am":"Tom Barr","fm":"Armando","ac":14.83,"y25":1472,"ybd":1800,"yrf":1700,"y26":null},{"rn":"GLF7","hb":"GLF7-10","bv":"GLF7-10-NP","vr":"nonpareil","fd":"GLF LP","cl":"Organic Almonds","am":"Tom Barr","fm":"Armando","ac":28.47,"y25":1065,"ybd":1500,"yrf":1600,"y26":null},{"rn":"GLF7","hb":"GLF7-3","bv":"GLF7-3-MT","vr":"monterey","fd":"GLF LP","cl":"Organic Almonds","am":"Tom Barr","fm":"Armando","ac":51.11,"y25":2601,"ybd":2200,"yrf":1900,"y26":null},{"rn":"GLF7","hb":"GLF7-3","bv":"GLF7-3-NP","vr":"nonpareil","fd":"GLF LP","cl":"Organic Almonds","am":"Tom Barr","fm":"Armando","ac":50.84,"y25":1634,"ybd":2200,"yrf":1900,"y26":null},{"rn":"GLF7","hb":"GLF7-3","bv":"GLF7-3-WC","vr":"wood colony","fd":"GLF LP","cl":"Organic Almonds","am":"Tom Barr","fm":"Armando","ac":50.87,"y25":2065,"ybd":2200,"yrf":1500,"y26":null},{"rn":"GLF7","hb":"GLF7-4","bv":"GLF7-4-MT","vr":"monterey","fd":"GLF LP","cl":"Organic Almonds","am":"Tom Barr","fm":"Armando","ac":38.84,"y25":1587,"ybd":2000,"yrf":1800,"y26":null},{"rn":"GLF7","hb":"GLF7-4","bv":"GLF7-4-NP","vr":"nonpareil","fd":"GLF LP","cl":"Organic Almonds","am":"Tom Barr","fm":"Armando","ac":78.29,"y25":1439,"ybd":2000,"yrf":1800,"y26":null},{"rn":"GLF7","hb":"GLF7-4","bv":"GLF7-4-WC","vr":"wood colony","fd":"GLF LP","cl":"Organic Almonds","am":"Tom Barr","fm":"Armando","ac":38.66,"y25":1864,"ybd":2000,"yrf":1500,"y26":null},{"rn":"GLF7","hb":"GLF7-8","bv":"GLF7-8-NP","vr":"nonpareil","fd":"GLF LP","cl":"Organic Almonds","am":"Tom Barr","fm":"Armando","ac":15.25,"y25":783,"ybd":1900,"yrf":1500,"y26":null},{"rn":"GLF7","hb":"GLF7-8","bv":"GLF7-8-WC","vr":"wood colony","fd":"GLF LP","cl":"Organic Almonds","am":"Tom Barr","fm":"Armando","ac":15.26,"y25":1549,"ybd":1900,"yrf":1400,"y26":null},{"rn":"GLF7","hb":"GLF7-11","bv":"GLF7-11-FT","vr":"fritz","fd":"GLF LP","cl":"Rollback Almonds","am":"Tom Barr","fm":"Armando","ac":20.91,"y25":938,"ybd":1500,"yrf":1300,"y26":null},{"rn":"GLF7","hb":"GLF7-11","bv":"GLF7-11-MT","vr":"monterey","fd":"GLF LP","cl":"Rollback Almonds","am":"Tom Barr","fm":"Armando","ac":20.96,"y25":1585,"ybd":1500,"yrf":1600,"y26":null},{"rn":"GLF7","hb":"GLF7-11","bv":"GLF7-11-NP","vr":"nonpareil","fd":"GLF LP","cl":"Rollback Almonds","am":"Tom Barr","fm":"Armando","ac":41.69,"y25":1241,"ybd":1500,"yrf":1600,"y26":null},{"rn":"GLF7","hb":"GLF7-5","bv":"GLF7-5-MT","vr":"monterey","fd":"GLF LP","cl":"Rollback Almonds","am":"Tom Barr","fm":"Armando","ac":22.49,"y25":2000,"ybd":1800,"yrf":2000,"y26":null},{"rn":"GLF7","hb":"GLF7-5","bv":"GLF7-5-NP","vr":"nonpareil","fd":"GLF LP","cl":"Rollback Almonds","am":"Tom Barr","fm":"Armando","ac":44.75,"y25":1179,"ybd":1800,"yrf":2000,"y26":null},{"rn":"GLF7","hb":"GLF7-5","bv":"GLF7-5-WC","vr":"wood colony","fd":"GLF LP","cl":"Rollback Almonds","am":"Tom Barr","fm":"Armando","ac":22.39,"y25":1735,"ybd":1500,"yrf":1700,"y26":null},{"rn":"GLF7","hb":"GLF7-6","bv":"GLF7-6-NP","vr":"nonpareil","fd":"GLF LP","cl":"Rollback Almonds","am":"Tom Barr","fm":"Armando","ac":44.75,"y25":1414,"ybd":1800,"yrf":1900,"y26":null},{"rn":"GLF7","hb":"GLF7-6","bv":"GLF7-6-SP","vr":"supareil","fd":"GLF LP","cl":"Rollback Almonds","am":"Tom Barr","fm":"Armando","ac":44.88,"y25":2176,"ybd":2200,"yrf":2200,"y26":null},{"rn":"GLF7","hb":"GLF7-7","bv":"GLF7-7-CM","vr":"carmel","fd":"GLF LP","cl":"Rollback Almonds","am":"Tom Barr","fm":"Armando","ac":17.85,"y25":1034,"ybd":1800,"yrf":1600,"y26":null},{"rn":"GLF7","hb":"GLF7-7","bv":"GLF7-7-MT","vr":"monterey","fd":"GLF LP","cl":"Rollback Almonds","am":"Tom Barr","fm":"Armando","ac":17.89,"y25":2169,"ybd":1800,"yrf":1800,"y26":null},{"rn":"GLF7","hb":"GLF7-7","bv":"GLF7-7-NP","vr":"nonpareil","fd":"GLF LP","cl":"Rollback Almonds","am":"Tom Barr","fm":"Armando","ac":35.58,"y25":1565,"ybd":1800,"yrf":1800,"y26":null},{"rn":"GLF9","hb":"GLF9-1AGH","bv":"GLF9-1AGH-GH","vr":"Golden Hills","fd":"GLF AZ","cl":"Immature Conventional Pistachios","am":"Bia","fm":"Dave","ac":23.07,"y25":1417,"ybd":2200,"yrf":0,"y26":null},{"rn":"GLF9","hb":"GLF9-1AGH","bv":"GLF9-1AGH-LH","vr":"Lost Hills","fd":"GLF AZ","cl":"Immature Conventional Pistachios","am":"Bia","fm":"Dave","ac":3.01,"y25":null,"ybd":2200,"yrf":0,"y26":null},{"rn":"GLF9","hb":"GLF9-1AK","bv":"GLF9-1AK-KR","vr":"Kerman","fd":"GLF AZ","cl":"Immature Conventional Pistachios","am":"Bia","fm":"Dave","ac":110.34,"y25":1448,"ybd":2200,"yrf":0,"y26":null},{"rn":"GLF9","hb":"GLF9-1B","bv":"GLF9-1B-GH","vr":"Golden Hills","fd":"GLF AZ","cl":"Immature Conventional Pistachios","am":"Bia","fm":"Dave","ac":154.13,"y25":null,"ybd":400,"yrf":0,"y26":null},{"rn":"GLF9","hb":"GLF9-1C","bv":"GLF9-1C-GH","vr":"Golden Hills","fd":"GLF AZ","cl":"Immature Conventional Pistachios","am":"Bia","fm":"Dave","ac":157.13,"y25":null,"ybd":400,"yrf":0,"y26":null},{"rn":"GLF9","hb":"GLF9-1D","bv":"GLF9-1D-GH","vr":"Golden Hills","fd":"GLF AZ","cl":"Immature Conventional Pistachios","am":"Bia","fm":"Dave","ac":154.13,"y25":null,"ybd":400,"yrf":0,"y26":null}];
+const BASIS = {y25:{lab:"2025 Actual",short:"2025"},yrf:{lab:"2026 Reforecast",short:"Reforecast"},ybd:{lab:"2026 Budget",short:"Budget"}};
+const S = {basis:"yrf", fund:"", cls:"", am:"", fm:"", q:"", sort:"name", dir:1,
+           open:new Set(), edits:{}};
+
+DATA.forEach((r,i)=>r.i=i);
+let SHEET = {};                // block-variety -> lb/ac, from the sheet
+const y26 = r => S.edits[r.i] !== undefined ? S.edits[r.i]
+               : (SHEET[r.bv] != null ? SHEET[r.bv] : null);
+const fromSheet = r => S.edits[r.i] === undefined && SHEET[r.bv] != null;
+const yb  = r => r[S.basis];
+const nat = s => s.replace(/\d+/g, m => m.padStart(6,"0"));
+const fmt = n => n==null ? "—" : Math.round(n).toLocaleString("en-US");
+const ac2 = n => n.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
+const pc  = (d,b) => (b===0||b==null) ? "—" : (d/b>=0?"+":"") + (100*d/b).toFixed(1) + "%";
+const cls = n => n>0.5 ? "pos" : n<-0.5 ? "neg" : "";
+const sign = d => (d>=0?"+":"−") + fmt(Math.abs(d));
+
+function rows(){
+  return DATA.filter(r=>{
+    if(S.fund && r.fd!==S.fund) return false;
+    if(S.cls  && r.cl!==S.cls)  return false;
+    if(S.am   && r.am!==S.am)   return false;
+    if(S.fm   && r.fm!==S.fm)   return false;
+    if(S.q){ const q=S.q.toLowerCase();
+      if(!(r.bv+" "+r.hb+" "+r.vr+" "+r.rn).toLowerCase().includes(q)) return false; }
+    return true;
+  });
+}
+/* Variance compares like with like: only blocks with a 2026 entry count on
+   BOTH sides. A part-entered book measured against a full-book plan would read
+   as a false collapse, which is the whole reason the seeded numbers came out. */
+function agg(list){
+  const a={ac:0,n:list.length,nEnt:0,acEnt:0,l26:0,lbEnt:0,lbAll:0,acb:0};
+  list.forEach(r=>{
+    const v=y26(r), b=yb(r);
+    a.ac+=r.ac;
+    if(b>0){ a.lbAll+=b*r.ac; a.acb+=r.ac; }
+    if(v!=null){ a.nEnt++; a.acEnt+=r.ac; a.l26+=v*r.ac; a.lbEnt+=(b||0)*r.ac; }
+  });
+  a.d   = a.nEnt ? a.l26-a.lbEnt : null;
+  a.y26 = a.acEnt ? a.l26/a.acEnt : null;
+  a.yb  = a.acb ? a.lbAll/a.acb : null;
+  a.lb  = a.lbAll;
+  return a;
+}
+
+/* ---------- summary tiles ---------- */
+function tote(list){
+  const a=agg(list), B=BASIS[S.basis];
+  document.getElementById("tote").innerHTML = `
+    <div class="stat"><div class="k">2026 USDA harvest</div>
+      <div class="v">${a.nEnt?fmt(a.l26):"—"}${a.nEnt?"<small>lbs</small>":""}</div>
+      <div class="ysub">${a.nEnt
+        ? fmt(a.y26)+" lb/ac · "+a.nEnt+" of "+a.n+" blocks entered"
+        : "no weights entered · "+a.n+" blocks awaiting"}</div>
+      <div class="meter"><i style="width:${a.n?a.nEnt/a.n*100:0}%"></i></div></div>
+    <div class="stat"><div class="k">${B.lab}</div>
+      <div class="v mute">${fmt(a.lb)}<small>lbs</small></div>
+      <div class="ysub">${fmt(a.yb)} lb/ac on ${fmt(a.acb)} acres</div></div>
+    <div class="stat"><div class="k">Variance <small>entered blocks</small></div>
+      <div class="v ${cls(a.d)}">${a.d==null?"—":sign(a.d)}</div>
+      <div class="ysub ${cls(a.d)}">${a.d==null
+        ? "waiting on 2026 weights"
+        : pc(a.d,a.lbEnt)+" vs "+B.short+" on "+fmt(a.acEnt)+" acres"}</div></div>`;
+}
+
+/* ---------- variance ladder ---------- */
+function ladder(list){
+  const by={};
+  list.forEach(r=>{ (by[r.rn]=by[r.rn]||[]).push(r); });
+  const arr=Object.entries(by).map(([rn,rs])=>({rn,...agg(rs)})).filter(x=>x.nEnt>0)
+              .sort((a,b)=>(a.d-b.d) || nat(a.rn).localeCompare(nat(b.rn)));
+  const max=Math.max(1,...arr.map(x=>Math.abs(x.d)));
+  const el=document.getElementById("ladder");
+  el.innerHTML = arr.length ? arr.map(x=>{
+    const w=Math.abs(x.d)/max*50, neg=x.d<0, flat=Math.abs(x.d)<1;
+    return `<button class="rung" data-rn="${x.rn}">
+      <span class="code">${x.rn}</span>
+      <span class="track"><span class="bar" style="${neg?"right:50%":"left:50%"};width:${w}%;
+        background:${neg?"var(--red)":"var(--green)"};opacity:${flat?0:1}"></span></span>
+      <span class="num ${cls(x.d)}">${flat?"—":sign(x.d/1000)+"k"}</span></button>`;
+  }).join("") : `<div class="empty">Nothing to compare yet. Enter a 2026 lb/ac on any block and its ranch appears here.</div>`;
+  document.getElementById("ladderCount").textContent = arr.length ? "· "+arr.length : "";
+  const flat = arr.every(x=>Math.abs(x.d)<1);
+  document.getElementById("scaleL").textContent = flat||!arr.length ? "" : "−"+fmt(max/1000)+"k lbs";
+  document.getElementById("scaleR").textContent = flat||!arr.length ? "" : "+"+fmt(max/1000)+"k lbs";
+  document.getElementById("ladderNote").textContent =
+    flat && arr.length ? "Flat — 2026 still matches "+BASIS[S.basis].short : "";
+  el.querySelectorAll(".rung").forEach(b=>b.onclick=()=>{
+    const rn=b.dataset.rn;
+    if(S.open.has(rn)) S.open.delete(rn); else S.open.add(rn);
+    render();
+    const t=document.querySelector(`tr[data-key="${rn}"]`);
+    if(t) t.scrollIntoView({block:"center",behavior:"smooth"});
+  });
+}
+
+/* ---------- table ---------- */
+function line(level,key,name,a,opts={}){
+  const {toggle=false,tag="",input=null,foot=false}=opts;
+  const chev = toggle ? `<span class="chev"></span>` : (level<3?`<span class="chev none"></span>`:"");
+  const open = toggle && S.open.has(key) ? " open" : "";
+  return `<tr class="lv${level}${open}${a.nEnt?"":" pend"}" data-key="${key}"${toggle?' data-t="1"':""}>
+    <td>${chev}${name}${tag?`<span class="tag">${tag}</span>`:""}</td>
+    <td>${ac2(a.ac)}</td>
+    <td class="hold">${input!==null?input:(a.y26==null?"—":fmt(a.y26))}</td>
+    <td>${a.yb==null?"—":fmt(a.yb)}</td>
+    <td class="hold">${a.nEnt?fmt(a.l26):"—"}</td>
+    <td class="${cls(a.d)}">${a.d==null?"—":sign(a.d)}</td>
+    <td class="${cls(a.d)}">${a.d==null?"—":pc(a.d,a.lbEnt)}</td></tr>`;
+}
+const KEY={name:x=>nat(x.name),ac:x=>x.a.ac,y26:x=>x.a.y26,yb:x=>x.a.yb,
+           l26:x=>x.a.l26,dl:x=>(x.a.d==null?-Infinity:x.a.d),dp:x=>(x.a.d!=null&&x.a.lbEnt?x.a.d/x.a.lbEnt:-Infinity)};
+function sortBy(list){
+  const f=KEY[S.sort]||KEY.name;
+  return list.sort((a,b)=>{const x=f(a),y=f(b);
+    return (typeof x==="string"? x.localeCompare(y) : x-y)*S.dir;});
+}
+function table(list){
+  const by={};
+  list.forEach(r=>{ (by[r.rn]=by[r.rn]||[]).push(r); });
+  let html="";
+  sortBy(Object.entries(by).map(([rn,rs])=>({name:rn,rs,a:agg(rs)}))).forEach(R=>{
+    html+=line(1,R.name,R.name,R.a,{toggle:true});
+    if(!S.open.has(R.name)) return;
+    const blocks={};
+    R.rs.forEach(r=>{ (blocks[r.hb]=blocks[r.hb]||[]).push(r); });
+    sortBy(Object.entries(blocks).map(([hb,rs])=>({name:hb,rs,a:agg(rs)}))).forEach(B=>{
+      const bk=R.name+"|"+B.name, multi=B.rs.length>1;
+      html+=line(2,bk,B.name,B.a,{toggle:multi});
+      if(multi && !S.open.has(bk)) return;
+      sortBy(B.rs.map(r=>({name:r.bv,r,a:agg([r])}))).forEach(V=>{
+        const r=V.r, cur=y26(r);
+        const mine=S.edits[r.i]!==undefined;
+        const inp=`<input class="yin${mine?" mine":""}" type="number" step="10" min="0" data-i="${r.i}"
+           value="${cur==null?"":Math.round(cur)}" title="${mine?"Your entry — Clear my edits reverts to the sheet":(fromSheet(r)?"From the sheet":"Not weighed yet")}"
+           aria-label="2026 yield for ${r.bv}">`;
+        html+=line(3,r.bv,r.vr,V.a,{input:inp, tag: yb(r)==null?"no basis":""});
+      });
+    });
+  });
+  const b=document.getElementById("body");
+  b.innerHTML = html || `<tr><td colspan="7" class="empty">No blocks match these filters. Clear one and try again.</td></tr>`;
+  document.getElementById("foot").innerHTML = list.length
+    ? line(1,"__t","Total",agg(list)).replace('class="lv1"','class="tot"').replace('<span class="chev none"></span>','')
+    : "";
+  b.querySelectorAll("tr[data-t]").forEach(tr=>tr.onclick=e=>{
+    if(e.target.classList.contains("yin")) return;
+    const k=tr.dataset.key; S.open.has(k)?S.open.delete(k):S.open.add(k); render();
+  });
+  b.querySelectorAll(".yin").forEach(inp=>{
+    inp.onchange=()=>{
+      const i=+inp.dataset.i, v=inp.value.trim();
+      if(v==="") delete S.edits[i]; else S.edits[i]=Math.max(0,+v);
+      render();
+    };
+    inp.onclick=e=>e.stopPropagation();
+  });
+}
+
+/* ---------- chrome ---------- */
+function fillSelect(id,label,vals){
+  const s=document.getElementById(id);
+  s.innerHTML=`<option value="">${label}</option>`+
+    [...new Set(vals)].sort((a,b)=>nat(a).localeCompare(nat(b)))
+      .map(v=>`<option>${v}</option>`).join("");
+}
+function render(){
+  const list=rows();
+  tote(list); ladder(list); table(list);
+  document.querySelectorAll("#basis button").forEach(b=>
+    b.setAttribute("aria-pressed", b.dataset.b===S.basis));
+  document.querySelectorAll("thead th").forEach(th=>{
+    th.innerHTML = th.textContent.replace(/[▲▼]/g,"").trim() +
+      (th.dataset.s===S.sort ? ` <span class="caret">${S.dir>0?"▲":"▼"}</span>` : "");
+  });
+  const n=Object.keys(S.edits).length;
+  document.getElementById("reset").hidden = !n;
+  document.getElementById("footnote").innerHTML =
+    `<b>2026 weights come from the GLF Yield Master sheet</b> via its Apps Script feed — column S, total field lbs — and lb/ac is computed here from acres. Hit Refresh to pull the latest. A block with no weight yet reads “—” and sits out of the comparison. You can also type a <b>2026 lb/ac</b> into the table to model a number without touching the sheet; those show in amber, live in this browser only, and Clear my edits reverts them to the sheet${n?` — <b>${n} of your own</b>`:""}. ` +
+    `Variance counts only blocks with a 2026 entry, on both sides — a part-entered book measured against the full plan would read as a false collapse. ` +
+    `Reforecast and Budget come from the source file's 2026 columns; 2025 Actual is the USDA column. Lbs = acres × lb/ac at block-variety level. ` +
+    `Out of scope here but present in the workbook: the 28 non-bearing block-varieties (GLF15, GLF21, the GLF23 pistachios, GLF5-3 nonpareil, GLF9 pecans) and GLF8 dates.`;
+}
+document.getElementById("basis").onclick=e=>{
+  const b=e.target.closest("button"); if(!b) return; S.basis=b.dataset.b; render();
+};
+document.querySelectorAll("thead th").forEach(th=>th.onclick=()=>{
+  if(S.sort===th.dataset.s) S.dir*=-1; else {S.sort=th.dataset.s; S.dir = th.dataset.s==="name"?1:-1;}
+  render();
+});
+const bind=(id,key)=>document.getElementById(id).onchange=e=>{S[key]=e.target.value;S.open.clear();render();};
+bind("fFund","fund"); bind("fClass","cls"); bind("fAM","am"); bind("fFM","fm");
+document.getElementById("q").oninput=e=>{S.q=e.target.value;render();};
+document.getElementById("tExpand").onclick=e=>{
+  if(S.open.size){S.open.clear(); e.target.textContent="Expand all";}
+  else{ rows().forEach(r=>{S.open.add(r.rn); S.open.add(r.rn+"|"+r.hb);});
+        e.target.textContent="Collapse all"; }
+  render();
+};
+document.getElementById("reset").onclick=()=>{S.edits={};render();};
+document.getElementById("dl").onclick=()=>{
+  const B=BASIS[S.basis], head=["Ranch","Harvest Block","Block-Variety","Variety","Fund",
+    "Reporting Classification","AM","FM","Acres","Yield 2026 lb/ac",B.lab+" lb/ac",
+    "Total 2026 lbs",B.lab+" lbs","Var lbs","Var %"];
+  const lines=[head.join(",")];
+  rows().forEach(r=>{
+    const v=y26(r)||0,b=yb(r)||0,l=v*r.ac,lb=b*r.ac,d=l-lb;
+    lines.push([r.rn,r.hb,r.bv,r.vr,r.fd,r.cl,r.am,r.fm,r.ac.toFixed(2),v,b,
+      l.toFixed(0),lb.toFixed(0),d.toFixed(0),lb?(100*d/lb).toFixed(1):""]
+      .map(x=>/[",]/.test(x)?`"${x}"`:x).join(","));
+  });
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([lines.join("\n")],{type:"text/csv"}));
+  a.download=`GLF_2026_harvest_vs_${B.short.toLowerCase()}.csv`; a.click();
+  URL.revokeObjectURL(a.href);
+};
+/* ---------- sheet loading ---------- */
+function setStatus(msg,isErr){
+  const el=document.getElementById("status");
+  el.textContent=msg||""; el.classList.toggle("err",!!isErr);
+}
+function showBanner(html){
+  const b=document.getElementById("banner");
+  if(!html){ b.classList.remove("show"); return; }
+  b.innerHTML=html; b.classList.add("show");
+}
+function resolveUrl(u){ return (!u || u.indexOf("PASTE_")===0) ? null : u; }
+const num = v => {
+  if(v==null) return null;
+  const n=parseFloat(String(v).replace(/[,$%\s]/g,""));
+  return isFinite(n)?n:null;
+};
+const ACRES={}, BV={};
+DATA.forEach(r=>{ const k=r.bv.toUpperCase(); ACRES[k]=r.ac; BV[k]=r.bv; });
+const KEYS=new Set(Object.keys(ACRES));
+
+/* The feed arrives as [{ "Block-Variety": "GLF7-1-NP", "2026 Harvest lbs": 201000 }, ...].
+   lbs -> lb/ac happens here, against the block's acres held on this page.
+   A 0 is kept (harvested nothing); a missing row means not weighed yet and the
+   block simply stays out of the comparison. */
+function ingest(rows){
+  if(!Array.isArray(rows)) return {err:"no-key-column"};
+  if(!rows.length) return {map:{},n:0,bad:[],stray:[]};
+  const first=rows[0];
+  if(!(KEY_HEADER in first)) return {err:"no-key-column"};
+  if(!(LBS_HEADER in first)) return {err:"no-lbs-column"};
+  const map={}, bad=[], stray=[]; let n=0;
+  rows.forEach(row=>{
+    const k=String(row[KEY_HEADER]||"").trim().toUpperCase();
+    if(!k) return;
+    const lb=num(row[LBS_HEADER]);
+    if(OUT_OF_SCOPE.has(k)){ if(lb>0) stray.push(k); return; }
+    if(!KEYS.has(k)){ if(lb>0) bad.push(k); return; }
+    if(lb==null) return;
+    const ac=ACRES[k];
+    if(!ac) return;
+    map[BV[k]]=Math.max(0,lb/ac); n++;
+  });
+  return {map,n,bad,stray};
+}
+function readCache(){ try{const r=localStorage.getItem(CACHE_KEY);return r?JSON.parse(r):null}catch(e){return null} }
+function writeCache(d){ try{localStorage.setItem(CACHE_KEY,JSON.stringify(d))}catch(e){} }
+
+async function loadSheet(initial){
+  const url=resolveUrl(API_URL);
+  if(initial){
+    const c=readCache();
+    if(c && c.map){ SHEET=c.map; render();
+      setStatus("As of "+new Date(c.updated).toLocaleTimeString()); }
+  }
+  if(!url){
+    showBanner("<b>No sheet connected yet.</b> In the GLF Yield Master sheet: Extensions \u25b8 Apps Script, paste <code>AppsScript_Code.gs</code>, Deploy \u25b8 Web app (Execute as: Me \u00b7 Access: Anyone), then paste the <code>/exec</code> URL into <code>API_URL</code> near the top of this file. Until then you can still type weights straight into the table.");
+    setStatus(""); return;
+  }
+  if(!initial) setStatus("Refreshing\u2026");
+  try{
+    const res=await fetch(url+(url.includes("?")?"&":"?")+"_="+Date.now(),{cache:"no-store"});
+    if(!res.ok) throw new Error("HTTP "+res.status);
+    const text=await res.text();
+    let data;
+    try{ data=JSON.parse(text); }
+    catch(e){ throw new Error("the URL didn't return JSON — check it ends in /exec and is deployed to \u201cAnyone\u201d"); }
+    /* the script reports its own failures rather than returning junk */
+    if(data.error) throw new Error(data.error);
+    const raw=data.rows||[];
+    const out=ingest(raw);
+    if(out.err==="no-key-column") throw new Error("the feed had no "+KEY_HEADER+" field");
+    if(out.err==="no-lbs-column") throw new Error("the feed had no \u201c"+LBS_HEADER+"\u201d field");
+    SHEET=out.map;
+    const when=data.updated?new Date(data.updated):new Date();
+    writeCache({updated:when.toISOString(),map:out.map});
+    render();
+    setStatus((out.n?out.n+" weighed":"nothing weighed yet")+" \u00b7 "+when.toLocaleTimeString());
+    const warn=[];
+    if(out.bad.length) warn.push("<b>"+out.bad.length+" weighed row"+(out.bad.length>1?"s":"")+
+      " didn't match a block-variety</b> and "+(out.bad.length>1?"were":"was")+" skipped: <code>"+
+      out.bad.slice(0,6).join("</code> <code>")+"</code>"+(out.bad.length>6?" and more":"")+
+      ". Keys must match column G of the master exactly.");
+    if(out.stray.length) warn.push("<b>"+out.stray.length+" block"+(out.stray.length>1?"s":"")+
+      " outside this dashboard now ha"+(out.stray.length>1?"ve":"s")+" a 2026 weight</b>: <code>"+
+      out.stray.slice(0,6).join("</code> <code>")+"</code>. Those lbs are in the master but not counted here \u2014 "+
+      "worth adding them back to scope.");
+    showBanner(warn.join("<br>"));
+  }catch(err){
+    if(Object.keys(SHEET).length){ setStatus("Showing saved copy",true); }
+    else{
+      setStatus("Load failed",true);
+      showBanner("<b>Couldn't read the sheet.</b> "+err.message+
+        ". Opening the <code>/exec</code> URL in a browser shows what the script is returning; add <code>?diag=1</code> to see which columns it found. You can still type weights in by hand.");
+    }
+  }
+}
+document.getElementById("refreshBtn").onclick=()=>loadSheet(false);
+
+fillSelect("fFund","All funds",DATA.map(r=>r.fd));
+fillSelect("fClass","All classifications",DATA.map(r=>r.cl));
+fillSelect("fAM","All AMs",DATA.map(r=>r.am));
+fillSelect("fFM","All FMs",DATA.map(r=>r.fm));
+render();
+loadSheet(true);
+</script>
+</body>
+</html>
