@@ -56,6 +56,9 @@
   .ysub{font-size:11.5px;color:var(--secondary);margin-top:9px;font-variant-numeric:tabular-nums;min-height:14px}
   .neg{color:var(--red)} .pos{color:var(--green)}
   .stat .k small{font-weight:400;color:var(--secondary)}
+  .stat .seg{width:100%;margin:7px 0 3px}
+  .stat .seg button{flex:1;padding:5px 6px;font-size:12px;letter-spacing:-.01em}
+  @media (max-width:700px){.stat .seg button{padding:5px 3px;font-size:11px}}
   .meter{height:4px;background:rgba(0,0,0,.06);border-radius:2px;margin-top:11px;overflow:hidden}
   .meter i{display:block;height:100%;border-radius:2px;background:var(--green);
     transition:width .5s cubic-bezier(.25,.1,.25,1)}
@@ -73,12 +76,13 @@
   /* variance ladder */
   .ladder{padding:8px 8px 6px}
   .rung{
-    all:unset;display:grid;grid-template-columns:54px 1fr 74px;align-items:center;gap:10px;
+    all:unset;display:grid;grid-template-columns:106px 1fr 66px;align-items:center;gap:8px;
     width:100%;box-sizing:border-box;padding:5px 12px;border-radius:8px;cursor:pointer;
   }
   .rung:hover{background:rgba(0,0,0,.03)}
   .rung:focus-visible{outline:2px solid var(--blue);outline-offset:-2px}
-  .rung .code{font-size:13px;font-weight:600;color:var(--text);letter-spacing:-.01em}
+  .rung .code{font-size:12px;font-weight:600;color:var(--text);letter-spacing:-.01em;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .track{position:relative;height:12px}
   .track:before{content:"";position:absolute;left:50%;top:-6px;bottom:-6px;width:1px;background:var(--hairline-soft)}
   .bar{position:absolute;top:2px;height:8px;border-radius:4px;transition:width .4s cubic-bezier(.25,.1,.25,1)}
@@ -97,6 +101,25 @@
   .dbar i{display:block;height:100%;border-radius:3px;background:var(--blue);
     transition:width .45s cubic-bezier(.25,.1,.25,1)}
   .dsub{font-size:11px;color:var(--secondary);margin-top:5px;font-variant-numeric:tabular-nums}
+
+  /* filters popover */
+  .filtwrap{position:relative}
+  .fbtn{font:inherit;font-size:13.5px;color:var(--text);border:none;border-radius:10px;
+    background:rgba(0,0,0,.05);padding:8px 12px;cursor:pointer;display:inline-flex;gap:7px;align-items:center}
+  .fbtn:hover{background:rgba(0,0,0,.09)}
+  .fbtn[aria-expanded="true"]{background:rgba(0,113,227,.12);color:var(--blue)}
+  .fbtn:focus-visible{outline:2px solid var(--blue);outline-offset:1px}
+  .badge{background:var(--blue);color:#fff;border-radius:9px;font-size:11px;font-weight:600;
+    min-width:17px;height:17px;display:inline-flex;align-items:center;justify-content:center;padding:0 5px}
+  .pop{position:absolute;top:calc(100% + 8px);left:0;z-index:30;width:236px;
+    background:var(--card);border-radius:14px;padding:13px;display:grid;gap:10px;
+    box-shadow:0 8px 30px rgba(0,0,0,.16);animation:fade .12s ease}
+  .pop label{display:grid;gap:4px;font-size:11.5px;font-weight:500;color:var(--secondary)}
+  .pop select{width:100%;max-width:none;cursor:pointer}
+  .pop[hidden],.badge[hidden]{display:none}
+  .pfoot{display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .pfoot span{font-size:11.5px;color:var(--secondary);font-variant-numeric:tabular-nums}
+  @media (max-width:700px){.pop{width:calc(100vw - 56px)}}
 
   /* tools */
   .tools{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:14px 20px 12px}
@@ -119,7 +142,7 @@
 
   /* table — lines only where a line means something */
   .scroll{overflow-x:auto;min-width:0;border-radius:0 0 18px 18px}
-  table{border-collapse:collapse;width:100%;min-width:780px}
+  table{border-collapse:collapse;width:100%;min-width:600px}
   thead th{
     font-size:12px;font-weight:500;color:var(--secondary);
     padding:12px 14px 10px;text-align:right;white-space:nowrap;
@@ -136,13 +159,13 @@
   tr.lv1:first-child td{border-top:none}
   tr.lv1 td:first-child{font-size:15px;font-weight:600;letter-spacing:-.01em;padding-left:20px}
   tr.lv1:hover td{background:rgba(0,0,0,.02)}
-  tr.lv2 td{cursor:pointer}
-  tr.lv2 td:first-child{padding-left:38px;font-weight:500}
-  tr.lv2:hover td{background:rgba(0,0,0,.02)}
-  tr.lv3 td{color:var(--secondary)}
+  tr.lv2 td{cursor:pointer;background:rgba(0,0,0,.015)}
+  tr.lv2 td:first-child{padding-left:38px;font-weight:500;box-shadow:inset 2px 0 0 rgba(0,0,0,.07)}
+  tr.lv2:hover td{background:rgba(0,0,0,.04)}
+  tr.lv3 td{color:var(--secondary);background:rgba(0,0,0,.015)}
   tr.lv3[data-pick]{cursor:pointer}
-  tr.lv3[data-pick]:hover td{background:rgba(0,0,0,.02)}
-  tr.lv3 td:first-child{padding-left:58px}
+  tr.lv3[data-pick]:hover td{background:rgba(0,0,0,.04)}
+  tr.lv3 td:first-child{padding-left:58px;box-shadow:inset 2px 0 0 rgba(0,0,0,.07)}
   tr.lv3 td.hold{color:var(--text);font-weight:500}
   tr.pend td{color:var(--secondary)}
   tr.pend td:first-child{font-weight:500}
@@ -155,6 +178,12 @@
   tfoot td{padding:14px;font-weight:600;border-top:1px solid var(--hairline);background:rgba(0,0,0,.015)}
   tfoot td:first-child{padding-left:20px}
   .empty{padding:34px 20px;color:var(--secondary)}
+  @media (min-width:981px){
+    .scroll{max-height:calc(100vh - 150px)}
+    tr.lv1.open td{position:sticky;top:37px;z-index:1;background:var(--card)}
+    tr.lv1.open:hover td{background:#f7f7f8}
+    tfoot td{position:sticky;bottom:0;z-index:2;background:#f6f6f7}
+  }
   .banner{display:none;background:#fff4e5;color:#7a4b00;border:1px solid #ffd591;
     border-radius:12px;padding:11px 15px;font-size:13px;line-height:1.5;margin:22px 0 -4px}
   .banner.show{display:block}
@@ -219,14 +248,6 @@
 
   <div class="head">
     <h1>2026 USDA Harvest Results</h1>
-    <div style="display:flex;align-items:center">
-      <span class="seglab">Compare with</span>
-      <div class="seg" id="basis" role="group" aria-label="Comparison basis">
-        <button data-b="y25" aria-pressed="false">2025 Actual</button>
-        <button data-b="yrf" aria-pressed="true">2026 Reforecast</button>
-        <button data-b="ybd" aria-pressed="false">2026 Budget</button>
-      </div>
-    </div>
   </div>
 
   <div class="banner" id="banner"></div>
@@ -240,7 +261,7 @@
     </section>
 
     <section class="card">
-      <header><h2>Variance by ranch <span id="ladderCount"></span></h2></header>
+      <header><h2>Biggest misses <span id="ladderCount"></span></h2><div class="cap">by block</div></header>
       <div class="ladder" id="ladder"></div>
       <div class="ladfoot"><span id="scaleL"></span><span id="ladderNote"></span><span id="scaleR"></span></div>
     </section></div>
@@ -248,11 +269,18 @@
     <section class="card">
       <div class="tools">
         <input type="search" id="q" placeholder="Search" aria-label="Search block or variety">
-        <select id="fFund"></select>
-        <select id="fAM"></select>
-        <select id="fFM"></select>
-        <select id="fProc"></select>
+        <div class="filtwrap">
+          <button class="fbtn" id="fToggle" aria-expanded="false">Filters<span class="badge" id="fCount" hidden></span></button>
+          <div class="pop" id="fPop" hidden>
+            <label>Fund<select id="fFund"></select></label>
+            <label>Area manager<select id="fAM"></select></label>
+            <label>Farm manager<select id="fFM"></select></label>
+            <label>Processor<select id="fProc"></select></label>
+            <div class="pfoot"><span id="fScope"></span><button class="link" id="fClear">Clear all</button></div>
+          </div>
+        </div>
         <button class="link" id="tExpand">Expand all</button>
+        <label class="chk"><input type="checkbox" id="fEnt">Weighed only</label>
         <span class="right">
           <span class="savenote" id="status"></span>
           <button class="link" id="refreshBtn">Refresh</button>
@@ -262,13 +290,11 @@
       <div class="scroll">
         <table id="grid">
           <thead><tr>
-            <th data-s="name">Ranch / block / variety</th>
-            <th data-s="ac">Acres</th>
-            <th data-s="y26">2026 lb/ac</th>
-            <th data-s="yb">Basis lb/ac</th>
-            <th data-s="l26">2026 lbs</th>
-            <th data-s="dl">Var lbs</th>
-            <th data-s="dp">Var %</th>
+            <th data-s="name" data-lab="Ranch / block / variety">Ranch / block / variety</th>
+            <th data-s="y26" data-lab="2026 lb/ac">2026 lb/ac</th>
+            <th data-s="yb"  data-lab="Basis lb/ac">Basis lb/ac</th>
+            <th data-s="l26" data-lab="2026 lbs">2026 lbs</th>
+            <th data-s="dp"  data-lab="Var %">Var %</th>
           </tr></thead>
           <tbody id="body"></tbody>
           <tfoot id="foot"></tfoot>
@@ -305,7 +331,7 @@ const OUT_OF_SCOPE = new Set(["GLF15-2A-GH","GLF15-2B-GH","GLF15-2C-GH","GLF15-2
 
 const DATA = [{"rn":"GLF1","hb":"GLF1-1","bv":"GLF1-1-MT","vr":"monterey","fd":"GLF LP","cl":"Rollback Almonds","am":"Jimmy Gill","fm":"Oscar","ac":32.98,"y25":860,"ybd":1600,"yrf":1800,"y26":null,"hl":"Holland","pr":"American Almond Company"},{"rn":"GLF1","hb":"GLF1-1","bv":"GLF1-1-NP","vr":"nonpareil","fd":"GLF LP","cl":"Rollback Almonds","am":"Jimmy Gill","fm":"Oscar","ac":65.95,"y25":810,"ybd":1600,"yrf":1600,"y26":null,"hl":"Holland","pr":"American Almond Company"},{"rn":"GLF1","hb":"GLF1-1","bv":"GLF1-1-WC","vr":"wood colony","fd":"GLF LP","cl":"Rollback Almonds","am":"Jimmy Gill","fm":"Oscar","ac":32.98,"y25":747,"ybd":1600,"yrf":1450,"y26":null,"hl":"Holland","pr":"American Almond Company"},{"rn":"GLF10","hb":"GLF10-NE","bv":"GLF10-NE-ID","vr":"independence","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Pablo","ac":34.03,"y25":487,"ybd":1200,"yrf":1100,"y26":null,"hl":"Braden","pr":"American Almond Company"},{"rn":"GLF10","hb":"GLF10-NE","bv":"GLF10-NE-MT","vr":"monterey","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Pablo","ac":34.03,"y25":728,"ybd":1400,"yrf":1300,"y26":null,"hl":"Braden","pr":"American Almond Company"},{"rn":"GLF10","hb":"GLF10-NE","bv":"GLF10-NE-NP","vr":"nonpareil","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Pablo","ac":68.05,"y25":603,"ybd":1200,"yrf":1300,"y26":null,"hl":"Braden","pr":"American Almond Company"},{"rn":"GLF10","hb":"GLF10-NW","bv":"GLF10-NW-ID","vr":"independence","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Pablo","ac":39.39,"y25":375,"ybd":1200,"yrf":1100,"y26":null,"hl":"Braden","pr":"Harris Woolf"},{"rn":"GLF10","hb":"GLF10-NW","bv":"GLF10-NW-MT","vr":"monterey","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Pablo","ac":39.39,"y25":652,"ybd":1400,"yrf":1400,"y26":null,"hl":"Braden","pr":"Harris Woolf"},{"rn":"GLF10","hb":"GLF10-NW","bv":"GLF10-NW-NP","vr":"nonpareil","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Pablo","ac":78.8,"y25":479,"ybd":1200,"yrf":1350,"y26":null,"hl":"Braden","pr":"Harris Woolf"},{"rn":"GLF10","hb":"GLF10-SE","bv":"GLF10-SE-ID","vr":"independence","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Pablo","ac":35.3,"y25":453,"ybd":1000,"yrf":1200,"y26":null,"hl":"Braden","pr":"Baugher"},{"rn":"GLF10","hb":"GLF10-SE","bv":"GLF10-SE-MT","vr":"monterey","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Pablo","ac":35.3,"y25":488,"ybd":1200,"yrf":1400,"y26":null,"hl":"Braden","pr":"Baugher"},{"rn":"GLF10","hb":"GLF10-SE","bv":"GLF10-SE-NP","vr":"nonpareil","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Pablo","ac":70.61,"y25":524,"ybd":1200,"yrf":1350,"y26":null,"hl":"Braden","pr":"Baugher"},{"rn":"GLF10","hb":"GLF10-SW","bv":"GLF10-SW-ID","vr":"independence","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Pablo","ac":33.26,"y25":595,"ybd":1000,"yrf":1100,"y26":null,"hl":"Braden","pr":"American Almond Company"},{"rn":"GLF10","hb":"GLF10-SW","bv":"GLF10-SW-MT","vr":"monterey","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Pablo","ac":33.26,"y25":860,"ybd":1200,"yrf":1400,"y26":null,"hl":"Braden","pr":"American Almond Company"},{"rn":"GLF10","hb":"GLF10-SW","bv":"GLF10-SW-NP","vr":"nonpareil","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Pablo","ac":66.52,"y25":841,"ybd":1200,"yrf":1400,"y26":null,"hl":"Braden","pr":"American Almond Company"},{"rn":"GLF11","hb":"GLF11-N","bv":"GLF11-N-KR","vr":"Kerman","fd":"GLF LP","cl":"Conventional Pistachios","am":"Jimmy Gill","fm":"Amalia","ac":191.42,"y25":2003,"ybd":1500,"yrf":1800,"y26":null,"hl":"N/A","pr":"TBD"},{"rn":"GLF11","hb":"GLF11-S","bv":"GLF11-S-KR","vr":"Kerman","fd":"GLF LP","cl":"Conventional Pistachios","am":"Jimmy Gill","fm":"Amalia","ac":132.82,"y25":3140,"ybd":2000,"yrf":1600,"y26":null,"hl":"N/A","pr":"TBD"},{"rn":"GLF12","hb":"GLF12-1","bv":"GLF12-1-GH","vr":"Golden Hills","fd":"GLF OZ","cl":"Immature Conventional Pistachios","am":"Jimmy Gill","fm":"Amalia","ac":113.75,"y25":0,"ybd":200,"yrf":0,"y26":null,"hl":"","pr":""},{"rn":"GLF12","hb":"GLF12-2","bv":"GLF12-2-GH","vr":"Golden Hills","fd":"GLF OZ","cl":"Immature Conventional Pistachios","am":"Jimmy Gill","fm":"Amalia","ac":164.12,"y25":0,"ybd":200,"yrf":0,"y26":null,"hl":"","pr":""},{"rn":"GLF13","hb":"GLF13-AN","bv":"GLF13-AN-MT","vr":"monterey","fd":"GLF LP","cl":"Conventional Almonds","am":"Saskia","fm":"Amalia","ac":18.69,"y25":2696,"ybd":2900,"yrf":2650,"y26":null,"hl":"Holland","pr":"American Almond Company"},{"rn":"GLF13","hb":"GLF13-AN","bv":"GLF13-AN-NP","vr":"nonpareil","fd":"GLF LP","cl":"Conventional Almonds","am":"Saskia","fm":"Amalia","ac":27.0,"y25":2629,"ybd":2800,"yrf":2500,"y26":null,"hl":"Holland","pr":"American Almond Company"},{"rn":"GLF13","hb":"GLF13-AS","bv":"GLF13-AS-MT","vr":"monterey","fd":"GLF LP","cl":"Conventional Almonds","am":"Saskia","fm":"Amalia","ac":14.54,"y25":2547,"ybd":2800,"yrf":2700,"y26":null,"hl":"Holland","pr":"Treehouse"},{"rn":"GLF13","hb":"GLF13-AS","bv":"GLF13-AS-NP","vr":"nonpareil","fd":"GLF LP","cl":"Conventional Almonds","am":"Saskia","fm":"Amalia","ac":20.77,"y25":2152,"ybd":2700,"yrf":2550,"y26":null,"hl":"Holland","pr":"Treehouse"},{"rn":"GLF13","hb":"GLF13-P","bv":"GLF13-P-GH","vr":"Golden Hills","fd":"GLF LP","cl":"Conventional Pistachios","am":"Saskia","fm":"Amalia","ac":145.55,"y25":5368,"ybd":4000,"yrf":3533,"y26":null,"hl":"N/A","pr":"TBD"},{"rn":"GLF14","hb":"GLF14-E","bv":"GLF14-E-ID","vr":"Independence","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Amalia","ac":84.95,"y25":1367,"ybd":2000,"yrf":1850,"y26":null,"hl":"Cortina","pr":"Harris Woolf"},{"rn":"GLF14","hb":"GLF14-W","bv":"GLF14-W-ID","vr":"Independence","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Amalia","ac":84.95,"y25":1255,"ybd":2000,"yrf":2000,"y26":null,"hl":"Cortina","pr":"Harris Woolf"},{"rn":"GLF16","hb":"GLF16-1","bv":"GLF16-1-KR","vr":"Kerman","fd":"GLF LP","cl":"Conventional Pistachios","am":"Saskia","fm":"Amalia","ac":74.56,"y25":3941,"ybd":2600,"yrf":2133,"y26":null,"hl":"N/A","pr":"TBD"},{"rn":"GLF16","hb":"GLF16-2","bv":"GLF16-2-KR","vr":"Kerman","fd":"GLF LP","cl":"Conventional Pistachios","am":"Saskia","fm":"Amalia","ac":79.53,"y25":4224,"ybd":2900,"yrf":2133,"y26":null,"hl":"N/A","pr":"TBD"},{"rn":"GLF16","hb":"GLF16-3","bv":"GLF16-3-KR","vr":"Kerman","fd":"GLF LP","cl":"Conventional Pistachios","am":"Saskia","fm":"Amalia","ac":79.53,"y25":3531,"ybd":2200,"yrf":2167,"y26":null,"hl":"N/A","pr":"TBD"},{"rn":"GLF17","hb":"GLF17-7","bv":"GLF17-7-ID","vr":"independence","fd":"GLF OZ","cl":"Immature Conventional Almonds","am":"Jimmy Gill","fm":"Oscar","ac":90.73,"y25":1232,"ybd":1750,"yrf":1750,"y26":null,"hl":"Holland","pr":"Supreme"},{"rn":"GLF17","hb":"GLF17-8","bv":"GLF17-8-ID","vr":"independence","fd":"GLF OZ","cl":"Immature Conventional Almonds","am":"Jimmy Gill","fm":"Oscar","ac":118.08,"y25":1710,"ybd":2200,"yrf":2000,"y26":null,"hl":"Holland","pr":"Treehouse"},{"rn":"GLF17","hb":"GLF17-8","bv":"GLF17-8-LB","vr":"liberty","fd":"GLF OZ","cl":"Immature Conventional Almonds","am":"Jimmy Gill","fm":"Oscar","ac":19.0,"y25":1594,"ybd":2000,"yrf":1633,"y26":null,"hl":"Holland","pr":"Treehouse"},{"rn":"GLF17","hb":"GLF17-8","bv":"GLF17-8-YZ","vr":"yorizane","fd":"GLF OZ","cl":"Immature Conventional Almonds","am":"Jimmy Gill","fm":"Oscar","ac":19.0,"y25":2005,"ybd":2200,"yrf":2000,"y26":null,"hl":"Holland","pr":"Treehouse"},{"rn":"GLF17","hb":"GLF17-S","bv":"GLF17-S-ID","vr":"independence","fd":"GLF OZ","cl":"Immature Conventional Almonds","am":"Jimmy Gill","fm":"Oscar","ac":137.01,"y25":1770,"ybd":2100,"yrf":1800,"y26":null,"hl":"Holland","pr":"Monte Vista"},{"rn":"GLF17","hb":"GLF17-9","bv":"GLF17-9-AD","vr":"aldrich","fd":"GLF OZ","cl":"Organic Almonds","am":"Jimmy Gill","fm":"Oscar","ac":30.66,"y25":836,"ybd":1400,"yrf":1200,"y26":null,"hl":"Holland","pr":"Baugher"},{"rn":"GLF17","hb":"GLF17-9","bv":"GLF17-9-MT","vr":"monterey","fd":"GLF OZ","cl":"Organic Almonds","am":"Jimmy Gill","fm":"Oscar","ac":30.66,"y25":858,"ybd":1400,"yrf":1200,"y26":null,"hl":"Holland","pr":"Baugher"},{"rn":"GLF17","hb":"GLF17-9","bv":"GLF17-9-NP","vr":"nonpareil","fd":"GLF OZ","cl":"Organic Almonds","am":"Jimmy Gill","fm":"Oscar","ac":61.32,"y25":788,"ybd":1400,"yrf":1200,"y26":null,"hl":"Holland","pr":"Baugher"},{"rn":"GLF17","hb":"GLF17-1","bv":"GLF17-1-ID","vr":"independence","fd":"GLF OZ","cl":"Rollback Almonds","am":"Jimmy Gill","fm":"Oscar","ac":41.54,"y25":2413,"ybd":2400,"yrf":2400,"y26":null,"hl":"Holland","pr":"American Almond Company"},{"rn":"GLF17","hb":"GLF17-2","bv":"GLF17-2-MT","vr":"monterey","fd":"GLF OZ","cl":"Rollback Almonds","am":"Jimmy Gill","fm":"Oscar","ac":50.45,"y25":1462,"ybd":1700,"yrf":1700,"y26":null,"hl":"Holland","pr":"Baugher"},{"rn":"GLF17","hb":"GLF17-2","bv":"GLF17-2-NP","vr":"nonpareil","fd":"GLF OZ","cl":"Rollback Almonds","am":"Jimmy Gill","fm":"Oscar","ac":51.43,"y25":1049,"ybd":1700,"yrf":1700,"y26":null,"hl":"Holland","pr":"Baugher"},{"rn":"GLF17","hb":"GLF17-3","bv":"GLF17-3-CM","vr":"carmel","fd":"GLF OZ","cl":"Rollback Almonds","am":"Jimmy Gill","fm":"Oscar","ac":2.2,"y25":null,"ybd":1700,"yrf":1300,"y26":null,"hl":"","pr":""},{"rn":"GLF17","hb":"GLF17-3","bv":"GLF17-3-MT","vr":"monterey","fd":"GLF OZ","cl":"Rollback Almonds","am":"Jimmy Gill","fm":"Oscar","ac":2.2,"y25":null,"ybd":1700,"yrf":1600,"y26":null,"hl":"","pr":""},{"rn":"GLF17","hb":"GLF17-3","bv":"GLF17-3-NP","vr":"nonpareil","fd":"GLF OZ","cl":"Rollback Almonds","am":"Jimmy Gill","fm":"Oscar","ac":4.4,"y25":null,"ybd":1700,"yrf":1600,"y26":null,"hl":"","pr":""},{"rn":"GLF18","hb":"GLF18-6","bv":"GLF18-6-ID","vr":"independence","fd":"GLF LP","cl":"Immature Conventional Almonds","am":"Jimmy Gill","fm":"Oscar","ac":122.05,"y25":1210,"ybd":1800,"yrf":1700,"y26":null,"hl":"Holland","pr":"Treehouse"},{"rn":"GLF18","hb":"GLF18-10","bv":"GLF18-10-MT","vr":"monterey","fd":"GLF LP","cl":"Rollback Almonds","am":"Jimmy Gill","fm":"Oscar","ac":37.25,"y25":734,"ybd":1500,"yrf":1500,"y26":null,"hl":"Holland","pr":"Monte Vista"},{"rn":"GLF18","hb":"GLF18-10","bv":"GLF18-10-NP","vr":"nonpareil","fd":"GLF LP","cl":"Rollback Almonds","am":"Jimmy Gill","fm":"Oscar","ac":74.49,"y25":992,"ybd":1500,"yrf":1400,"y26":null,"hl":"Holland","pr":"Monte Vista"},{"rn":"GLF18","hb":"GLF18-10","bv":"GLF18-10-WC","vr":"wood colony","fd":"GLF LP","cl":"Rollback Almonds","am":"Jimmy Gill","fm":"Oscar","ac":37.25,"y25":1070,"ybd":1200,"yrf":1100,"y26":null,"hl":"Holland","pr":"Monte Vista"},{"rn":"GLF18","hb":"GLF18-3","bv":"GLF18-3-CM","vr":"carmel","fd":"GLF LP","cl":"Rollback Almonds","am":"Jimmy Gill","fm":"Oscar","ac":15.27,"y25":1209,"ybd":1700,"yrf":1300,"y26":null,"hl":"Holland","pr":"American Almond Company"},{"rn":"GLF18","hb":"GLF18-3","bv":"GLF18-3-MT","vr":"monterey","fd":"GLF LP","cl":"Rollback Almonds","am":"Jimmy Gill","fm":"Oscar","ac":15.27,"y25":1242,"ybd":1700,"yrf":1600,"y26":null,"hl":"Holland","pr":"American Almond Company"},{"rn":"GLF18","hb":"GLF18-3","bv":"GLF18-3-NP","vr":"nonpareil","fd":"GLF LP","cl":"Rollback Almonds","am":"Jimmy Gill","fm":"Oscar","ac":30.54,"y25":1169,"ybd":1700,"yrf":1500,"y26":null,"hl":"Holland","pr":"American Almond Company"},{"rn":"GLF18","hb":"GLF18-4","bv":"GLF18-4-BT","vr":"butte","fd":"GLF LP","cl":"Rollback Almonds","am":"Jimmy Gill","fm":"Oscar","ac":37.5,"y25":2245,"ybd":2000,"yrf":1800,"y26":null,"hl":"Holland","pr":"Baugher"},{"rn":"GLF18","hb":"GLF18-4","bv":"GLF18-4-PD","vr":"padre","fd":"GLF LP","cl":"Rollback Almonds","am":"Jimmy Gill","fm":"Oscar","ac":37.5,"y25":2245,"ybd":2000,"yrf":1800,"y26":null,"hl":"Holland","pr":"Baugher"},{"rn":"GLF18","hb":"GLF18-5","bv":"GLF18-5-AD","vr":"aldrich","fd":"GLF LP","cl":"Rollback Almonds","am":"Jimmy Gill","fm":"Oscar","ac":11.85,"y25":1321,"ybd":1500,"yrf":1400,"y26":null,"hl":"Holland","pr":"Treehouse"},{"rn":"GLF18","hb":"GLF18-5","bv":"GLF18-5-NP","vr":"nonpareil","fd":"GLF LP","cl":"Rollback Almonds","am":"Jimmy Gill","fm":"Oscar","ac":11.85,"y25":1158,"ybd":1700,"yrf":1400,"y26":null,"hl":"Holland","pr":"Treehouse"},{"rn":"GLF19","hb":"GLF19-1","bv":"GLF19-1-MT","vr":"monterey","fd":"GLF LP","cl":"Organic Almonds","am":"Jimmy Gill","fm":"Gerardo","ac":56.22,"y25":1459,"ybd":2000,"yrf":2100,"y26":null,"hl":"Treehouse","pr":"Baugher"},{"rn":"GLF19","hb":"GLF19-1","bv":"GLF19-1-NP","vr":"nonpareil","fd":"GLF LP","cl":"Organic Almonds","am":"Jimmy Gill","fm":"Gerardo","ac":56.22,"y25":1498,"ybd":2000,"yrf":2100,"y26":null,"hl":"Treehouse","pr":"Baugher"},{"rn":"GLF20","hb":"GLF20-E","bv":"GLF20-E-GH","vr":"Golden Hills","fd":"GLF LP","cl":"Conventional Pistachios","am":"Jimmy Gill","fm":"Amalia","ac":150.94,"y25":2366,"ybd":2500,"yrf":2300,"y26":null,"hl":"N/A","pr":"TBD"},{"rn":"GLF20","hb":"GLF20-W","bv":"GLF20-W-GH","vr":"Golden Hills","fd":"GLF LP","cl":"Conventional Pistachios","am":"Jimmy Gill","fm":"Amalia","ac":150.94,"y25":2773,"ybd":2500,"yrf":2300,"y26":null,"hl":"N/A","pr":"TBD"},{"rn":"GLF22","hb":"GLF22-C","bv":"GLF22-C-GH","vr":"Golden Hills","fd":"GLF LP","cl":"Conventional Pistachios","am":"Jimmy Gill","fm":"Amalia","ac":118.1,"y25":2384,"ybd":2800,"yrf":2600,"y26":null,"hl":"N/A","pr":"TBD"},{"rn":"GLF22","hb":"GLF22-C","bv":"GLF22-O-GH","vr":"Golden Hills","fd":"GLF LP","cl":"Conventional Pistachios","am":"Jimmy Gill","fm":"Amalia","ac":82.26,"y25":3000,"ybd":3400,"yrf":2867,"y26":null,"hl":"N/A","pr":"TBD"},{"rn":"GLF23","hb":"GLF23-5","bv":"GLF23-5-MT","vr":"monterey","fd":"GLF OZ","cl":"Conventional Almonds","am":"Tom Barr","fm":"Armando","ac":48.61,"y25":2844,"ybd":2800,"yrf":2800,"y26":null,"hl":"Holland","pr":"Treehouse"},{"rn":"GLF23","hb":"GLF23-5","bv":"GLF23-5-NP","vr":"nonpareil","fd":"GLF OZ","cl":"Conventional Almonds","am":"Tom Barr","fm":"Armando","ac":48.61,"y25":2156,"ybd":2800,"yrf":2800,"y26":null,"hl":"Holland","pr":"Treehouse"},{"rn":"GLF23","hb":"GLF23-5","bv":"GLF23-5-WC","vr":"wood colony","fd":"GLF OZ","cl":"Conventional Almonds","am":"Tom Barr","fm":"Armando","ac":48.61,"y25":2671,"ybd":2800,"yrf":2800,"y26":null,"hl":"Holland","pr":"Treehouse"},{"rn":"GLF24","hb":"GLF24-1","bv":"GLF24-1-AD","vr":"aldrich","fd":"GLF LP","cl":"Conventional Almonds","am":"Jimmy Gill","fm":"Gerardo","ac":39.02,"y25":1465,"ybd":2000,"yrf":1600,"y26":null,"hl":"Treehouse","pr":"Harris Woolf"},{"rn":"GLF24","hb":"GLF24-1","bv":"GLF24-1-MT","vr":"monterey","fd":"GLF LP","cl":"Conventional Almonds","am":"Jimmy Gill","fm":"Gerardo","ac":39.02,"y25":1723,"ybd":2000,"yrf":1900,"y26":null,"hl":"Treehouse","pr":"Harris Woolf"},{"rn":"GLF24","hb":"GLF24-1","bv":"GLF24-1-NP","vr":"nonpareil","fd":"GLF LP","cl":"Conventional Almonds","am":"Jimmy Gill","fm":"Gerardo","ac":78.04,"y25":1340,"ybd":2000,"yrf":1600,"y26":null,"hl":"Treehouse","pr":"Harris Woolf"},{"rn":"GLF25","hb":"GLF25-A","bv":"GLF25-A-MT","vr":"monterey","fd":"GLF LP","cl":"Conventional Almonds","am":"Jimmy Gill","fm":"Gerardo","ac":74.28,"y25":2388,"ybd":2800,"yrf":2700,"y26":null,"hl":"Treehouse","pr":"Monte Vista"},{"rn":"GLF25","hb":"GLF25-A","bv":"GLF25-A-NP","vr":"nonpareil","fd":"GLF LP","cl":"Conventional Almonds","am":"Jimmy Gill","fm":"Gerardo","ac":74.28,"y25":2237,"ybd":2800,"yrf":2700,"y26":null,"hl":"Treehouse","pr":"Monte Vista"},{"rn":"GLF25","hb":"GLF25-B","bv":"GLF25-B-ID","vr":"independence","fd":"GLF LP","cl":"Conventional Almonds","am":"Jimmy Gill","fm":"Gerardo","ac":37.14,"y25":1959,"ybd":2800,"yrf":2500,"y26":null,"hl":"Treehouse","pr":"Monte Vista"},{"rn":"GLF25","hb":"GLF25-B","bv":"GLF25-B-MT","vr":"monterey","fd":"GLF LP","cl":"Conventional Almonds","am":"Jimmy Gill","fm":"Gerardo","ac":37.14,"y25":1951,"ybd":2800,"yrf":2700,"y26":null,"hl":"Treehouse","pr":"Monte Vista"},{"rn":"GLF25","hb":"GLF25-B","bv":"GLF25-B-NP","vr":"nonpareil","fd":"GLF LP","cl":"Conventional Almonds","am":"Jimmy Gill","fm":"Gerardo","ac":74.28,"y25":2172,"ybd":2800,"yrf":2300,"y26":null,"hl":"Treehouse","pr":"Monte Vista"},{"rn":"GLF26","hb":"GLF26-1","bv":"GLF26-1-MT","vr":"monterey","fd":"GLF26","cl":"Conventional Almonds","am":"Jimmy Gill","fm":"Gerardo","ac":36.0,"y25":2497,"ybd":2800,"yrf":2800,"y26":null,"hl":"Treehouse","pr":"Treehouse"},{"rn":"GLF26","hb":"GLF26-1","bv":"GLF26-1-NP","vr":"nonpareil","fd":"GLF26","cl":"Conventional Almonds","am":"Jimmy Gill","fm":"Gerardo","ac":36.0,"y25":1909,"ybd":2800,"yrf":2600,"y26":null,"hl":"Treehouse","pr":"Treehouse"},{"rn":"GLF26","hb":"GLF26-2","bv":"GLF26-2-MT","vr":"monterey","fd":"GLF26","cl":"Conventional Almonds","am":"Jimmy Gill","fm":"Gerardo","ac":55.25,"y25":2554,"ybd":2800,"yrf":2800,"y26":null,"hl":"Treehouse","pr":"Treehouse"},{"rn":"GLF26","hb":"GLF26-2","bv":"GLF26-2-NP","vr":"nonpareil","fd":"GLF26","cl":"Conventional Almonds","am":"Jimmy Gill","fm":"Gerardo","ac":55.25,"y25":1922,"ybd":2800,"yrf":2700,"y26":null,"hl":"Treehouse","pr":"Treehouse"},{"rn":"GLF26","hb":"GLF26-3","bv":"GLF26-3-MT","vr":"monterey","fd":"GLF26","cl":"Conventional Almonds","am":"Jimmy Gill","fm":"Gerardo","ac":34.62,"y25":3008,"ybd":3000,"yrf":2800,"y26":null,"hl":"Treehouse","pr":"Supreme"},{"rn":"GLF26","hb":"GLF26-3","bv":"GLF26-3-NP","vr":"nonpareil","fd":"GLF26","cl":"Conventional Almonds","am":"Jimmy Gill","fm":"Gerardo","ac":34.62,"y25":2688,"ybd":3000,"yrf":2500,"y26":null,"hl":"Treehouse","pr":"Supreme"},{"rn":"GLF26","hb":"GLF26-4","bv":"GLF26-4-MT","vr":"monterey","fd":"GLF26","cl":"Conventional Almonds","am":"Jimmy Gill","fm":"Gerardo","ac":39.46,"y25":3006,"ybd":3000,"yrf":2800,"y26":null,"hl":"Treehouse","pr":"Supreme"},{"rn":"GLF26","hb":"GLF26-4","bv":"GLF26-4-NP","vr":"nonpareil","fd":"GLF26","cl":"Conventional Almonds","am":"Jimmy Gill","fm":"Gerardo","ac":39.46,"y25":2398,"ybd":3000,"yrf":2700,"y26":null,"hl":"Treehouse","pr":"Supreme"},{"rn":"GLF27","hb":"GLF27-1","bv":"GLF27-1-CM","vr":"carmel","fd":"GLF LP","cl":"Conventional Almonds","am":"Tom Barr","fm":"Armando","ac":19.25,"y25":1769,"ybd":2800,"yrf":2200,"y26":null,"hl":"Holland","pr":"Supreme"},{"rn":"GLF27","hb":"GLF27-1","bv":"GLF27-1-MT","vr":"monterey","fd":"GLF LP","cl":"Conventional Almonds","am":"Tom Barr","fm":"Armando","ac":19.25,"y25":2572,"ybd":2800,"yrf":2400,"y26":null,"hl":"Holland","pr":"Supreme"},{"rn":"GLF27","hb":"GLF27-1","bv":"GLF27-1-NP","vr":"nonpareil","fd":"GLF LP","cl":"Conventional Almonds","am":"Tom Barr","fm":"Armando","ac":38.5,"y25":2272,"ybd":2800,"yrf":2300,"y26":null,"hl":"Holland","pr":"Supreme"},{"rn":"GLF3","hb":"GLF3-D","bv":"GLF3-D-AD","vr":"aldrich","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":23.49,"y25":2089,"ybd":2100,"yrf":750,"y26":null,"hl":"TBD","pr":"Baugher"},{"rn":"GLF3","hb":"GLF3-D","bv":"GLF3-D-MT","vr":"monterey","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":23.49,"y25":1276,"ybd":2200,"yrf":1200,"y26":null,"hl":"TBD","pr":"Baugher"},{"rn":"GLF3","hb":"GLF3-D","bv":"GLF3-D-NP","vr":"nonpareil","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":70.27,"y25":1496,"ybd":2100,"yrf":1300,"y26":null,"hl":"TBD","pr":"Baugher"},{"rn":"GLF3","hb":"GLF3-D","bv":"GLF3-D-WC","vr":"wood colony","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":23.49,"y25":1211,"ybd":2100,"yrf":200,"y26":null,"hl":"TBD","pr":"Baugher"},{"rn":"GLF3","hb":"GLF3-E","bv":"GLF3-E-AD","vr":"aldrich","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":23.49,"y25":2189,"ybd":2100,"yrf":750,"y26":null,"hl":"TBD","pr":"Baugher"},{"rn":"GLF3","hb":"GLF3-E","bv":"GLF3-E-MT","vr":"monterey","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":23.49,"y25":1223,"ybd":2100,"yrf":1300,"y26":null,"hl":"TBD","pr":"Baugher"},{"rn":"GLF3","hb":"GLF3-E","bv":"GLF3-E-NP","vr":"nonpareil","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":70.27,"y25":1272,"ybd":2000,"yrf":1400,"y26":null,"hl":"TBD","pr":"Baugher"},{"rn":"GLF3","hb":"GLF3-E","bv":"GLF3-E-WC","vr":"wood colony","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":23.49,"y25":1261,"ybd":2000,"yrf":200,"y26":null,"hl":"TBD","pr":"Baugher"},{"rn":"GLF3","hb":"GLF3-NW","bv":"GLF3-NW-AD","vr":"aldrich","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":35.75,"y25":1148,"ybd":2200,"yrf":550,"y26":null,"hl":"TBD","pr":"Baugher"},{"rn":"GLF3","hb":"GLF3-NW","bv":"GLF3-NW-MT","vr":"monterey","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":35.75,"y25":1224,"ybd":2300,"yrf":1000,"y26":null,"hl":"TBD","pr":"Baugher"},{"rn":"GLF3","hb":"GLF3-NW","bv":"GLF3-NW-NP","vr":"nonpareil","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":106.94,"y25":1705,"ybd":2300,"yrf":900,"y26":null,"hl":"TBD","pr":"Baugher"},{"rn":"GLF3","hb":"GLF3-NW","bv":"GLF3-NW-WC","vr":"wood colony","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":35.75,"y25":957,"ybd":2100,"yrf":100,"y26":null,"hl":"TBD","pr":"Baugher"},{"rn":"GLF3","hb":"GLF3-PP","bv":"GLF3-PP-AD","vr":"aldrich","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":23.49,"y25":1496,"ybd":1900,"yrf":600,"y26":null,"hl":"TBD","pr":"Baugher"},{"rn":"GLF3","hb":"GLF3-PP","bv":"GLF3-PP-MT","vr":"monterey","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":23.49,"y25":1277,"ybd":1900,"yrf":1200,"y26":null,"hl":"TBD","pr":"Baugher"},{"rn":"GLF3","hb":"GLF3-PP","bv":"GLF3-PP-NP","vr":"nonpareil","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":70.27,"y25":1625,"ybd":1800,"yrf":1200,"y26":null,"hl":"TBD","pr":"Baugher"},{"rn":"GLF3","hb":"GLF3-PP","bv":"GLF3-PP-WC","vr":"wood colony","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":23.49,"y25":1305,"ybd":1800,"yrf":100,"y26":null,"hl":"TBD","pr":"Baugher"},{"rn":"GLF3","hb":"GLF3-SW","bv":"GLF3-SW-AD","vr":"aldrich","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":16.34,"y25":2775,"ybd":2000,"yrf":500,"y26":null,"hl":"TBD","pr":"Baugher"},{"rn":"GLF3","hb":"GLF3-SW","bv":"GLF3-SW-MT","vr":"monterey","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":16.34,"y25":1419,"ybd":2000,"yrf":1000,"y26":null,"hl":"TBD","pr":"Baugher"},{"rn":"GLF3","hb":"GLF3-SW","bv":"GLF3-SW-NP","vr":"nonpareil","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":49.91,"y25":1385,"ybd":1800,"yrf":1000,"y26":null,"hl":"TBD","pr":"Baugher"},{"rn":"GLF3","hb":"GLF3-SW","bv":"GLF3-SW-WC","vr":"wood colony","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":16.34,"y25":1219,"ybd":2000,"yrf":200,"y26":null,"hl":"TBD","pr":"Baugher"},{"rn":"GLF4","hb":"GLF4-B14","bv":"GLF4-B14-BT","vr":"butte","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Pablo","ac":58.88,"y25":1730,"ybd":2000,"yrf":2100,"y26":null,"hl":"Assali","pr":"Treehouse"},{"rn":"GLF4","hb":"GLF4-B14","bv":"GLF4-B14-PD","vr":"padre","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Pablo","ac":58.88,"y25":1730,"ybd":2000,"yrf":2000,"y26":null,"hl":"Assali","pr":"Treehouse"},{"rn":"GLF4","hb":"GLF4-B5","bv":"GLF4-B5-BT","vr":"butte","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Pablo","ac":54.82,"y25":1691,"ybd":2000,"yrf":2100,"y26":null,"hl":"Braden","pr":"Treehouse"},{"rn":"GLF4","hb":"GLF4-B5","bv":"GLF4-B5-PD","vr":"padre","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Pablo","ac":54.82,"y25":1691,"ybd":2000,"yrf":2000,"y26":null,"hl":"Braden","pr":"Treehouse"},{"rn":"GLF4","hb":"GLF4-GHE","bv":"GLF4-GHE-CM","vr":"carmel","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Pablo","ac":154.32,"y25":1057,"ybd":1500,"yrf":1900,"y26":null,"hl":"Braden","pr":"Treehouse"},{"rn":"GLF4","hb":"GLF4-GHW","bv":"GLF4-GHW-MT","vr":"monterey","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Pablo","ac":77.16,"y25":2040,"ybd":1500,"yrf":2000,"y26":null,"hl":"Assali","pr":"Treehouse"},{"rn":"GLF4","hb":"GLF4-B69","bv":"GLF4-B69-BT","vr":"butte","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":40.61,"y25":1664,"ybd":1900,"yrf":1400,"y26":null,"hl":"Assali","pr":"Baugher"},{"rn":"GLF4","hb":"GLF4-B69","bv":"GLF4-B69-PD","vr":"padre","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":40.61,"y25":1664,"ybd":1900,"yrf":1300,"y26":null,"hl":"Assali","pr":"Baugher"},{"rn":"GLF5","hb":"GLF5-1","bv":"GLF5-1-ID","vr":"independence","fd":"GLF OZ","cl":"Conventional Almonds","am":"Jimmy Gill","fm":"Oscar","ac":144.51,"y25":2460,"ybd":2800,"yrf":2500,"y26":null,"hl":"Holland","pr":"Harris Woolf"},{"rn":"GLF5","hb":"GLF5-2","bv":"GLF5-2-ID","vr":"independence","fd":"GLF OZ","cl":"Conventional Almonds","am":"Jimmy Gill","fm":"Oscar","ac":149.49,"y25":2280,"ybd":2800,"yrf":2500,"y26":null,"hl":"Holland","pr":"Treehouse"},{"rn":"GLF5","hb":"GLF5-3","bv":"GLF5-3-MT","vr":"monterey","fd":"GLF OZ","cl":"Conventional Almonds","am":"Jimmy Gill","fm":"Oscar","ac":76.04,"y25":1182,"ybd":2800,"yrf":1900,"y26":null,"hl":"Holland","pr":"Harris Woolf"},{"rn":"GLF6","hb":"GLF6-1","bv":"GLF6-1-ID","vr":"independence","fd":"GLF OZ","cl":"Immature Conventional Almonds","am":"Jimmy Gill","fm":"Oscar","ac":207.27,"y25":2352,"ybd":2800,"yrf":2700,"y26":null,"hl":"Holland","pr":"50% Harris Woolf, 50% Monte Vista"},{"rn":"GLF7","hb":"GLF7-1","bv":"GLF7-1-AD","vr":"aldrich","fd":"GLF LP","cl":"Conventional Almonds","am":"Tom Barr","fm":"Armando","ac":38.32,"y25":3654,"ybd":3000,"yrf":2800,"y26":null,"hl":"Holland","pr":"Supreme"},{"rn":"GLF7","hb":"GLF7-1","bv":"GLF7-1-NP","vr":"nonpareil","fd":"GLF LP","cl":"Conventional Almonds","am":"Tom Barr","fm":"Armando","ac":77.64,"y25":2132,"ybd":3000,"yrf":2800,"y26":null,"hl":"Holland","pr":"Supreme"},{"rn":"GLF7","hb":"GLF7-1","bv":"GLF7-1-WC","vr":"wood colony","fd":"GLF LP","cl":"Conventional Almonds","am":"Tom Barr","fm":"Armando","ac":38.23,"y25":2869,"ybd":3000,"yrf":2700,"y26":null,"hl":"Holland","pr":"Supreme"},{"rn":"GLF7","hb":"GLF7-2","bv":"GLF7-2-MT","vr":"monterey","fd":"GLF LP","cl":"Conventional Almonds","am":"Tom Barr","fm":"Armando","ac":47.5,"y25":1935,"ybd":2800,"yrf":2800,"y26":null,"hl":"Holland","pr":"Treehouse"},{"rn":"GLF7","hb":"GLF7-2","bv":"GLF7-2-NP","vr":"nonpareil","fd":"GLF LP","cl":"Conventional Almonds","am":"Tom Barr","fm":"Armando","ac":47.39,"y25":1331,"ybd":2800,"yrf":2700,"y26":null,"hl":"Holland","pr":"Treehouse"},{"rn":"GLF7","hb":"GLF7-2","bv":"GLF7-2-WC","vr":"wood colony","fd":"GLF LP","cl":"Conventional Almonds","am":"Tom Barr","fm":"Armando","ac":47.28,"y25":1620,"ybd":2800,"yrf":2700,"y26":null,"hl":"Holland","pr":"Treehouse"},{"rn":"GLF7","hb":"GLF7-10","bv":"GLF7-10-FT","vr":"fritz","fd":"GLF LP","cl":"Organic Almonds","am":"Tom Barr","fm":"Armando","ac":14.79,"y25":876,"ybd":1500,"yrf":1300,"y26":null,"hl":"Holland","pr":"Baugher"},{"rn":"GLF7","hb":"GLF7-10","bv":"GLF7-10-MT","vr":"monterey","fd":"GLF LP","cl":"Organic Almonds","am":"Tom Barr","fm":"Armando","ac":14.83,"y25":1472,"ybd":1800,"yrf":1700,"y26":null,"hl":"Holland","pr":"Baugher"},{"rn":"GLF7","hb":"GLF7-10","bv":"GLF7-10-NP","vr":"nonpareil","fd":"GLF LP","cl":"Organic Almonds","am":"Tom Barr","fm":"Armando","ac":28.47,"y25":1065,"ybd":1500,"yrf":1600,"y26":null,"hl":"Holland","pr":"Baugher"},{"rn":"GLF7","hb":"GLF7-3","bv":"GLF7-3-MT","vr":"monterey","fd":"GLF LP","cl":"Organic Almonds","am":"Tom Barr","fm":"Armando","ac":51.11,"y25":2601,"ybd":2200,"yrf":1900,"y26":null,"hl":"Holland","pr":"Baugher"},{"rn":"GLF7","hb":"GLF7-3","bv":"GLF7-3-NP","vr":"nonpareil","fd":"GLF LP","cl":"Organic Almonds","am":"Tom Barr","fm":"Armando","ac":50.84,"y25":1634,"ybd":2200,"yrf":1900,"y26":null,"hl":"Holland","pr":"Baugher"},{"rn":"GLF7","hb":"GLF7-3","bv":"GLF7-3-WC","vr":"wood colony","fd":"GLF LP","cl":"Organic Almonds","am":"Tom Barr","fm":"Armando","ac":50.87,"y25":2065,"ybd":2200,"yrf":1500,"y26":null,"hl":"Holland","pr":"Baugher"},{"rn":"GLF7","hb":"GLF7-4","bv":"GLF7-4-MT","vr":"monterey","fd":"GLF LP","cl":"Organic Almonds","am":"Tom Barr","fm":"Armando","ac":38.84,"y25":1587,"ybd":2000,"yrf":1800,"y26":null,"hl":"Holland","pr":"Baugher"},{"rn":"GLF7","hb":"GLF7-4","bv":"GLF7-4-NP","vr":"nonpareil","fd":"GLF LP","cl":"Organic Almonds","am":"Tom Barr","fm":"Armando","ac":78.29,"y25":1439,"ybd":2000,"yrf":1800,"y26":null,"hl":"Holland","pr":"Baugher"},{"rn":"GLF7","hb":"GLF7-4","bv":"GLF7-4-WC","vr":"wood colony","fd":"GLF LP","cl":"Organic Almonds","am":"Tom Barr","fm":"Armando","ac":38.66,"y25":1864,"ybd":2000,"yrf":1500,"y26":null,"hl":"Holland","pr":"Baugher"},{"rn":"GLF7","hb":"GLF7-8","bv":"GLF7-8-NP","vr":"nonpareil","fd":"GLF LP","cl":"Organic Almonds","am":"Tom Barr","fm":"Armando","ac":15.25,"y25":783,"ybd":1900,"yrf":1500,"y26":null,"hl":"Holland","pr":"Baugher"},{"rn":"GLF7","hb":"GLF7-8","bv":"GLF7-8-WC","vr":"wood colony","fd":"GLF LP","cl":"Organic Almonds","am":"Tom Barr","fm":"Armando","ac":15.26,"y25":1549,"ybd":1900,"yrf":1400,"y26":null,"hl":"Holland","pr":"Baugher"},{"rn":"GLF7","hb":"GLF7-11","bv":"GLF7-11-FT","vr":"fritz","fd":"GLF LP","cl":"Rollback Almonds","am":"Tom Barr","fm":"Armando","ac":20.91,"y25":938,"ybd":1500,"yrf":1300,"y26":null,"hl":"Holland","pr":"Treehouse"},{"rn":"GLF7","hb":"GLF7-11","bv":"GLF7-11-MT","vr":"monterey","fd":"GLF LP","cl":"Rollback Almonds","am":"Tom Barr","fm":"Armando","ac":20.96,"y25":1585,"ybd":1500,"yrf":1600,"y26":null,"hl":"Holland","pr":"Treehouse"},{"rn":"GLF7","hb":"GLF7-11","bv":"GLF7-11-NP","vr":"nonpareil","fd":"GLF LP","cl":"Rollback Almonds","am":"Tom Barr","fm":"Armando","ac":41.69,"y25":1241,"ybd":1500,"yrf":1600,"y26":null,"hl":"Holland","pr":"Treehouse"},{"rn":"GLF7","hb":"GLF7-5","bv":"GLF7-5-MT","vr":"monterey","fd":"GLF LP","cl":"Rollback Almonds","am":"Tom Barr","fm":"Armando","ac":22.49,"y25":2000,"ybd":1800,"yrf":2000,"y26":null,"hl":"Holland","pr":"Supreme"},{"rn":"GLF7","hb":"GLF7-5","bv":"GLF7-5-NP","vr":"nonpareil","fd":"GLF LP","cl":"Rollback Almonds","am":"Tom Barr","fm":"Armando","ac":44.75,"y25":1179,"ybd":1800,"yrf":2000,"y26":null,"hl":"Holland","pr":"Supreme"},{"rn":"GLF7","hb":"GLF7-5","bv":"GLF7-5-WC","vr":"wood colony","fd":"GLF LP","cl":"Rollback Almonds","am":"Tom Barr","fm":"Armando","ac":22.39,"y25":1735,"ybd":1500,"yrf":1700,"y26":null,"hl":"Holland","pr":"Supreme"},{"rn":"GLF7","hb":"GLF7-6","bv":"GLF7-6-NP","vr":"nonpareil","fd":"GLF LP","cl":"Rollback Almonds","am":"Tom Barr","fm":"Armando","ac":44.75,"y25":1414,"ybd":1800,"yrf":1900,"y26":null,"hl":"Holland","pr":"Harris Woolf"},{"rn":"GLF7","hb":"GLF7-6","bv":"GLF7-6-SP","vr":"supareil","fd":"GLF LP","cl":"Rollback Almonds","am":"Tom Barr","fm":"Armando","ac":44.88,"y25":2176,"ybd":2200,"yrf":2200,"y26":null,"hl":"Holland","pr":"Harris Woolf"},{"rn":"GLF7","hb":"GLF7-7","bv":"GLF7-7-CM","vr":"carmel","fd":"GLF LP","cl":"Rollback Almonds","am":"Tom Barr","fm":"Armando","ac":17.85,"y25":1034,"ybd":1800,"yrf":1600,"y26":null,"hl":"Holland","pr":"Treehouse"},{"rn":"GLF7","hb":"GLF7-7","bv":"GLF7-7-MT","vr":"monterey","fd":"GLF LP","cl":"Rollback Almonds","am":"Tom Barr","fm":"Armando","ac":17.89,"y25":2169,"ybd":1800,"yrf":1800,"y26":null,"hl":"Holland","pr":"Treehouse"},{"rn":"GLF7","hb":"GLF7-7","bv":"GLF7-7-NP","vr":"nonpareil","fd":"GLF LP","cl":"Rollback Almonds","am":"Tom Barr","fm":"Armando","ac":35.58,"y25":1565,"ybd":1800,"yrf":1800,"y26":null,"hl":"Holland","pr":"Treehouse"},{"rn":"GLF9","hb":"GLF9-1AGH","bv":"GLF9-1AGH-GH","vr":"Golden Hills","fd":"GLF AZ","cl":"Immature Conventional Pistachios","am":"Bia","fm":"Dave","ac":23.07,"y25":1417,"ybd":2200,"yrf":0,"y26":null,"hl":"N/A","pr":"TBD"},{"rn":"GLF9","hb":"GLF9-1AGH","bv":"GLF9-1AGH-LH","vr":"Lost Hills","fd":"GLF AZ","cl":"Immature Conventional Pistachios","am":"Bia","fm":"Dave","ac":3.01,"y25":null,"ybd":2200,"yrf":0,"y26":null,"hl":"N/A","pr":"TBD"},{"rn":"GLF9","hb":"GLF9-1AK","bv":"GLF9-1AK-KR","vr":"Kerman","fd":"GLF AZ","cl":"Immature Conventional Pistachios","am":"Bia","fm":"Dave","ac":110.34,"y25":1448,"ybd":2200,"yrf":0,"y26":null,"hl":"N/A","pr":"TBD"},{"rn":"GLF9","hb":"GLF9-1B","bv":"GLF9-1B-GH","vr":"Golden Hills","fd":"GLF AZ","cl":"Immature Conventional Pistachios","am":"Bia","fm":"Dave","ac":154.13,"y25":null,"ybd":400,"yrf":0,"y26":null,"hl":"N/A","pr":"TBD"},{"rn":"GLF9","hb":"GLF9-1C","bv":"GLF9-1C-GH","vr":"Golden Hills","fd":"GLF AZ","cl":"Immature Conventional Pistachios","am":"Bia","fm":"Dave","ac":157.13,"y25":null,"ybd":400,"yrf":0,"y26":null,"hl":"N/A","pr":"TBD"},{"rn":"GLF9","hb":"GLF9-1D","bv":"GLF9-1D-GH","vr":"Golden Hills","fd":"GLF AZ","cl":"Immature Conventional Pistachios","am":"Bia","fm":"Dave","ac":154.13,"y25":null,"ybd":400,"yrf":0,"y26":null,"hl":"N/A","pr":"TBD"}];
 const BASIS = {y25:{lab:"2025 Actual",short:"2025"},yrf:{lab:"2026 Reforecast",short:"Reforecast"},ybd:{lab:"2026 Budget",short:"Budget"}};
-const S = {basis:"yrf", fund:"", am:"", fm:"", pr:"", q:"", sort:"name", dir:1, sel:null,
+const S = {basis:"yrf", fund:"", am:"", fm:"", pr:"", q:"", sort:"name", dir:1, sel:null, entOnly:false,
            open:new Set()};
 
 DATA.forEach((r,i)=>r.i=i);
@@ -365,7 +391,10 @@ function tote(list){
         ? fmt(a.y26)+" lb/ac · "+a.nEnt+" of "+a.n+" blocks entered"
         : "no weights entered · "+a.n+" blocks awaiting"}</div>
       <div class="meter"><i style="width:${a.n?a.nEnt/a.n*100:0}%"></i></div></div>
-    <div class="stat"><div class="k">${B.lab}</div>
+    <div class="stat"><div class="k">Compare with</div>
+      <div class="seg" id="basis" role="group" aria-label="Comparison basis">${
+        Object.entries(BASIS).map(([k,v])=>
+          `<button data-b="${k}" aria-pressed="${k===S.basis}">${v.short}</button>`).join("")}</div>
       <div class="v mute">${fmt(a.lb)}<small>lbs</small></div>
       <div class="ysub">${fmt(a.yb)} lb/ac on ${fmt(a.acb)} acres</div></div>
     <div class="stat"><div class="k">Variance <small>entered blocks</small></div>
@@ -416,34 +445,34 @@ function dumbbell(list){
 }
 
 /* ---------- variance ladder ---------- */
+const LADDER_N = 10;
+const kk = d => (d>=0?"+":"\u2212") +
+  (Math.abs(d)>=10000 ? fmt(Math.abs(d)/1000) : (Math.abs(d)/1000).toFixed(1)) + "k";
 function ladder(list){
-  const by={};
-  list.forEach(r=>{ (by[r.rn]=by[r.rn]||[]).push(r); });
-  const arr=Object.entries(by).map(([rn,rs])=>({rn,...agg(rs)})).filter(x=>x.nEnt>0)
-              .sort((a,b)=>(a.d-b.d) || nat(a.rn).localeCompare(nat(b.rn)));
+  /* The table already ranks ranches, so this ranks the blocks inside them: the
+     N largest misses in lbs, either direction, worst first. That is the thing
+     you would actually go look at. */
+  const scored=list.filter(r=>y26(r)!=null).map(r=>({r,...agg([r])}));
+  const arr=scored.slice().sort((a,b)=>Math.abs(b.d)-Math.abs(a.d))
+                  .slice(0,LADDER_N).sort((a,b)=>a.d-b.d);
   const max=Math.max(1,...arr.map(x=>Math.abs(x.d)));
   const el=document.getElementById("ladder");
   el.innerHTML = arr.length ? arr.map(x=>{
     const w=Math.abs(x.d)/max*50, neg=x.d<0, flat=Math.abs(x.d)<1;
-    return `<button class="rung" data-rn="${x.rn}">
-      <span class="code">${x.rn}</span>
+    return `<button class="rung" data-i="${x.r.i}" title="${x.r.rn} \u00b7 ${x.r.vr}">
+      <span class="code">${x.r.bv}</span>
       <span class="track"><span class="bar" style="${neg?"right:50%":"left:50%"};width:${w}%;
         background:${neg?"var(--red)":"var(--green)"};opacity:${flat?0:1}"></span></span>
-      <span class="num ${cls(x.d)}">${flat?"—":sign(x.d/1000)+"k"}</span></button>`;
-  }).join("") : `<div class="empty">Nothing to compare yet. Enter a 2026 lb/ac on any block and its ranch appears here.</div>`;
-  document.getElementById("ladderCount").textContent = arr.length ? "· "+arr.length : "";
+      <span class="num ${cls(x.d)}">${flat?"\u2014":kk(x.d)}</span></button>`;
+  }).join("") : `<div class="empty">Nothing to compare yet. The blocks furthest from ${BASIS[S.basis].short} appear here as weights come in.</div>`;
+  document.getElementById("ladderCount").textContent =
+    scored.length > arr.length ? "\u00b7 top "+arr.length+" of "+scored.length : (arr.length ? "\u00b7 "+arr.length : "");
   const flat = arr.every(x=>Math.abs(x.d)<1);
-  document.getElementById("scaleL").textContent = flat||!arr.length ? "" : "−"+fmt(max/1000)+"k lbs";
+  document.getElementById("scaleL").textContent = flat||!arr.length ? "" : "\u2212"+fmt(max/1000)+"k lbs";
   document.getElementById("scaleR").textContent = flat||!arr.length ? "" : "+"+fmt(max/1000)+"k lbs";
   document.getElementById("ladderNote").textContent =
-    flat && arr.length ? "Flat — 2026 still matches "+BASIS[S.basis].short : "";
-  el.querySelectorAll(".rung").forEach(b=>b.onclick=()=>{
-    const rn=b.dataset.rn;
-    if(S.open.has(rn)) S.open.delete(rn); else S.open.add(rn);
-    render();
-    const t=document.querySelector(`tr[data-key="${rn}"]`);
-    if(t) t.scrollIntoView({block:"center",behavior:"smooth"});
-  });
+    flat && arr.length ? "Flat \u2014 2026 still matches "+BASIS[S.basis].short : "";
+  el.querySelectorAll(".rung").forEach(b=>b.onclick=()=>openDetail(+b.dataset.i));
 }
 
 /* ---------- table ---------- */
@@ -451,14 +480,13 @@ function line(level,key,name,a,opts={}){
   const {toggle=false,tag="",pick=null}=opts;
   const chev = toggle ? `<span class="chev"></span>` : (level<3?`<span class="chev none"></span>`:"");
   const open = toggle && S.open.has(key) ? " open" : "";
+  const blank = a.nEnt ? "—" : "";
   return `<tr class="lv${level}${open}${a.nEnt?"":" pend"}" data-key="${key}"${toggle?' data-t="1"':""}${pick!=null?` data-pick="${pick}"`:""}>
     <td>${chev}${name}${tag?`<span class="tag">${tag}</span>`:""}</td>
-    <td>${ac2(a.ac)}</td>
-    <td class="hold">${a.y26==null?"—":fmt(a.y26)}</td>
+    <td class="hold">${a.y26==null?blank:fmt(a.y26)}</td>
     <td>${a.yb==null?"—":fmt(a.yb)}</td>
-    <td class="hold">${a.nEnt?fmt(a.l26):"—"}</td>
-    <td class="${cls(a.d)}">${a.d==null?"—":sign(a.d)}</td>
-    <td class="${cls(a.d)}">${a.d==null?"—":pc(a.d,a.lbEnt)}</td></tr>`;
+    <td class="hold">${a.nEnt?fmt(a.l26):blank}</td>
+    <td class="${cls(a.d)}">${a.d==null?blank:pc(a.d,a.lbEnt)}</td></tr>`;
 }
 const KEY={name:x=>nat(x.name),ac:x=>x.a.ac,y26:x=>x.a.y26,yb:x=>x.a.yb,
            l26:x=>x.a.l26,dl:x=>(x.a.d==null?-Infinity:x.a.d),dp:x=>(x.a.d!=null&&x.a.lbEnt?x.a.d/x.a.lbEnt:-Infinity)};
@@ -468,8 +496,9 @@ function sortBy(list){
     return (typeof x==="string"? x.localeCompare(y) : x-y)*S.dir;});
 }
 function table(list){
+  const shown = S.entOnly ? list.filter(r=>y26(r)!=null) : list;
   const by={};
-  list.forEach(r=>{ (by[r.rn]=by[r.rn]||[]).push(r); });
+  shown.forEach(r=>{ (by[r.rn]=by[r.rn]||[]).push(r); });
   let html="";
   sortBy(Object.entries(by).map(([rn,rs])=>({name:rn,rs,a:agg(rs)}))).forEach(R=>{
     html+=line(1,R.name,R.name,R.a,{toggle:true});
@@ -487,13 +516,18 @@ function table(list){
     });
   });
   const b=document.getElementById("body");
-  b.innerHTML = html || `<tr><td colspan="7" class="empty">No blocks match these filters. Clear one and try again.</td></tr>`;
+  b.innerHTML = html || `<tr><td colspan="5" class="empty">${S.entOnly && list.length ? "No weights in yet for these blocks. Untick \u201cWeighed only\u201d to see them." : "No blocks match these filters. Clear one and try again."}</td></tr>`;
   document.getElementById("foot").innerHTML = list.length
     ? line(1,"__t","Total",agg(list)).replace('class="lv1"','class="tot"').replace('<span class="chev none"></span>','')
     : "";
   b.querySelectorAll("tr[data-pick]").forEach(tr=>tr.onclick=()=>openDetail(+tr.dataset.pick));
-  b.querySelectorAll("tr[data-t]").forEach(tr=>tr.onclick=e=>{
-    const k=tr.dataset.key; S.open.has(k)?S.open.delete(k):S.open.add(k); render();
+  b.querySelectorAll("tr[data-t]").forEach(tr=>tr.onclick=()=>{
+    const k=tr.dataset.key, top=!k.includes("|");
+    if(S.open.has(k)){
+      S.open.delete(k);
+      if(top) [...S.open].forEach(x=>{ if(x.startsWith(k+"|")) S.open.delete(x); });
+    } else { if(top) S.open.clear(); S.open.add(k); }
+    render();
   });
 }
 
@@ -572,16 +606,20 @@ function render(){
   const sel=document.getElementById("fProc");
   sel.hidden=false;
   tote(list); dumbbell(list); ladder(list); table(list);
+  const nF=[S.fund,S.am,S.fm,S.pr].filter(Boolean).length;
+  const badge=document.getElementById("fCount");
+  badge.hidden=!nF; badge.textContent=nF;
+  document.getElementById("fScope").textContent=list.length+" of "+DATA.length+" blocks";
   if(S.sel!=null) paintDetail();
   document.querySelectorAll("#basis button").forEach(b=>
     b.setAttribute("aria-pressed", b.dataset.b===S.basis));
   document.querySelectorAll("thead th").forEach(th=>{
-    th.innerHTML = th.textContent.replace(/[▲▼]/g,"").trim() +
+    th.innerHTML = (th.dataset.s==="yb" ? BASIS[S.basis].short+" lb/ac" : th.dataset.lab) +
       (th.dataset.s===S.sort ? ` <span class="caret">${S.dir>0?"▲":"▼"}</span>` : "");
   });
 }
-document.getElementById("basis").onclick=e=>{
-  const b=e.target.closest("button"); if(!b) return; S.basis=b.dataset.b; render();
+document.getElementById("tote").onclick=e=>{
+  const b=e.target.closest("#basis button"); if(!b) return; S.basis=b.dataset.b; render();
 };
 document.querySelectorAll("thead th").forEach(th=>th.onclick=()=>{
   if(S.sort===th.dataset.s) S.dir*=-1; else {S.sort=th.dataset.s; S.dir = th.dataset.s==="name"?1:-1;}
@@ -590,6 +628,18 @@ document.querySelectorAll("thead th").forEach(th=>th.onclick=()=>{
 const bind=(id,key)=>document.getElementById(id).onchange=e=>{S[key]=e.target.value;S.open.clear();render();};
 bind("fFund","fund"); bind("fAM","am"); bind("fFM","fm"); bind("fProc","pr");
 document.getElementById("q").oninput=e=>{S.q=e.target.value;render();};
+const fPop=document.getElementById("fPop"), fBtn=document.getElementById("fToggle");
+function setPop(open){ fPop.hidden=!open; fBtn.setAttribute("aria-expanded",open?"true":"false"); }
+fBtn.onclick=e=>{ e.stopPropagation(); setPop(fPop.hidden); };
+fPop.onclick=e=>e.stopPropagation();
+document.addEventListener("click",()=>setPop(false));
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") setPop(false); });
+document.getElementById("fClear").onclick=()=>{
+  S.fund=S.am=S.fm=S.pr="";
+  ["fFund","fAM","fFM","fProc"].forEach(id=>document.getElementById(id).value="");
+  S.open.clear(); render();
+};
+document.getElementById("fEnt").onchange=e=>{S.entOnly=e.target.checked;S.open.clear();render();};
 document.getElementById("tExpand").onclick=e=>{
   if(S.open.size){S.open.clear(); e.target.textContent="Expand all";}
   else{ rows().forEach(r=>{S.open.add(r.rn); S.open.add(r.rn+"|"+r.hb);});
