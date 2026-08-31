@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Yield Assumption Using Field Weights Turnout</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>2026 USDA Harvest Results</title>
 <style>
   :root{
     --bg:#f5f5f7;
@@ -16,296 +16,279 @@
     --amber:#ff9f0a;
     --red:#ff3b30;
     --blue:#0071e3;
-    --fill:#f5f5f7;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   body{
-    background:var(--bg);
-    color:var(--text);
+    background:var(--bg);color:var(--text);
     font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    font-size:14px;
-    -webkit-font-smoothing:antialiased;
+    font-size:14px;-webkit-font-smoothing:antialiased;
     padding:48px 24px 96px;
   }
-  .wrap{max-width:1140px;margin:0 auto}
+  .wrap{max-width:1240px;margin:0 auto}
 
-  .eyebrow{
-    font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
-    color:var(--secondary);margin-bottom:6px;
-  }
+  .head{display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between}
   h1{font-size:34px;font-weight:700;letter-spacing:-.025em;line-height:1.1}
-  .sub{color:var(--secondary);font-size:15px;margin-top:8px;max-width:560px}
 
+  /* segmented control — the one place a choice is made */
+  .seg{display:inline-flex;background:rgba(0,0,0,.05);border-radius:10px;padding:2px}
+  .seg button{
+    font:inherit;font-size:13px;font-weight:500;color:var(--text);
+    border:none;background:none;padding:7px 15px;border-radius:8px;cursor:pointer;
+    white-space:nowrap;transition:background .15s ease,box-shadow .15s ease;
+  }
+  .seg button:hover{color:#000}
+  .seg button[aria-pressed="true"]{background:var(--card);box-shadow:0 1px 2px rgba(0,0,0,.1)}
+  .seg button:focus-visible{outline:2px solid var(--blue);outline-offset:1px}
+  .seglab{font-size:12px;font-weight:500;color:var(--secondary);margin-right:10px}
+
+  /* summary tiles */
   .summary{
-    display:flex;flex-wrap:wrap;
-    background:var(--card);
-    border-radius:18px;
+    display:flex;flex-wrap:wrap;background:var(--card);border-radius:18px;
     box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 24px rgba(0,0,0,.04);
-    margin:28px 0 24px;
-    overflow:hidden;
+    margin:26px 0 22px;overflow:hidden;
   }
-  .stat{
-    flex:1 1 160px;min-width:150px;
-    padding:18px 22px 16px;
-    border-right:1px solid var(--hairline-soft);
-  }
+  .stat{flex:1 1 230px;min-width:200px;padding:18px 22px 17px;border-right:1px solid var(--hairline-soft)}
   .stat:last-child{border-right:none}
   .stat .k{font-size:12px;font-weight:500;color:var(--secondary)}
-  .stat .v{
-    font-size:24px;font-weight:600;letter-spacing:-.02em;margin-top:4px;
-    font-variant-numeric:tabular-nums;
-  }
-  .stat .v small{font-size:14px;font-weight:400;color:var(--secondary)}
-  .meter{
-    height:4px;background:rgba(0,0,0,.06);border-radius:2px;
-    margin-top:12px;overflow:hidden;
-  }
-  .meter i{
-    display:block;height:100%;width:0;border-radius:2px;
-    background:var(--green);transition:width .5s cubic-bezier(.25,.1,.25,1);
-  }
-  .meter i.amber{background:var(--amber)}
-  /* subline is now empty-state only, so it collapses instead of holding a gap */
-  .ysub{font-size:11px;color:var(--secondary);margin-top:10px;font-variant-numeric:tabular-nums}
-  .ysub:empty{display:none}
-  .stat .v.neg{color:var(--red)}
-  .stat .v.pos{color:var(--green)}
-  .chk{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--secondary);cursor:pointer}
-  .chk input{accent-color:var(--blue);width:15px;height:15px}
-  .fbar{flex:none;width:60px;height:4px;border-radius:2px;background:rgba(0,0,0,.07);overflow:hidden;margin-left:4px}
-  .fbar i{display:block;height:100%;background:var(--green);border-radius:2px;transition:width .4s ease}
-  tr.row.unfin td{opacity:.5}
-  tfoot tr.sub td{font-weight:500;color:var(--secondary);font-size:13px;border-top:1px solid var(--hairline-soft)}
+  .stat .v{font-size:25px;font-weight:600;letter-spacing:-.02em;margin-top:5px;font-variant-numeric:tabular-nums}
+  .stat .v small{font-size:14px;font-weight:400;color:var(--secondary);margin-left:3px}
+  .stat .v.mute{color:var(--secondary);font-weight:500}
+  .ysub{font-size:11.5px;color:var(--secondary);margin-top:9px;font-variant-numeric:tabular-nums;min-height:14px}
+  .neg{color:var(--red)} .pos{color:var(--green)}
+  .stat .k small{font-weight:400;color:var(--secondary)}
+  .stat .seg{width:100%;margin:7px 0 3px}
+  .stat .seg button{flex:1;padding:5px 6px;font-size:12px;letter-spacing:-.01em}
+  @media (max-width:700px){.stat .seg button{padding:5px 3px;font-size:11px}}
+  .meter{height:4px;background:rgba(0,0,0,.06);border-radius:2px;margin-top:11px;overflow:hidden}
+  .meter i{display:block;height:100%;border-radius:2px;background:var(--green);
+    transition:width .5s cubic-bezier(.25,.1,.25,1)}
 
-  .tools{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
-  input[type="search"]{
-    font:inherit;font-size:14px;
-    padding:8px 14px;border:none;border-radius:10px;
-    background:rgba(0,0,0,.05);color:var(--text);width:240px;
-    outline:none;
+  .cols{display:grid;grid-template-columns:minmax(0,318px) minmax(0,1fr);gap:22px;align-items:start}
+  .card{
+    background:var(--card);border-radius:18px;min-width:0;
+    box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 24px rgba(0,0,0,.04);
   }
-  input[type="search"]:focus{box-shadow:0 0 0 3px rgba(0,113,227,.3)}
-  .link{
-    font:inherit;font-size:14px;color:var(--blue);
-    background:none;border:none;cursor:pointer;padding:4px 2px;
+  .card>header{padding:17px 20px 4px;display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+  .card h2{font-size:16px;font-weight:600;letter-spacing:-.01em}
+  .card h2 span{color:var(--secondary);font-weight:500}
+  .cap{font-size:12px;color:var(--secondary)}
+
+  /* variance ladder */
+  .ladder{padding:8px 8px 6px}
+  .rung{
+    all:unset;display:grid;grid-template-columns:100px 1fr 76px;align-items:center;gap:8px;
+    width:100%;box-sizing:border-box;padding:5px 12px;border-radius:8px;cursor:pointer;
   }
+  .rung:hover{background:rgba(0,0,0,.03)}
+  .rung:focus-visible{outline:2px solid var(--blue);outline-offset:-2px}
+  .rung .code{font-size:12px;font-weight:600;color:var(--text);letter-spacing:-.01em;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .track{position:relative;height:12px}
+  .track:before{content:"";position:absolute;left:50%;top:-6px;bottom:-6px;width:1px;background:var(--hairline-soft)}
+  .bar{position:absolute;top:2px;height:8px;border-radius:4px;transition:width .4s cubic-bezier(.25,.1,.25,1)}
+  .rung .num{font-size:12px;text-align:right;font-variant-numeric:tabular-nums;color:var(--secondary)}
+  .rung .num .chip{font-size:12px;padding:2px 7px}
+  .ladfoot{display:flex;justify-content:space-between;font-size:11px;color:var(--secondary);
+    padding:8px 20px 16px;font-variant-numeric:tabular-nums}
+
+  /* progress by crop */
+  .dumb{padding:14px 20px 18px}
+  .drow{margin-bottom:14px}
+  .drow:last-child{margin-bottom:4px}
+  .dhead{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:6px}
+  .dname{font-size:12.5px;font-weight:500}
+  .dpct{font-size:12px;font-variant-numeric:tabular-nums;font-weight:500}
+  .dbar{height:6px;background:rgba(0,0,0,.06);border-radius:3px;overflow:hidden}
+  .dbar i{display:block;height:100%;border-radius:3px;background:var(--blue);
+    transition:width .45s cubic-bezier(.25,.1,.25,1)}
+  .dsub{font-size:11px;color:var(--secondary);margin-top:5px;font-variant-numeric:tabular-nums}
+
+  /* filters popover */
+  .filtwrap{position:relative}
+  .fbtn{font:inherit;font-size:13.5px;color:var(--text);border:none;border-radius:10px;
+    background:rgba(0,0,0,.05);padding:8px 12px;cursor:pointer;display:inline-flex;gap:7px;align-items:center}
+  .fbtn:hover{background:rgba(0,0,0,.09)}
+  .fbtn[aria-expanded="true"]{background:rgba(0,113,227,.12);color:var(--blue)}
+  .fbtn:focus-visible{outline:2px solid var(--blue);outline-offset:1px}
+  .badge{background:var(--blue);color:#fff;border-radius:9px;font-size:11px;font-weight:600;
+    min-width:17px;height:17px;display:inline-flex;align-items:center;justify-content:center;padding:0 5px}
+  .pop{position:absolute;top:calc(100% + 8px);left:0;z-index:30;width:236px;
+    background:var(--card);border-radius:14px;padding:13px;display:grid;gap:10px;
+    box-shadow:0 8px 30px rgba(0,0,0,.16);animation:fade .12s ease}
+  .pop label{display:grid;gap:4px;font-size:11.5px;font-weight:500;color:var(--secondary)}
+  .pop select{width:100%;max-width:none;cursor:pointer}
+  .pop[hidden],.badge[hidden]{display:none}
+  .pfoot{display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .pfoot span{font-size:11.5px;color:var(--secondary);font-variant-numeric:tabular-nums}
+  @media (max-width:700px){.pop{width:calc(100vw - 56px)}}
+
+  /* tools */
+  .tools{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:14px 20px 12px}
+  select,input[type=search]{
+    font:inherit;font-size:13.5px;color:var(--text);
+    border:none;border-radius:10px;background:rgba(0,0,0,.05);
+    padding:8px 12px;outline:none;-webkit-appearance:none;appearance:none;cursor:pointer;
+  }
+  select{padding-right:26px;max-width:168px;text-overflow:ellipsis;background-image:linear-gradient(45deg,transparent 50%,var(--secondary) 50%),linear-gradient(135deg,var(--secondary) 50%,transparent 50%);
+    background-position:calc(100% - 14px) 55%,calc(100% - 9px) 55%;background-size:5px 5px,5px 5px;background-repeat:no-repeat}
+  input[type=search]{cursor:text;width:150px}
+  select:focus-visible,input:focus-visible{box-shadow:0 0 0 3px rgba(0,113,227,.3)}
+  .link{font:inherit;font-size:13.5px;color:var(--blue);background:none;border:none;cursor:pointer;padding:4px 2px}
   .link:hover{text-decoration:underline}
   .link:focus-visible{outline:2px solid var(--blue);outline-offset:2px;border-radius:4px}
-  .spacer{flex:1}
-  .savenote{font-size:12px;color:var(--secondary)}
-  .savenote.err{color:var(--red)}
+  .chk{display:inline-flex;align-items:center;gap:6px;font-size:13.5px;color:var(--secondary);cursor:pointer;white-space:nowrap}
+  .chk input{accent-color:var(--blue);width:15px;height:15px;margin:0}
+  .tools .right{margin-left:auto;display:inline-flex;gap:14px;align-items:center}
+  @media (max-width:1100px){.tools .right{margin-left:0}}
 
-  .card{
-    background:var(--card);
-    border-radius:18px;
-    box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 24px rgba(0,0,0,.04);
-    overflow-x:auto;
-  }
-  /* Two independent column groups, same mental model each time: a group is
-     either on the page or it isn't, and the choice sticks.
-       .rf  — everything reforecast (2 columns + its summary tile)
-       .lbs — the Forecast column stated in total pounds, plus its two
-              footer figures
-     Both keep computing while hidden, so flipping a switch reveals a
-     finished number rather than an empty cell. */
-  .rf,.lbs{display:none}
-  body.rf-on th.rf,body.rf-on td.rf{display:table-cell}
-  body.rf-on .stat.rf{display:block}
-  body.lbs-on th.lbs,body.lbs-on td.lbs{display:table-cell}
-
-  /* a hairline where the reforecast group starts, so the two columns read as a
-     zone rather than more of the same */
-  body.rf-on th.grpL,body.rf-on td.grpL{border-left:1px solid var(--hairline)}
-
-  /* the tile sits where it falls in the row — right after Field Weight YOY —
-     and reads as a peer of its neighbours, not a headline */
-
-  /* the toggles read as controls, not footnotes — filled when active */
-  .cmp{
-    display:inline-flex;align-items:center;gap:8px;
-    font-size:14px;font-weight:500;color:var(--blue);
-    background:rgba(0,113,227,.1);
-    padding:8px 14px;border-radius:10px;cursor:pointer;
-    white-space:nowrap;
-    transition:background .15s ease,color .15s ease;
-  }
-  .cmp:hover{background:rgba(0,113,227,.16)}
-  .cmp:focus-within{box-shadow:0 0 0 3px rgba(0,113,227,.3)}
-  .cmp input{accent-color:var(--blue);width:16px;height:16px;margin:0}
-  /* state lives on the label itself so the two toggles light independently */
-  .cmp.on{background:var(--blue);color:#fff}
-  .cmp.on:hover{background:#0062c4}
-  .cmp.on input{accent-color:#fff}
-
-  /* min-width tracks which column groups are showing, so the default view
-     doesn't inherit a scrollbar it no longer needs */
-  table{border-collapse:collapse;width:100%;min-width:840px}
-  body.lbs-on table{min-width:920px}
-  body.rf-on table{min-width:1020px}
-  body.rf-on.lbs-on table{min-width:1100px}
+  /* table — lines only where a line means something */
+  .scroll{overflow-x:auto;min-width:0;border-radius:0 0 18px 18px}
+  table{border-collapse:collapse;width:100%;min-width:600px}
   thead th{
     font-size:12px;font-weight:500;color:var(--secondary);
-    padding:14px 12px 10px;text-align:right;white-space:nowrap;
+    padding:12px 14px 10px;text-align:right;white-space:nowrap;
     border-bottom:1px solid var(--hairline);
-    position:sticky;top:0;background:var(--card);z-index:2;
+    position:sticky;top:0;background:var(--card);z-index:2;cursor:pointer;
   }
   thead th:first-child{text-align:left;padding-left:20px}
-  thead th.c{text-align:center;width:64px;white-space:normal;line-height:1.2}
+  thead th:hover{color:var(--text)}
+  thead th .caret{color:var(--blue);font-size:9px;vertical-align:1px}
 
-  tr.farm td{padding:0;border-top:1px solid var(--hairline-soft)}
-  tr.farm:first-child td{border-top:none}
-  .band{
-    all:unset;display:flex;align-items:center;gap:10px;
-    width:100%;padding:13px 20px;box-sizing:border-box;cursor:pointer;
-  }
-  .band:hover{background:rgba(0,0,0,.02)}
-  .band:focus-visible{outline:2px solid var(--blue);outline-offset:-2px}
-  .chev{
-    flex:none;width:8px;height:8px;
-    border-right:1.5px solid var(--secondary);border-bottom:1.5px solid var(--secondary);
-    transform:rotate(-45deg);transition:transform .18s ease;margin-right:2px;
-  }
-  tr.farm.open .chev{transform:rotate(45deg)}
-  .fname{font-size:15px;font-weight:600;letter-spacing:-.01em}
-  .fright{margin-left:auto;display:flex;gap:20px;align-items:baseline}
-  .fdone{font-size:12px;color:var(--secondary);font-variant-numeric:tabular-nums}
-
-  tr.row td{
-    padding:8px 12px;text-align:right;white-space:nowrap;
-    font-variant-numeric:tabular-nums;
-    border-top:1px solid var(--hairline-soft);
-  }
-  tr.row td.var{text-align:left;padding-left:42px}
-  tr.row.hide{display:none}
-  td.calcv{font-weight:500}
-  .neg{color:var(--red)}
-  .pos{color:var(--green)}
-  td.prior{color:var(--secondary)}
-
-  /* the header stops being grey filler once the column is on screen */
-  body.rf-on th.varrf{color:var(--text);font-weight:600}
-
-  /* Every variance in this column is a chip, so the column reads as a row of
-     verdicts rather than more figures. Two levels: a light fill for everything,
-     a heavier one past the material threshold, so real misses still separate
-     themselves without the column shouting all the way down. */
-  .chip{
-    display:inline-block;padding:3px 9px;border-radius:7px;
-    font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;
-  }
+  td{padding:7px 14px;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+  td:first-child{text-align:left}
+  tr.lv1 td{padding-top:12px;padding-bottom:12px;border-top:1px solid rgba(0,0,0,.04);cursor:pointer}
+  tr.lv1:first-child td{border-top:none}
+  tr.lv1 td:first-child{font-size:15px;font-weight:600;letter-spacing:-.01em;padding-left:20px}
+  tr.lv1:hover td{background:rgba(0,0,0,.02)}
+  tr.lv2 td{cursor:pointer;background:rgba(0,0,0,.015)}
+  tr.lv2 td:first-child{padding-left:38px;font-weight:500;box-shadow:inset 2px 0 0 rgba(0,0,0,.07)}
+  tr.lv2:hover td{background:rgba(0,0,0,.04)}
+  tr.lv3 td{color:var(--secondary);background:rgba(0,0,0,.015)}
+  tr.lv3[data-pick]{cursor:pointer}
+  tr.lv3[data-pick]:hover td{background:rgba(0,0,0,.04)}
+  tr.lv3 td:first-child{padding-left:58px;box-shadow:inset 2px 0 0 rgba(0,0,0,.07)}
+  tr.lv3 td.hold{color:var(--text);font-weight:500}
+  td.dtc{color:var(--secondary);font-size:12.5px}
+  /* Every variance is a chip, so the column reads as a row of verdicts rather
+     than more figures. Light fill for everything, heavier past the material
+     threshold, so real misses separate without the column shouting all the way
+     down. */
+  .chip{display:inline-block;padding:3px 9px;border-radius:7px;
+    font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
   .chip.neg{background:rgba(255,59,48,.10);color:#c9251c}
   .chip.pos{background:rgba(52,199,89,.12);color:#1a7f37}
   .chip.big{font-weight:700}
   .chip.big.neg{background:rgba(255,59,48,.20)}
   .chip.big.pos{background:rgba(52,199,89,.24)}
-
-  td.st{text-align:center;width:64px}
-  .dot{
-    display:inline-block;width:16px;height:16px;border-radius:50%;
-    background:var(--red);vertical-align:middle;
+  tr.lv3 td .chip{font-size:12.5px}
+  tr.part td:first-child .tag{color:var(--amber)}
+  tr.pend td{color:var(--secondary)}
+  tr.pend td:first-child{font-weight:500}
+  .chev{display:inline-block;width:6px;height:6px;margin-right:9px;vertical-align:1px;
+    border-right:1.5px solid var(--secondary);border-bottom:1.5px solid var(--secondary);
+    transform:rotate(-45deg);transition:transform .18s ease}
+  tr.open>td .chev{transform:rotate(45deg)}
+  .chev.none{border:none}
+  .tag{font-size:11px;color:var(--secondary);margin-left:8px;font-weight:400}
+  tfoot td{padding:14px;font-weight:600;border-top:1px solid var(--hairline);background:rgba(0,0,0,.015)}
+  tfoot td:first-child{padding-left:20px}
+  .empty{padding:34px 20px;color:var(--secondary)}
+  @media (min-width:981px){
+    .scroll{max-height:calc(100vh - 150px)}
+    tr.lv1.open td{position:sticky;top:37px;z-index:1;background:var(--card)}
+    tr.lv1.open:hover td{background:#f7f7f8}
+    tfoot td{position:sticky;bottom:0;z-index:2;background:#f6f6f7}
   }
-  .dot[data-state="1"]{background:var(--amber)}
-  .dot[data-state="2"]{background:var(--green)}
-
-  tfoot td{
-    padding:14px 12px;text-align:right;font-weight:600;
-    border-top:1px solid var(--hairline);
-    font-variant-numeric:tabular-nums;white-space:nowrap;
-  }
-  tfoot td:first-child{text-align:left;padding-left:20px}
-
-  .note{font-size:12px;color:var(--secondary);margin-top:14px;line-height:1.6}
-
+  .banner{display:none;background:#fff4e5;color:#7a4b00;border:1px solid #ffd591;
+    border-radius:12px;padding:11px 15px;font-size:13px;line-height:1.5;margin:22px 0 -4px}
+  .banner.show{display:block}
+  .banner code{background:rgba(0,0,0,.06);border-radius:4px;padding:1px 5px;font-size:12px}
+  .savenote{font-size:12px;color:var(--secondary);white-space:nowrap}
+  .savenote.err{color:var(--red)}
   /* Identity sheet — asked once per browser, then remembered. Sits over the
      page rather than blocking it, so the data is visible behind the question. */
-  .sheet{
-    display:none;position:fixed;inset:0;z-index:50;
-    background:rgba(0,0,0,.28);
-    -webkit-backdrop-filter:saturate(120%) blur(6px);
-    backdrop-filter:saturate(120%) blur(6px);
-    align-items:center;justify-content:center;padding:24px;
-  }
+  .sheet{display:none;position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.28);
+    -webkit-backdrop-filter:saturate(120%) blur(6px);backdrop-filter:saturate(120%) blur(6px);
+    align-items:center;justify-content:center;padding:24px}
   .sheet.show{display:flex}
-  .sheetCard{
-    background:var(--card);border-radius:18px;
-    box-shadow:0 8px 40px rgba(0,0,0,.18);
-    padding:26px 26px 22px;max-width:380px;width:100%;
-  }
+  .sheetCard{background:var(--card);border-radius:18px;box-shadow:0 8px 40px rgba(0,0,0,.18);
+    padding:26px 26px 22px;max-width:380px;width:100%}
   .sheetCard h2{font-size:20px;font-weight:600;letter-spacing:-.02em}
   .sheetCard p{font-size:13px;color:var(--secondary);line-height:1.5;margin:8px 0 18px}
-  .sheetCard select,.sheetCard input[type="text"]{
-    font:inherit;font-size:15px;width:100%;
-    padding:10px 12px;border:1px solid var(--hairline);
-    border-radius:10px;background:var(--fill);color:var(--text);
-    outline:none;-webkit-appearance:none;appearance:none;
-  }
+  .sheetCard select,.sheetCard input[type="text"]{font:inherit;font-size:15px;width:100%;max-width:none;
+    padding:10px 12px;border:1px solid var(--hairline);border-radius:10px;
+    background:var(--bg);color:var(--text);outline:none;-webkit-appearance:none;appearance:none}
   .sheetCard select:focus,.sheetCard input[type="text"]:focus{
-    box-shadow:0 0 0 3px rgba(0,113,227,.3);border-color:transparent;
-  }
+    box-shadow:0 0 0 3px rgba(0,113,227,.3);border-color:transparent}
   .sheetCard input[type="text"]{margin-top:10px}
-  .sheetCard button{
-    font:inherit;font-size:15px;font-weight:500;
-    width:100%;margin-top:18px;padding:11px;
-    border:none;border-radius:10px;cursor:pointer;
-    background:var(--blue);color:#fff;
-  }
+  .sheetCard button{font:inherit;font-size:15px;font-weight:500;width:100%;margin-top:18px;
+    padding:11px;border:none;border-radius:10px;cursor:pointer;background:var(--blue);color:#fff}
   .sheetCard button:hover{background:#0062c4}
   .sheetCard button:disabled{background:rgba(0,0,0,.12);color:var(--secondary);cursor:default}
-  .whoami{font-size:12px;color:var(--secondary)}
-  .whoami button{
-    font:inherit;font-size:12px;color:var(--blue);
-    background:none;border:none;cursor:pointer;padding:0 0 0 4px;
-  }
+  .whoami{font-size:12px;color:var(--secondary);white-space:nowrap}
+  .whoami button{font:inherit;font-size:12px;color:var(--blue);background:none;border:none;
+    cursor:pointer;padding:0 0 0 4px}
   .whoami button:hover{text-decoration:underline}
 
-  .banner{
-    display:none;background:#fff4e5;color:#7a4b00;
-    border:1px solid #ffd591;border-radius:12px;
-    padding:10px 14px;font-size:13px;margin-bottom:16px;
-  }
-  .banner.show{display:block}
+  /* block detail panel */
+  .scrim{position:fixed;inset:0;background:rgba(0,0,0,.18);z-index:40;
+    animation:fade .18s ease}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  @keyframes slide{from{transform:translateX(14px);opacity:0}to{transform:none;opacity:1}}
+  .sheetp{position:fixed;top:16px;right:16px;bottom:16px;width:352px;z-index:41;
+    background:var(--card);border-radius:18px;overflow-y:auto;
+    box-shadow:0 8px 40px rgba(0,0,0,.18);animation:slide .2s ease}
+  .sheetp header{padding:20px 22px 14px;display:flex;justify-content:space-between;
+    align-items:flex-start;gap:10px}
+  .sheetp h3{font-size:19px;font-weight:600;letter-spacing:-.015em;text-transform:capitalize}
+  .sheetp .code{font-size:12px;color:var(--secondary);margin-top:3px;font-variant-numeric:tabular-nums}
+  .x{font:inherit;font-size:20px;line-height:1;color:var(--secondary);background:rgba(0,0,0,.05);
+    border:none;border-radius:50%;width:28px;height:28px;cursor:pointer;flex:none}
+  .x:hover{background:rgba(0,0,0,.1);color:var(--text)}
+  .pill{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:500;
+    border-radius:8px;padding:6px 11px;margin:0 22px}
+  .pill.wait{background:rgba(255,159,10,.14);color:#8a5200}
+  .pill.done{background:rgba(52,199,89,.15);color:#1c7a35}
+  .pill i{width:7px;height:7px;border-radius:50%;background:currentColor}
+  .kv{padding:16px 22px 4px}
+  .kv div{display:flex;justify-content:space-between;gap:14px;padding:7px 0;font-size:13px;
+    border-bottom:1px solid var(--hairline-soft)}
+  .kv div:last-child{border-bottom:none}
+  .kv span:first-child{color:var(--secondary)}
+  .kv span:last-child{font-variant-numeric:tabular-nums;text-align:right}
+  .waiting{margin:10px 22px 22px;padding:13px 15px;background:rgba(0,0,0,.03);
+    border-radius:12px;font-size:12.5px;line-height:1.55;color:var(--secondary)}
+  .waiting b{color:var(--text);font-weight:600}
+  .waiting a{color:var(--blue);cursor:pointer;text-decoration:none}
+  .waiting a:hover{text-decoration:underline}
+  @media (max-width:640px){.sheetp{left:12px;right:12px;width:auto;top:auto;height:78%}}
 
-  @media (max-width:640px){
+
+  @media (max-width:980px){
+    .cols{grid-template-columns:minmax(0,1fr)}
     body{padding:24px 12px 60px}
-    h1{font-size:26px}
-    input[type="search"]{width:100%}
-    .fbar{display:none}
+    h1{font-size:27px}
   }
-  @media (prefers-reduced-motion:reduce){.chev,.meter i,.fbar i,.cmp{transition:none}}
+  @media (max-width:700px){
+    .head{align-items:flex-start}
+    .head>div{flex-direction:column;align-items:flex-start!important;gap:8px;width:100%}
+    .seglab{margin:0}
+    .seg{width:100%}
+    .seg button{flex:1;padding:8px 6px;font-size:12.5px}
+    .summary{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--hairline-soft)}
+    .stat{background:var(--card);border-right:none;padding:14px 16px;min-width:0}
+    .stat .v{font-size:21px}
+    input[type=search]{width:100%}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
-
 <div class="sheet" id="idSheet" role="dialog" aria-modal="true" aria-labelledby="idTitle">
   <div class="sheetCard">
-    <h2 id="idTitle">Field Weights 2026</h2>
+    <h2 id="idTitle">2026 USDA Harvest Results</h2>
     <p>Pick your name, you won't have to enter it again.</p>
-    <select id="idSelect" aria-label="Select your name">
-      <option value="" selected>Select your name</option>
-      <optgroup label="AMs">
-        <option>Jimmy</option>
-        <option>Tom</option>
-        <option>Sawyer</option>
-        <option>Bia</option>
-      </optgroup>
-      <optgroup label="FMs">
-        <option>Oscar</option>
-        <option>Pablo</option>
-        <option>Armando</option>
-        <option>Gerardo</option>
-        <option>Amalia</option>
-        <option>Dave</option>
-      </optgroup>
-      <optgroup label="Office">
-        <option>Jack</option>
-        <option>Jackie</option>
-        <option>David</option>
-        <option>Carl</option>
-        <option>Santiago</option>
-        <option>Vasu</option>
-      </optgroup>
-      <option value="__other">Someone else…</option>
-    </select>
+    <select id="idSelect" aria-label="Select your name"></select>
     <input type="text" id="idOther" placeholder="Your name" hidden aria-label="Your name">
     <button id="idSave" disabled>Continue</button>
   </div>
@@ -313,574 +296,644 @@
 
 <div class="wrap">
 
-  <h1>Yield Assumption Using Field&nbsp;Weights&nbsp;Turnout</h1>
+  <div class="head">
+    <h1>2026 USDA Harvest Results</h1>
+  </div>
 
   <div class="banner" id="banner"></div>
 
-  <div class="summary">
-    <div class="stat">
-      <div class="k">Pickup</div>
-      <div class="v" id="sPick"></div>
-      <div class="meter"><i id="mPick"></i></div>
-    </div>
-    <div class="stat">
-      <div class="k">Tickets in</div>
-      <div class="v" id="sTick"></div>
-      <div class="meter"><i id="mTick" class="amber"></i></div>
-    </div>
-    <div class="stat">
-      <div class="k">Blocks closed</div>
-      <div class="v" id="sClosed"></div>
-      <div class="meter"><i id="mClosed"></i></div>
-    </div>
-    <div class="stat">
-      <div class="k">Field Weight YOY</div>
-      <div class="v" id="sFWAc"></div>
-      <div class="ysub" id="sFWAcSub"></div>
-    </div>
-    <div class="stat rf">
-      <div class="k">Forecast vs Rfcst <small>finished blocks</small></div>
-      <div class="v" id="sRfVar"></div>
-      <div class="ysub" id="sRfSub"></div>
-    </div>
-    <div class="stat"><div class="k">Field weight · lbs</div><div class="v" id="sFW"></div></div>
-    <div class="stat"><div class="k">Forecast · lbs</div><div class="v" id="sFcst"></div></div>
+  <div class="summary" id="tote"></div>
+
+  <div class="cols">
+    <div><section class="card" style="margin-bottom:22px">
+      <header><h2>Progress <span>by crop</span></h2><div class="cap" id="progCap"></div></header>
+      <div class="dumb" id="dumb"></div>
+    </section>
+
+    <section class="card">
+      <header><h2>Biggest misses <span id="ladderCount"></span></h2><div class="cap" id="ladderCap">by block · bars in lbs</div></header>
+      <div class="ladder" id="ladder"></div>
+      <div class="ladfoot"><span id="scaleL"></span><span id="ladderNote"></span><span id="scaleR"></span></div>
+    </section></div>
+
+    <section class="card">
+      <div class="tools">
+        <input type="search" id="q" placeholder="Search" aria-label="Search block or variety">
+        <div class="filtwrap">
+          <button class="fbtn" id="fToggle" aria-expanded="false">Filters<span class="badge" id="fCount" hidden></span></button>
+          <div class="pop" id="fPop" hidden>
+            <label>Fund<select id="fFund"></select></label>
+            <label>Area manager<select id="fAM"></select></label>
+            <label>Farm manager<select id="fFM"></select></label>
+            <label>Processor<select id="fProc"></select></label>
+            <div class="pfoot"><span id="fScope"></span><button class="link" id="fClear">Clear all</button></div>
+          </div>
+        </div>
+        <button class="link" id="tExpand">Expand all</button>
+        <label class="chk"><input type="checkbox" id="fEnt" checked>Weighed only</label>
+        <span class="right">
+          <span class="whoami" id="whoami"></span>
+          <span class="savenote" id="status"></span>
+          <button class="link" id="refreshBtn">Refresh</button>
+          <button class="link" id="dl">Export CSV</button>
+        </span>
+      </div>
+      <div class="scroll">
+        <table id="grid">
+          <thead><tr>
+            <th data-s="name" data-lab="Ranch / block / variety">Ranch / block / variety</th>
+            <th data-s="y26" data-lab="2026 lb/ac">2026 lb/ac</th>
+            <th data-s="yb"  data-lab="Basis lb/ac">Basis lb/ac</th>
+            <th data-s="l26" data-lab="2026 lbs">2026 lbs</th>
+            <th data-s="dp"  data-lab="Var %">Var %</th>
+            <th data-s="dt"  data-lab="USDA final">USDA final</th>
+          </tr></thead>
+          <tbody id="body"></tbody>
+          <tfoot id="foot"></tfoot>
+        </table>
+      </div>
+    </section>
   </div>
 
-  <div class="tools">
-    <input type="search" id="filter" placeholder="Search" aria-label="Filter rows">
-    <button class="link" id="expandAll">Expand all</button>
-    <button class="link" id="collapseAll">Collapse all</button>
-    <label class="chk"><input type="checkbox" id="onlyFin"> Finished only</label>
-    <label class="chk"><input type="checkbox" id="cmpLbs"> Total lbs</label>
-    <label class="cmp" id="cmpRfLabel"><input type="checkbox" id="cmpRf"> Compare with Reforecast Yields</label>
-    <div class="spacer"></div>
-    <span class="whoami" id="whoami"></span>
-    <button class="link" id="refreshBtn">Refresh</button>
-    <span class="savenote" id="savenote"></span>
-  </div>
-
-  <div class="card">
-    <table>
-      <thead>
-        <tr>
-          <th>Farm</th>
-          <th class="c">All Pickups?</th>
-          <th class="c">All Tickets Submitted?</th>
-          <th>Field Weight</th>
-          <th class="y25">FW '25</th>
-          <th class="y25">Var vs '25</th>
-          <th>Turnout Assumption</th>
-          <th class="lbs">Forecast</th>
-          <th>Forecast lb/acre</th>
-          <th class="rf varrf">Var vs Rfcst</th>
-          <th class="rf grpL">Rfcst lb/acre</th>
-        </tr>
-      </thead>
-      <tbody id="tbody"></tbody>
-      <tfoot>
-        <tr>
-          <td colspan="3">Total</td>
-          <td id="tFW"></td>
-          <td class="y25" id="tFW25"></td><td class="y25"></td><td></td>
-          <td class="lbs" id="tFcst"></td>
-          <td></td>
-          <td class="rf varrf"></td><td class="rf grpL"></td>
-        </tr>
-        <tr class="sub">
-          <td colspan="3">Finished blocks only</td>
-          <td id="tfFW"></td>
-          <td class="y25" id="tfFW25"></td><td class="y25" id="tfVar"></td><td></td>
-          <td class="lbs" id="tfFcst"></td>
-          <td id="tfFcstAc"></td>
-          <td class="rf varrf" id="tfRfVar"></td><td class="rf grpL" id="tfRfAc"></td>
-        </tr>
-      </tfoot>
-    </table>
-  </div>
+  <div class="scrim" id="scrim" hidden></div>
+  <aside class="sheetp" id="detail" hidden aria-label="Block detail"></aside>
 
 </div>
 
 <script>
 /* ============================================================
    1. PASTE YOUR APPS SCRIPT WEB APP URL BELOW.
-      In the Google Sheet: Extensions ▸ Apps Script, paste AppsScript_Code.gs,
-      Deploy ▸ Web app (Execute as: Me · Access: Anyone), copy the /exec URL.
-      The script returns only the raw columns; this page computes
-      lbs/acre, variance vs '25, forecast, and variance vs Rfcst itself.
+      In the GLF Yield Master sheet: Extensions ▸ Apps Script, paste
+      AppsScript_Code.gs, Deploy ▸ Web app (Execute as: Me · Access: Anyone),
+      copy the /exec URL.
+
+      The script exposes Block-Variety and 2026 Harvest lbs, plus an optional
+      "2026 Final Date" column if you add one to the master.
+      Acres, budget, reforecast, the huller/processor plan and everything else
+      stay in this file or in the workbook; the feed carries weights only.
    ============================================================ */
-const API_URL = "https://script.google.com/macros/s/AKfycbz8grVMeVnQK33sRaCTtOBGLDCZiHgJ4YIqowivfd3Lr4vaaqrF21KJBkKhv5U-VAi6/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbzbw0AVIEqM_y2zRXyGf8mFuGi4KBM2HGw5gn7UAAFN7fM_046DzmpkByhG9jnqDGEB/exec";
+const KEY_HEADER = "Block-Variety";
+const LBS_HEADER = "2026 Harvest lbs";
+/* Optional third field. If the sheet doesn't have this column the date column
+   just stays blank — nothing else changes. */
+const DATE_HEADER = "2026 Final Date";
+const CACHE_KEY = "glf-usda-harvest-2026-v1";
 
-/* v2: row shape gained rfcst. New key so a v1 cache can't paint a blank column. */
-const CACHE_KEY = "glf-fw-2026-cache-v2";
-let ROWS = [];
-let openFarms = new Set();     // remember which farms are expanded across refreshes
-let expandedOnce = false;      // expand-all applies once, on the first painted data
-let onlyFinished = false;      // "Finished only" filter
+/* Block-varieties that live in the master but not on this dashboard: the
+   non-bearing plantings and GLF8 dates. Silently skipped — but if a real weight
+   shows up against one, that's lbs going missing, so we say so. */
+const OUT_OF_SCOPE = new Set(["GLF15-2A-GH","GLF15-2B-GH","GLF15-2C-GH","GLF15-2D-GH","GLF15-3A-GH","GLF15-3B-GH","GLF15-3C-GH","GLF15-3D-GH","GLF21-4A-KR","GLF21-4B-KR","GLF21-4C-KR","GLF21-4D-KR","GLF21-5A-KR","GLF21-5B-KR","GLF21-5C-KR","GLF21-5D-KR","GLF21-6A-KR","GLF21-6B-KR","GLF21-6C-KR","GLF21-6D-KR","GLF21-7-KR","GLF23-1-GH","GLF23-2-GH","GLF23-3-GH","GLF23-4-GH","GLF23-6-GH","GLF5-3-BH","GLF8-N30E-MJ","GLF8-N30W-MJ","GLF8-P7E-MJ","GLF8-P7W-MJ","GLF9-1AGH-GH","GLF9-1AGH-LH","GLF9-1AK-KR","GLF9-1B-GH","GLF9-1C-GH","GLF9-1D-GH","GLF9-1AP-PC"]);
 
-const fmt0 = new Intl.NumberFormat("en-US",{maximumFractionDigits:0});
-const fmt1 = new Intl.NumberFormat("en-US",{maximumFractionDigits:1});
-function parseNum(s){
-  if(s === "" || s == null) return null;
-  const n = parseFloat(String(s).replace(/[,%\s]/g,""));
-  return isNaN(n) ? null : n;
-}
-const fmtLbs = n => n == null ? "" : fmt0.format(Math.round(n));
+const DATA = [{"rn":"GLF1","hb":"GLF1-1","bv":"GLF1-1-MT","vr":"monterey","fd":"GLF LP","cl":"Rollback Almonds","am":"Jimmy Gill","fm":"Oscar","ac":32.98,"y25":860,"ybd":1600,"yrf":1800,"y26":null,"hl":"Holland","pr":"American Almond Company"},{"rn":"GLF1","hb":"GLF1-1","bv":"GLF1-1-NP","vr":"nonpareil","fd":"GLF LP","cl":"Rollback Almonds","am":"Jimmy Gill","fm":"Oscar","ac":65.95,"y25":810,"ybd":1600,"yrf":1600,"y26":null,"hl":"Holland","pr":"American Almond Company"},{"rn":"GLF1","hb":"GLF1-1","bv":"GLF1-1-WC","vr":"wood colony","fd":"GLF LP","cl":"Rollback Almonds","am":"Jimmy Gill","fm":"Oscar","ac":32.98,"y25":747,"ybd":1600,"yrf":1450,"y26":null,"hl":"Holland","pr":"American Almond Company"},{"rn":"GLF10","hb":"GLF10-NE","bv":"GLF10-NE-ID","vr":"independence","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Pablo","ac":34.03,"y25":487,"ybd":1200,"yrf":1100,"y26":null,"hl":"Braden","pr":"American Almond Company"},{"rn":"GLF10","hb":"GLF10-NE","bv":"GLF10-NE-MT","vr":"monterey","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Pablo","ac":34.03,"y25":728,"ybd":1400,"yrf":1300,"y26":null,"hl":"Braden","pr":"American Almond Company"},{"rn":"GLF10","hb":"GLF10-NE","bv":"GLF10-NE-NP","vr":"nonpareil","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Pablo","ac":68.05,"y25":603,"ybd":1200,"yrf":1300,"y26":null,"hl":"Braden","pr":"American Almond Company"},{"rn":"GLF10","hb":"GLF10-NW","bv":"GLF10-NW-ID","vr":"independence","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Pablo","ac":39.39,"y25":375,"ybd":1200,"yrf":1100,"y26":null,"hl":"Braden","pr":"Harris Woolf"},{"rn":"GLF10","hb":"GLF10-NW","bv":"GLF10-NW-MT","vr":"monterey","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Pablo","ac":39.39,"y25":652,"ybd":1400,"yrf":1400,"y26":null,"hl":"Braden","pr":"Harris Woolf"},{"rn":"GLF10","hb":"GLF10-NW","bv":"GLF10-NW-NP","vr":"nonpareil","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Pablo","ac":78.8,"y25":479,"ybd":1200,"yrf":1350,"y26":null,"hl":"Braden","pr":"Harris Woolf"},{"rn":"GLF10","hb":"GLF10-SE","bv":"GLF10-SE-ID","vr":"independence","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Pablo","ac":35.3,"y25":453,"ybd":1000,"yrf":1200,"y26":null,"hl":"Braden","pr":"Baugher"},{"rn":"GLF10","hb":"GLF10-SE","bv":"GLF10-SE-MT","vr":"monterey","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Pablo","ac":35.3,"y25":488,"ybd":1200,"yrf":1400,"y26":null,"hl":"Braden","pr":"Baugher"},{"rn":"GLF10","hb":"GLF10-SE","bv":"GLF10-SE-NP","vr":"nonpareil","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Pablo","ac":70.61,"y25":524,"ybd":1200,"yrf":1350,"y26":null,"hl":"Braden","pr":"Baugher"},{"rn":"GLF10","hb":"GLF10-SW","bv":"GLF10-SW-ID","vr":"independence","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Pablo","ac":33.26,"y25":595,"ybd":1000,"yrf":1100,"y26":null,"hl":"Braden","pr":"American Almond Company"},{"rn":"GLF10","hb":"GLF10-SW","bv":"GLF10-SW-MT","vr":"monterey","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Pablo","ac":33.26,"y25":860,"ybd":1200,"yrf":1400,"y26":null,"hl":"Braden","pr":"American Almond Company"},{"rn":"GLF10","hb":"GLF10-SW","bv":"GLF10-SW-NP","vr":"nonpareil","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Pablo","ac":66.52,"y25":841,"ybd":1200,"yrf":1400,"y26":null,"hl":"Braden","pr":"American Almond Company"},{"rn":"GLF11","hb":"GLF11-N","bv":"GLF11-N-KR","vr":"Kerman","fd":"GLF LP","cl":"Conventional Pistachios","am":"Jimmy Gill","fm":"Amalia","ac":191.42,"y25":2003,"ybd":1500,"yrf":1800,"y26":null,"hl":"N/A","pr":"TBD"},{"rn":"GLF11","hb":"GLF11-S","bv":"GLF11-S-KR","vr":"Kerman","fd":"GLF LP","cl":"Conventional Pistachios","am":"Jimmy Gill","fm":"Amalia","ac":132.82,"y25":3140,"ybd":2000,"yrf":1600,"y26":null,"hl":"N/A","pr":"TBD"},{"rn":"GLF12","hb":"GLF12-1","bv":"GLF12-1-GH","vr":"Golden Hills","fd":"GLF OZ","cl":"Immature Conventional Pistachios","am":"Jimmy Gill","fm":"Amalia","ac":113.75,"y25":0,"ybd":200,"yrf":0,"y26":null,"hl":"","pr":""},{"rn":"GLF12","hb":"GLF12-2","bv":"GLF12-2-GH","vr":"Golden Hills","fd":"GLF OZ","cl":"Immature Conventional Pistachios","am":"Jimmy Gill","fm":"Amalia","ac":164.12,"y25":0,"ybd":200,"yrf":0,"y26":null,"hl":"","pr":""},{"rn":"GLF13","hb":"GLF13-AN","bv":"GLF13-AN-MT","vr":"monterey","fd":"GLF LP","cl":"Conventional Almonds","am":"Saskia","fm":"Amalia","ac":18.69,"y25":2696,"ybd":2900,"yrf":2650,"y26":null,"hl":"Holland","pr":"American Almond Company"},{"rn":"GLF13","hb":"GLF13-AN","bv":"GLF13-AN-NP","vr":"nonpareil","fd":"GLF LP","cl":"Conventional Almonds","am":"Saskia","fm":"Amalia","ac":27.0,"y25":2629,"ybd":2800,"yrf":2500,"y26":null,"hl":"Holland","pr":"American Almond Company"},{"rn":"GLF13","hb":"GLF13-AS","bv":"GLF13-AS-MT","vr":"monterey","fd":"GLF LP","cl":"Conventional Almonds","am":"Saskia","fm":"Amalia","ac":14.54,"y25":2547,"ybd":2800,"yrf":2700,"y26":null,"hl":"Holland","pr":"Treehouse"},{"rn":"GLF13","hb":"GLF13-AS","bv":"GLF13-AS-NP","vr":"nonpareil","fd":"GLF LP","cl":"Conventional Almonds","am":"Saskia","fm":"Amalia","ac":20.77,"y25":2152,"ybd":2700,"yrf":2550,"y26":null,"hl":"Holland","pr":"Treehouse"},{"rn":"GLF13","hb":"GLF13-P","bv":"GLF13-P-GH","vr":"Golden Hills","fd":"GLF LP","cl":"Conventional Pistachios","am":"Saskia","fm":"Amalia","ac":145.55,"y25":5368,"ybd":4000,"yrf":3533,"y26":null,"hl":"N/A","pr":"TBD"},{"rn":"GLF14","hb":"GLF14-E","bv":"GLF14-E-ID","vr":"Independence","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Amalia","ac":84.95,"y25":1367,"ybd":2000,"yrf":1850,"y26":null,"hl":"Cortina","pr":"Harris Woolf"},{"rn":"GLF14","hb":"GLF14-W","bv":"GLF14-W-ID","vr":"Independence","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Amalia","ac":84.95,"y25":1255,"ybd":2000,"yrf":2000,"y26":null,"hl":"Cortina","pr":"Harris Woolf"},{"rn":"GLF16","hb":"GLF16-1","bv":"GLF16-1-KR","vr":"Kerman","fd":"GLF LP","cl":"Conventional Pistachios","am":"Saskia","fm":"Amalia","ac":74.56,"y25":3941,"ybd":2600,"yrf":2133,"y26":null,"hl":"N/A","pr":"TBD"},{"rn":"GLF16","hb":"GLF16-2","bv":"GLF16-2-KR","vr":"Kerman","fd":"GLF LP","cl":"Conventional Pistachios","am":"Saskia","fm":"Amalia","ac":79.53,"y25":4224,"ybd":2900,"yrf":2133,"y26":null,"hl":"N/A","pr":"TBD"},{"rn":"GLF16","hb":"GLF16-3","bv":"GLF16-3-KR","vr":"Kerman","fd":"GLF LP","cl":"Conventional Pistachios","am":"Saskia","fm":"Amalia","ac":79.53,"y25":3531,"ybd":2200,"yrf":2167,"y26":null,"hl":"N/A","pr":"TBD"},{"rn":"GLF17","hb":"GLF17-7","bv":"GLF17-7-ID","vr":"independence","fd":"GLF OZ","cl":"Immature Conventional Almonds","am":"Jimmy Gill","fm":"Oscar","ac":90.73,"y25":1232,"ybd":1750,"yrf":1750,"y26":null,"hl":"Holland","pr":"Supreme"},{"rn":"GLF17","hb":"GLF17-8","bv":"GLF17-8-ID","vr":"independence","fd":"GLF OZ","cl":"Immature Conventional Almonds","am":"Jimmy Gill","fm":"Oscar","ac":118.08,"y25":1710,"ybd":2200,"yrf":2000,"y26":null,"hl":"Holland","pr":"Treehouse"},{"rn":"GLF17","hb":"GLF17-8","bv":"GLF17-8-LB","vr":"liberty","fd":"GLF OZ","cl":"Immature Conventional Almonds","am":"Jimmy Gill","fm":"Oscar","ac":19.0,"y25":1594,"ybd":2000,"yrf":1633,"y26":null,"hl":"Holland","pr":"Treehouse"},{"rn":"GLF17","hb":"GLF17-8","bv":"GLF17-8-YZ","vr":"yorizane","fd":"GLF OZ","cl":"Immature Conventional Almonds","am":"Jimmy Gill","fm":"Oscar","ac":19.0,"y25":2005,"ybd":2200,"yrf":2000,"y26":null,"hl":"Holland","pr":"Treehouse"},{"rn":"GLF17","hb":"GLF17-S","bv":"GLF17-S-ID","vr":"independence","fd":"GLF OZ","cl":"Immature Conventional Almonds","am":"Jimmy Gill","fm":"Oscar","ac":137.01,"y25":1770,"ybd":2100,"yrf":1800,"y26":null,"hl":"Holland","pr":"Monte Vista"},{"rn":"GLF17","hb":"GLF17-9","bv":"GLF17-9-AD","vr":"aldrich","fd":"GLF OZ","cl":"Organic Almonds","am":"Jimmy Gill","fm":"Oscar","ac":30.66,"y25":836,"ybd":1400,"yrf":1200,"y26":null,"hl":"Holland","pr":"Baugher"},{"rn":"GLF17","hb":"GLF17-9","bv":"GLF17-9-MT","vr":"monterey","fd":"GLF OZ","cl":"Organic Almonds","am":"Jimmy Gill","fm":"Oscar","ac":30.66,"y25":858,"ybd":1400,"yrf":1200,"y26":null,"hl":"Holland","pr":"Baugher"},{"rn":"GLF17","hb":"GLF17-9","bv":"GLF17-9-NP","vr":"nonpareil","fd":"GLF OZ","cl":"Organic Almonds","am":"Jimmy Gill","fm":"Oscar","ac":61.32,"y25":788,"ybd":1400,"yrf":1200,"y26":null,"hl":"Holland","pr":"Baugher"},{"rn":"GLF17","hb":"GLF17-1","bv":"GLF17-1-ID","vr":"independence","fd":"GLF OZ","cl":"Rollback Almonds","am":"Jimmy Gill","fm":"Oscar","ac":41.54,"y25":2413,"ybd":2400,"yrf":2400,"y26":null,"hl":"Holland","pr":"American Almond Company"},{"rn":"GLF17","hb":"GLF17-2","bv":"GLF17-2-MT","vr":"monterey","fd":"GLF OZ","cl":"Rollback Almonds","am":"Jimmy Gill","fm":"Oscar","ac":50.45,"y25":1462,"ybd":1700,"yrf":1700,"y26":null,"hl":"Holland","pr":"Baugher"},{"rn":"GLF17","hb":"GLF17-2","bv":"GLF17-2-NP","vr":"nonpareil","fd":"GLF OZ","cl":"Rollback Almonds","am":"Jimmy Gill","fm":"Oscar","ac":51.43,"y25":1049,"ybd":1700,"yrf":1700,"y26":null,"hl":"Holland","pr":"Baugher"},{"rn":"GLF17","hb":"GLF17-3","bv":"GLF17-3-CM","vr":"carmel","fd":"GLF OZ","cl":"Rollback Almonds","am":"Jimmy Gill","fm":"Oscar","ac":2.2,"y25":null,"ybd":1700,"yrf":1300,"y26":null,"hl":"","pr":""},{"rn":"GLF17","hb":"GLF17-3","bv":"GLF17-3-MT","vr":"monterey","fd":"GLF OZ","cl":"Rollback Almonds","am":"Jimmy Gill","fm":"Oscar","ac":2.2,"y25":null,"ybd":1700,"yrf":1600,"y26":null,"hl":"","pr":""},{"rn":"GLF17","hb":"GLF17-3","bv":"GLF17-3-NP","vr":"nonpareil","fd":"GLF OZ","cl":"Rollback Almonds","am":"Jimmy Gill","fm":"Oscar","ac":4.4,"y25":null,"ybd":1700,"yrf":1600,"y26":null,"hl":"","pr":""},{"rn":"GLF18","hb":"GLF18-6","bv":"GLF18-6-ID","vr":"independence","fd":"GLF LP","cl":"Immature Conventional Almonds","am":"Jimmy Gill","fm":"Oscar","ac":122.05,"y25":1210,"ybd":1800,"yrf":1700,"y26":null,"hl":"Holland","pr":"Treehouse"},{"rn":"GLF18","hb":"GLF18-10","bv":"GLF18-10-MT","vr":"monterey","fd":"GLF LP","cl":"Rollback Almonds","am":"Jimmy Gill","fm":"Oscar","ac":37.25,"y25":734,"ybd":1500,"yrf":1500,"y26":null,"hl":"Holland","pr":"Monte Vista"},{"rn":"GLF18","hb":"GLF18-10","bv":"GLF18-10-NP","vr":"nonpareil","fd":"GLF LP","cl":"Rollback Almonds","am":"Jimmy Gill","fm":"Oscar","ac":74.49,"y25":992,"ybd":1500,"yrf":1400,"y26":null,"hl":"Holland","pr":"Monte Vista"},{"rn":"GLF18","hb":"GLF18-10","bv":"GLF18-10-WC","vr":"wood colony","fd":"GLF LP","cl":"Rollback Almonds","am":"Jimmy Gill","fm":"Oscar","ac":37.25,"y25":1070,"ybd":1200,"yrf":1100,"y26":null,"hl":"Holland","pr":"Monte Vista"},{"rn":"GLF18","hb":"GLF18-3","bv":"GLF18-3-CM","vr":"carmel","fd":"GLF LP","cl":"Rollback Almonds","am":"Jimmy Gill","fm":"Oscar","ac":15.27,"y25":1209,"ybd":1700,"yrf":1300,"y26":null,"hl":"Holland","pr":"American Almond Company"},{"rn":"GLF18","hb":"GLF18-3","bv":"GLF18-3-MT","vr":"monterey","fd":"GLF LP","cl":"Rollback Almonds","am":"Jimmy Gill","fm":"Oscar","ac":15.27,"y25":1242,"ybd":1700,"yrf":1600,"y26":null,"hl":"Holland","pr":"American Almond Company"},{"rn":"GLF18","hb":"GLF18-3","bv":"GLF18-3-NP","vr":"nonpareil","fd":"GLF LP","cl":"Rollback Almonds","am":"Jimmy Gill","fm":"Oscar","ac":30.54,"y25":1169,"ybd":1700,"yrf":1500,"y26":null,"hl":"Holland","pr":"American Almond Company"},{"rn":"GLF18","hb":"GLF18-4","bv":"GLF18-4-BT","vr":"butte","fd":"GLF LP","cl":"Rollback Almonds","am":"Jimmy Gill","fm":"Oscar","ac":37.5,"y25":2245,"ybd":2000,"yrf":1800,"y26":null,"hl":"Holland","pr":"Baugher"},{"rn":"GLF18","hb":"GLF18-4","bv":"GLF18-4-PD","vr":"padre","fd":"GLF LP","cl":"Rollback Almonds","am":"Jimmy Gill","fm":"Oscar","ac":37.5,"y25":2245,"ybd":2000,"yrf":1800,"y26":null,"hl":"Holland","pr":"Baugher"},{"rn":"GLF18","hb":"GLF18-5","bv":"GLF18-5-AD","vr":"aldrich","fd":"GLF LP","cl":"Rollback Almonds","am":"Jimmy Gill","fm":"Oscar","ac":11.85,"y25":1321,"ybd":1500,"yrf":1400,"y26":null,"hl":"Holland","pr":"Treehouse"},{"rn":"GLF18","hb":"GLF18-5","bv":"GLF18-5-NP","vr":"nonpareil","fd":"GLF LP","cl":"Rollback Almonds","am":"Jimmy Gill","fm":"Oscar","ac":11.85,"y25":1158,"ybd":1700,"yrf":1400,"y26":null,"hl":"Holland","pr":"Treehouse"},{"rn":"GLF19","hb":"GLF19-1","bv":"GLF19-1-MT","vr":"monterey","fd":"GLF LP","cl":"Organic Almonds","am":"Jimmy Gill","fm":"Gerardo","ac":56.22,"y25":1459,"ybd":2000,"yrf":2100,"y26":null,"hl":"Treehouse","pr":"Baugher"},{"rn":"GLF19","hb":"GLF19-1","bv":"GLF19-1-NP","vr":"nonpareil","fd":"GLF LP","cl":"Organic Almonds","am":"Jimmy Gill","fm":"Gerardo","ac":56.22,"y25":1498,"ybd":2000,"yrf":2100,"y26":null,"hl":"Treehouse","pr":"Baugher"},{"rn":"GLF20","hb":"GLF20-E","bv":"GLF20-E-GH","vr":"Golden Hills","fd":"GLF LP","cl":"Conventional Pistachios","am":"Jimmy Gill","fm":"Amalia","ac":150.94,"y25":2366,"ybd":2500,"yrf":2300,"y26":null,"hl":"N/A","pr":"TBD"},{"rn":"GLF20","hb":"GLF20-W","bv":"GLF20-W-GH","vr":"Golden Hills","fd":"GLF LP","cl":"Conventional Pistachios","am":"Jimmy Gill","fm":"Amalia","ac":150.94,"y25":2773,"ybd":2500,"yrf":2300,"y26":null,"hl":"N/A","pr":"TBD"},{"rn":"GLF22","hb":"GLF22-C","bv":"GLF22-C-GH","vr":"Golden Hills","fd":"GLF LP","cl":"Conventional Pistachios","am":"Jimmy Gill","fm":"Amalia","ac":118.1,"y25":2384,"ybd":2800,"yrf":2600,"y26":null,"hl":"N/A","pr":"TBD"},{"rn":"GLF22","hb":"GLF22-C","bv":"GLF22-O-GH","vr":"Golden Hills","fd":"GLF LP","cl":"Conventional Pistachios","am":"Jimmy Gill","fm":"Amalia","ac":82.26,"y25":3000,"ybd":3400,"yrf":2867,"y26":null,"hl":"N/A","pr":"TBD"},{"rn":"GLF23","hb":"GLF23-5","bv":"GLF23-5-MT","vr":"monterey","fd":"GLF OZ","cl":"Conventional Almonds","am":"Tom Barr","fm":"Armando","ac":48.61,"y25":2844,"ybd":2800,"yrf":2800,"y26":null,"hl":"Holland","pr":"Treehouse"},{"rn":"GLF23","hb":"GLF23-5","bv":"GLF23-5-NP","vr":"nonpareil","fd":"GLF OZ","cl":"Conventional Almonds","am":"Tom Barr","fm":"Armando","ac":48.61,"y25":2156,"ybd":2800,"yrf":2800,"y26":null,"hl":"Holland","pr":"Treehouse"},{"rn":"GLF23","hb":"GLF23-5","bv":"GLF23-5-WC","vr":"wood colony","fd":"GLF OZ","cl":"Conventional Almonds","am":"Tom Barr","fm":"Armando","ac":48.61,"y25":2671,"ybd":2800,"yrf":2800,"y26":null,"hl":"Holland","pr":"Treehouse"},{"rn":"GLF24","hb":"GLF24-1","bv":"GLF24-1-AD","vr":"aldrich","fd":"GLF LP","cl":"Conventional Almonds","am":"Jimmy Gill","fm":"Gerardo","ac":39.02,"y25":1465,"ybd":2000,"yrf":1600,"y26":null,"hl":"Treehouse","pr":"Harris Woolf"},{"rn":"GLF24","hb":"GLF24-1","bv":"GLF24-1-MT","vr":"monterey","fd":"GLF LP","cl":"Conventional Almonds","am":"Jimmy Gill","fm":"Gerardo","ac":39.02,"y25":1723,"ybd":2000,"yrf":1900,"y26":null,"hl":"Treehouse","pr":"Harris Woolf"},{"rn":"GLF24","hb":"GLF24-1","bv":"GLF24-1-NP","vr":"nonpareil","fd":"GLF LP","cl":"Conventional Almonds","am":"Jimmy Gill","fm":"Gerardo","ac":78.04,"y25":1340,"ybd":2000,"yrf":1600,"y26":null,"hl":"Treehouse","pr":"Harris Woolf"},{"rn":"GLF25","hb":"GLF25-A","bv":"GLF25-A-MT","vr":"monterey","fd":"GLF LP","cl":"Conventional Almonds","am":"Jimmy Gill","fm":"Gerardo","ac":74.28,"y25":2388,"ybd":2800,"yrf":2700,"y26":null,"hl":"Treehouse","pr":"Monte Vista"},{"rn":"GLF25","hb":"GLF25-A","bv":"GLF25-A-NP","vr":"nonpareil","fd":"GLF LP","cl":"Conventional Almonds","am":"Jimmy Gill","fm":"Gerardo","ac":74.28,"y25":2237,"ybd":2800,"yrf":2700,"y26":null,"hl":"Treehouse","pr":"Monte Vista"},{"rn":"GLF25","hb":"GLF25-B","bv":"GLF25-B-ID","vr":"independence","fd":"GLF LP","cl":"Conventional Almonds","am":"Jimmy Gill","fm":"Gerardo","ac":37.14,"y25":1959,"ybd":2800,"yrf":2500,"y26":null,"hl":"Treehouse","pr":"Monte Vista"},{"rn":"GLF25","hb":"GLF25-B","bv":"GLF25-B-MT","vr":"monterey","fd":"GLF LP","cl":"Conventional Almonds","am":"Jimmy Gill","fm":"Gerardo","ac":37.14,"y25":1951,"ybd":2800,"yrf":2700,"y26":null,"hl":"Treehouse","pr":"Monte Vista"},{"rn":"GLF25","hb":"GLF25-B","bv":"GLF25-B-NP","vr":"nonpareil","fd":"GLF LP","cl":"Conventional Almonds","am":"Jimmy Gill","fm":"Gerardo","ac":74.28,"y25":2172,"ybd":2800,"yrf":2300,"y26":null,"hl":"Treehouse","pr":"Monte Vista"},{"rn":"GLF26","hb":"GLF26-1","bv":"GLF26-1-MT","vr":"monterey","fd":"GLF26","cl":"Conventional Almonds","am":"Jimmy Gill","fm":"Gerardo","ac":36.0,"y25":2497,"ybd":2800,"yrf":2800,"y26":null,"hl":"Treehouse","pr":"Treehouse"},{"rn":"GLF26","hb":"GLF26-1","bv":"GLF26-1-NP","vr":"nonpareil","fd":"GLF26","cl":"Conventional Almonds","am":"Jimmy Gill","fm":"Gerardo","ac":36.0,"y25":1909,"ybd":2800,"yrf":2600,"y26":null,"hl":"Treehouse","pr":"Treehouse"},{"rn":"GLF26","hb":"GLF26-2","bv":"GLF26-2-MT","vr":"monterey","fd":"GLF26","cl":"Conventional Almonds","am":"Jimmy Gill","fm":"Gerardo","ac":55.25,"y25":2554,"ybd":2800,"yrf":2800,"y26":null,"hl":"Treehouse","pr":"Treehouse"},{"rn":"GLF26","hb":"GLF26-2","bv":"GLF26-2-NP","vr":"nonpareil","fd":"GLF26","cl":"Conventional Almonds","am":"Jimmy Gill","fm":"Gerardo","ac":55.25,"y25":1922,"ybd":2800,"yrf":2700,"y26":null,"hl":"Treehouse","pr":"Treehouse"},{"rn":"GLF26","hb":"GLF26-3","bv":"GLF26-3-MT","vr":"monterey","fd":"GLF26","cl":"Conventional Almonds","am":"Jimmy Gill","fm":"Gerardo","ac":34.62,"y25":3008,"ybd":3000,"yrf":2800,"y26":null,"hl":"Treehouse","pr":"Supreme"},{"rn":"GLF26","hb":"GLF26-3","bv":"GLF26-3-NP","vr":"nonpareil","fd":"GLF26","cl":"Conventional Almonds","am":"Jimmy Gill","fm":"Gerardo","ac":34.62,"y25":2688,"ybd":3000,"yrf":2500,"y26":null,"hl":"Treehouse","pr":"Supreme"},{"rn":"GLF26","hb":"GLF26-4","bv":"GLF26-4-MT","vr":"monterey","fd":"GLF26","cl":"Conventional Almonds","am":"Jimmy Gill","fm":"Gerardo","ac":39.46,"y25":3006,"ybd":3000,"yrf":2800,"y26":null,"hl":"Treehouse","pr":"Supreme"},{"rn":"GLF26","hb":"GLF26-4","bv":"GLF26-4-NP","vr":"nonpareil","fd":"GLF26","cl":"Conventional Almonds","am":"Jimmy Gill","fm":"Gerardo","ac":39.46,"y25":2398,"ybd":3000,"yrf":2700,"y26":null,"hl":"Treehouse","pr":"Supreme"},{"rn":"GLF27","hb":"GLF27-1","bv":"GLF27-1-CM","vr":"carmel","fd":"GLF LP","cl":"Conventional Almonds","am":"Tom Barr","fm":"Armando","ac":19.25,"y25":1769,"ybd":2800,"yrf":2200,"y26":null,"hl":"Holland","pr":"Supreme"},{"rn":"GLF27","hb":"GLF27-1","bv":"GLF27-1-MT","vr":"monterey","fd":"GLF LP","cl":"Conventional Almonds","am":"Tom Barr","fm":"Armando","ac":19.25,"y25":2572,"ybd":2800,"yrf":2400,"y26":null,"hl":"Holland","pr":"Supreme"},{"rn":"GLF27","hb":"GLF27-1","bv":"GLF27-1-NP","vr":"nonpareil","fd":"GLF LP","cl":"Conventional Almonds","am":"Tom Barr","fm":"Armando","ac":38.5,"y25":2272,"ybd":2800,"yrf":2300,"y26":null,"hl":"Holland","pr":"Supreme"},{"rn":"GLF3","hb":"GLF3-D","bv":"GLF3-D-AD","vr":"aldrich","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":23.49,"y25":2089,"ybd":2100,"yrf":750,"y26":null,"hl":"TBD","pr":"Baugher"},{"rn":"GLF3","hb":"GLF3-D","bv":"GLF3-D-MT","vr":"monterey","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":23.49,"y25":1276,"ybd":2200,"yrf":1200,"y26":null,"hl":"TBD","pr":"Baugher"},{"rn":"GLF3","hb":"GLF3-D","bv":"GLF3-D-NP","vr":"nonpareil","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":70.27,"y25":1496,"ybd":2100,"yrf":1300,"y26":null,"hl":"TBD","pr":"Baugher"},{"rn":"GLF3","hb":"GLF3-D","bv":"GLF3-D-WC","vr":"wood colony","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":23.49,"y25":1211,"ybd":2100,"yrf":200,"y26":null,"hl":"TBD","pr":"Baugher"},{"rn":"GLF3","hb":"GLF3-E","bv":"GLF3-E-AD","vr":"aldrich","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":23.49,"y25":2189,"ybd":2100,"yrf":750,"y26":null,"hl":"TBD","pr":"Baugher"},{"rn":"GLF3","hb":"GLF3-E","bv":"GLF3-E-MT","vr":"monterey","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":23.49,"y25":1223,"ybd":2100,"yrf":1300,"y26":null,"hl":"TBD","pr":"Baugher"},{"rn":"GLF3","hb":"GLF3-E","bv":"GLF3-E-NP","vr":"nonpareil","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":70.27,"y25":1272,"ybd":2000,"yrf":1400,"y26":null,"hl":"TBD","pr":"Baugher"},{"rn":"GLF3","hb":"GLF3-E","bv":"GLF3-E-WC","vr":"wood colony","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":23.49,"y25":1261,"ybd":2000,"yrf":200,"y26":null,"hl":"TBD","pr":"Baugher"},{"rn":"GLF3","hb":"GLF3-NW","bv":"GLF3-NW-AD","vr":"aldrich","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":35.75,"y25":1148,"ybd":2200,"yrf":550,"y26":null,"hl":"TBD","pr":"Baugher"},{"rn":"GLF3","hb":"GLF3-NW","bv":"GLF3-NW-MT","vr":"monterey","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":35.75,"y25":1224,"ybd":2300,"yrf":1000,"y26":null,"hl":"TBD","pr":"Baugher"},{"rn":"GLF3","hb":"GLF3-NW","bv":"GLF3-NW-NP","vr":"nonpareil","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":106.94,"y25":1705,"ybd":2300,"yrf":900,"y26":null,"hl":"TBD","pr":"Baugher"},{"rn":"GLF3","hb":"GLF3-NW","bv":"GLF3-NW-WC","vr":"wood colony","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":35.75,"y25":957,"ybd":2100,"yrf":100,"y26":null,"hl":"TBD","pr":"Baugher"},{"rn":"GLF3","hb":"GLF3-PP","bv":"GLF3-PP-AD","vr":"aldrich","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":23.49,"y25":1496,"ybd":1900,"yrf":600,"y26":null,"hl":"TBD","pr":"Baugher"},{"rn":"GLF3","hb":"GLF3-PP","bv":"GLF3-PP-MT","vr":"monterey","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":23.49,"y25":1277,"ybd":1900,"yrf":1200,"y26":null,"hl":"TBD","pr":"Baugher"},{"rn":"GLF3","hb":"GLF3-PP","bv":"GLF3-PP-NP","vr":"nonpareil","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":70.27,"y25":1625,"ybd":1800,"yrf":1200,"y26":null,"hl":"TBD","pr":"Baugher"},{"rn":"GLF3","hb":"GLF3-PP","bv":"GLF3-PP-WC","vr":"wood colony","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":23.49,"y25":1305,"ybd":1800,"yrf":100,"y26":null,"hl":"TBD","pr":"Baugher"},{"rn":"GLF3","hb":"GLF3-SW","bv":"GLF3-SW-AD","vr":"aldrich","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":16.34,"y25":2775,"ybd":2000,"yrf":500,"y26":null,"hl":"TBD","pr":"Baugher"},{"rn":"GLF3","hb":"GLF3-SW","bv":"GLF3-SW-MT","vr":"monterey","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":16.34,"y25":1419,"ybd":2000,"yrf":1000,"y26":null,"hl":"TBD","pr":"Baugher"},{"rn":"GLF3","hb":"GLF3-SW","bv":"GLF3-SW-NP","vr":"nonpareil","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":49.91,"y25":1385,"ybd":1800,"yrf":1000,"y26":null,"hl":"TBD","pr":"Baugher"},{"rn":"GLF3","hb":"GLF3-SW","bv":"GLF3-SW-WC","vr":"wood colony","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":16.34,"y25":1219,"ybd":2000,"yrf":200,"y26":null,"hl":"TBD","pr":"Baugher"},{"rn":"GLF4","hb":"GLF4-B14","bv":"GLF4-B14-BT","vr":"butte","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Pablo","ac":58.88,"y25":1730,"ybd":2000,"yrf":2100,"y26":null,"hl":"Assali","pr":"Treehouse"},{"rn":"GLF4","hb":"GLF4-B14","bv":"GLF4-B14-PD","vr":"padre","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Pablo","ac":58.88,"y25":1730,"ybd":2000,"yrf":2000,"y26":null,"hl":"Assali","pr":"Treehouse"},{"rn":"GLF4","hb":"GLF4-B5","bv":"GLF4-B5-BT","vr":"butte","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Pablo","ac":54.82,"y25":1691,"ybd":2000,"yrf":2100,"y26":null,"hl":"Braden","pr":"Treehouse"},{"rn":"GLF4","hb":"GLF4-B5","bv":"GLF4-B5-PD","vr":"padre","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Pablo","ac":54.82,"y25":1691,"ybd":2000,"yrf":2000,"y26":null,"hl":"Braden","pr":"Treehouse"},{"rn":"GLF4","hb":"GLF4-GHE","bv":"GLF4-GHE-CM","vr":"carmel","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Pablo","ac":154.32,"y25":1057,"ybd":1500,"yrf":1900,"y26":null,"hl":"Braden","pr":"Treehouse"},{"rn":"GLF4","hb":"GLF4-GHW","bv":"GLF4-GHW-MT","vr":"monterey","fd":"GLF LP","cl":"Rollback Almonds","am":"Saskia","fm":"Pablo","ac":77.16,"y25":2040,"ybd":1500,"yrf":2000,"y26":null,"hl":"Assali","pr":"Treehouse"},{"rn":"GLF4","hb":"GLF4-B69","bv":"GLF4-B69-BT","vr":"butte","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":40.61,"y25":1664,"ybd":1900,"yrf":1400,"y26":null,"hl":"Assali","pr":"Baugher"},{"rn":"GLF4","hb":"GLF4-B69","bv":"GLF4-B69-PD","vr":"padre","fd":"GLF LP","cl":"Organic Almonds","am":"Saskia","fm":"Pablo","ac":40.61,"y25":1664,"ybd":1900,"yrf":1300,"y26":null,"hl":"Assali","pr":"Baugher"},{"rn":"GLF5","hb":"GLF5-1","bv":"GLF5-1-ID","vr":"independence","fd":"GLF OZ","cl":"Conventional Almonds","am":"Jimmy Gill","fm":"Oscar","ac":144.51,"y25":2460,"ybd":2800,"yrf":2500,"y26":null,"hl":"Holland","pr":"Harris Woolf"},{"rn":"GLF5","hb":"GLF5-2","bv":"GLF5-2-ID","vr":"independence","fd":"GLF OZ","cl":"Conventional Almonds","am":"Jimmy Gill","fm":"Oscar","ac":149.49,"y25":2280,"ybd":2800,"yrf":2500,"y26":null,"hl":"Holland","pr":"Treehouse"},{"rn":"GLF5","hb":"GLF5-3","bv":"GLF5-3-MT","vr":"monterey","fd":"GLF OZ","cl":"Conventional Almonds","am":"Jimmy Gill","fm":"Oscar","ac":76.04,"y25":1182,"ybd":2800,"yrf":1900,"y26":null,"hl":"Holland","pr":"Harris Woolf"},{"rn":"GLF6","hb":"GLF6-1","bv":"GLF6-1-ID","vr":"independence","fd":"GLF OZ","cl":"Immature Conventional Almonds","am":"Jimmy Gill","fm":"Oscar","ac":207.27,"y25":2352,"ybd":2800,"yrf":2700,"y26":null,"hl":"Holland","pr":"50% Harris Woolf, 50% Monte Vista"},{"rn":"GLF7","hb":"GLF7-1","bv":"GLF7-1-AD","vr":"aldrich","fd":"GLF LP","cl":"Conventional Almonds","am":"Tom Barr","fm":"Armando","ac":38.32,"y25":3654,"ybd":3000,"yrf":2800,"y26":null,"hl":"Holland","pr":"Supreme"},{"rn":"GLF7","hb":"GLF7-1","bv":"GLF7-1-NP","vr":"nonpareil","fd":"GLF LP","cl":"Conventional Almonds","am":"Tom Barr","fm":"Armando","ac":77.64,"y25":2132,"ybd":3000,"yrf":2800,"y26":null,"hl":"Holland","pr":"Supreme"},{"rn":"GLF7","hb":"GLF7-1","bv":"GLF7-1-WC","vr":"wood colony","fd":"GLF LP","cl":"Conventional Almonds","am":"Tom Barr","fm":"Armando","ac":38.23,"y25":2869,"ybd":3000,"yrf":2700,"y26":null,"hl":"Holland","pr":"Supreme"},{"rn":"GLF7","hb":"GLF7-2","bv":"GLF7-2-MT","vr":"monterey","fd":"GLF LP","cl":"Conventional Almonds","am":"Tom Barr","fm":"Armando","ac":47.5,"y25":1935,"ybd":2800,"yrf":2800,"y26":null,"hl":"Holland","pr":"Treehouse"},{"rn":"GLF7","hb":"GLF7-2","bv":"GLF7-2-NP","vr":"nonpareil","fd":"GLF LP","cl":"Conventional Almonds","am":"Tom Barr","fm":"Armando","ac":47.39,"y25":1331,"ybd":2800,"yrf":2700,"y26":null,"hl":"Holland","pr":"Treehouse"},{"rn":"GLF7","hb":"GLF7-2","bv":"GLF7-2-WC","vr":"wood colony","fd":"GLF LP","cl":"Conventional Almonds","am":"Tom Barr","fm":"Armando","ac":47.28,"y25":1620,"ybd":2800,"yrf":2700,"y26":null,"hl":"Holland","pr":"Treehouse"},{"rn":"GLF7","hb":"GLF7-10","bv":"GLF7-10-FT","vr":"fritz","fd":"GLF LP","cl":"Organic Almonds","am":"Tom Barr","fm":"Armando","ac":14.79,"y25":876,"ybd":1500,"yrf":1300,"y26":null,"hl":"Holland","pr":"Baugher"},{"rn":"GLF7","hb":"GLF7-10","bv":"GLF7-10-MT","vr":"monterey","fd":"GLF LP","cl":"Organic Almonds","am":"Tom Barr","fm":"Armando","ac":14.83,"y25":1472,"ybd":1800,"yrf":1700,"y26":null,"hl":"Holland","pr":"Baugher"},{"rn":"GLF7","hb":"GLF7-10","bv":"GLF7-10-NP","vr":"nonpareil","fd":"GLF LP","cl":"Organic Almonds","am":"Tom Barr","fm":"Armando","ac":28.47,"y25":1065,"ybd":1500,"yrf":1600,"y26":null,"hl":"Holland","pr":"Baugher"},{"rn":"GLF7","hb":"GLF7-3","bv":"GLF7-3-MT","vr":"monterey","fd":"GLF LP","cl":"Organic Almonds","am":"Tom Barr","fm":"Armando","ac":51.11,"y25":2601,"ybd":2200,"yrf":1900,"y26":null,"hl":"Holland","pr":"Baugher"},{"rn":"GLF7","hb":"GLF7-3","bv":"GLF7-3-NP","vr":"nonpareil","fd":"GLF LP","cl":"Organic Almonds","am":"Tom Barr","fm":"Armando","ac":50.84,"y25":1634,"ybd":2200,"yrf":1900,"y26":null,"hl":"Holland","pr":"Baugher"},{"rn":"GLF7","hb":"GLF7-3","bv":"GLF7-3-WC","vr":"wood colony","fd":"GLF LP","cl":"Organic Almonds","am":"Tom Barr","fm":"Armando","ac":50.87,"y25":2065,"ybd":2200,"yrf":1500,"y26":null,"hl":"Holland","pr":"Baugher"},{"rn":"GLF7","hb":"GLF7-4","bv":"GLF7-4-MT","vr":"monterey","fd":"GLF LP","cl":"Organic Almonds","am":"Tom Barr","fm":"Armando","ac":38.84,"y25":1587,"ybd":2000,"yrf":1800,"y26":null,"hl":"Holland","pr":"Baugher"},{"rn":"GLF7","hb":"GLF7-4","bv":"GLF7-4-NP","vr":"nonpareil","fd":"GLF LP","cl":"Organic Almonds","am":"Tom Barr","fm":"Armando","ac":78.29,"y25":1439,"ybd":2000,"yrf":1800,"y26":null,"hl":"Holland","pr":"Baugher"},{"rn":"GLF7","hb":"GLF7-4","bv":"GLF7-4-WC","vr":"wood colony","fd":"GLF LP","cl":"Organic Almonds","am":"Tom Barr","fm":"Armando","ac":38.66,"y25":1864,"ybd":2000,"yrf":1500,"y26":null,"hl":"Holland","pr":"Baugher"},{"rn":"GLF7","hb":"GLF7-8","bv":"GLF7-8-NP","vr":"nonpareil","fd":"GLF LP","cl":"Organic Almonds","am":"Tom Barr","fm":"Armando","ac":15.25,"y25":783,"ybd":1900,"yrf":1500,"y26":null,"hl":"Holland","pr":"Baugher"},{"rn":"GLF7","hb":"GLF7-8","bv":"GLF7-8-WC","vr":"wood colony","fd":"GLF LP","cl":"Organic Almonds","am":"Tom Barr","fm":"Armando","ac":15.26,"y25":1549,"ybd":1900,"yrf":1400,"y26":null,"hl":"Holland","pr":"Baugher"},{"rn":"GLF7","hb":"GLF7-11","bv":"GLF7-11-FT","vr":"fritz","fd":"GLF LP","cl":"Rollback Almonds","am":"Tom Barr","fm":"Armando","ac":20.91,"y25":938,"ybd":1500,"yrf":1300,"y26":null,"hl":"Holland","pr":"Treehouse"},{"rn":"GLF7","hb":"GLF7-11","bv":"GLF7-11-MT","vr":"monterey","fd":"GLF LP","cl":"Rollback Almonds","am":"Tom Barr","fm":"Armando","ac":20.96,"y25":1585,"ybd":1500,"yrf":1600,"y26":null,"hl":"Holland","pr":"Treehouse"},{"rn":"GLF7","hb":"GLF7-11","bv":"GLF7-11-NP","vr":"nonpareil","fd":"GLF LP","cl":"Rollback Almonds","am":"Tom Barr","fm":"Armando","ac":41.69,"y25":1241,"ybd":1500,"yrf":1600,"y26":null,"hl":"Holland","pr":"Treehouse"},{"rn":"GLF7","hb":"GLF7-5","bv":"GLF7-5-MT","vr":"monterey","fd":"GLF LP","cl":"Rollback Almonds","am":"Tom Barr","fm":"Armando","ac":22.49,"y25":2000,"ybd":1800,"yrf":2000,"y26":null,"hl":"Holland","pr":"Supreme"},{"rn":"GLF7","hb":"GLF7-5","bv":"GLF7-5-NP","vr":"nonpareil","fd":"GLF LP","cl":"Rollback Almonds","am":"Tom Barr","fm":"Armando","ac":44.75,"y25":1179,"ybd":1800,"yrf":2000,"y26":null,"hl":"Holland","pr":"Supreme"},{"rn":"GLF7","hb":"GLF7-5","bv":"GLF7-5-WC","vr":"wood colony","fd":"GLF LP","cl":"Rollback Almonds","am":"Tom Barr","fm":"Armando","ac":22.39,"y25":1735,"ybd":1500,"yrf":1700,"y26":null,"hl":"Holland","pr":"Supreme"},{"rn":"GLF7","hb":"GLF7-6","bv":"GLF7-6-NP","vr":"nonpareil","fd":"GLF LP","cl":"Rollback Almonds","am":"Tom Barr","fm":"Armando","ac":44.75,"y25":1414,"ybd":1800,"yrf":1900,"y26":null,"hl":"Holland","pr":"Harris Woolf"},{"rn":"GLF7","hb":"GLF7-6","bv":"GLF7-6-SP","vr":"supareil","fd":"GLF LP","cl":"Rollback Almonds","am":"Tom Barr","fm":"Armando","ac":44.88,"y25":2176,"ybd":2200,"yrf":2200,"y26":null,"hl":"Holland","pr":"Harris Woolf"},{"rn":"GLF7","hb":"GLF7-7","bv":"GLF7-7-CM","vr":"carmel","fd":"GLF LP","cl":"Rollback Almonds","am":"Tom Barr","fm":"Armando","ac":17.85,"y25":1034,"ybd":1800,"yrf":1600,"y26":null,"hl":"Holland","pr":"Treehouse"},{"rn":"GLF7","hb":"GLF7-7","bv":"GLF7-7-MT","vr":"monterey","fd":"GLF LP","cl":"Rollback Almonds","am":"Tom Barr","fm":"Armando","ac":17.89,"y25":2169,"ybd":1800,"yrf":1800,"y26":null,"hl":"Holland","pr":"Treehouse"},{"rn":"GLF7","hb":"GLF7-7","bv":"GLF7-7-NP","vr":"nonpareil","fd":"GLF LP","cl":"Rollback Almonds","am":"Tom Barr","fm":"Armando","ac":35.58,"y25":1565,"ybd":1800,"yrf":1800,"y26":null,"hl":"Holland","pr":"Treehouse"}];
+const BASIS = {y25:{lab:"2025 Actual",short:"2025"},yrf:{lab:"2026 Reforecast",short:"Reforecast"},ybd:{lab:"2026 Budget",short:"Budget"}};
+const S = {basis:"yrf", fund:"", am:"", fm:"", pr:"", q:"", sort:"name", dir:1, sel:null, entOnly:true,
+           open:new Set()};
 
-/* All ticket-gated calcs live here. Nothing computes until tickets == Done (2).
-   Rfcst/acre is a reforecast input, not a harvest observation, so it displays
-   ungated — but the variance against it does not, since the forecast side is
-   only meaningful once every ticket for the block is in. */
-function calc(r){
-  const fw = parseNum(r.fw), a = parseNum(r.assump), ac = parseNum(r.acres);
-  const rf = parseNum(r.rfcst);
-  const ticketsDone = Number(r.tickets) === 2;
-  const fcst = (ticketsDone && fw!=null && a!=null) ? fw*a/100 : null;
-  const fcstAc = (fcst!=null && ac!=null && ac!==0) ? fcst/ac : null;
-  /* both sides are turnout-adjusted meats per acre, so this is apples-to-apples */
-  const varRf = (fcstAc!=null && rf!=null && rf!==0) ? (fcstAc-rf)/rf*100 : null;
-  return { fw, fcst, fcstAc, rf, varRf, ticketsDone };
-}
-/* a block is finished when both lights are green */
-function isFin(r){ return Number(r.pickup) === 2 && Number(r.tickets) === 2; }
-const pctTxt = v => (v>=0?"+":"") + fmt1.format(v) + "%";
-const signCls = v => v==null ? "" : (v<0 ? "neg" : (v>0 ? "pos" : ""));
-
-/* Anything this far off the reforecast is worth a second look; inside it is
-   noise you don't want shouting. Single knob — raise or lower to taste. */
+DATA.forEach((r,i)=>r.i=i);
+let SHEET = {};                // block-variety -> lb/ac, from the sheet. Read-only.
+let DATES = {};                // block-variety -> Date the USDA weight went final
+/* The 2026 huller/processor plan travels with this file (fields hl and pr on
+   each row) rather than coming down the feed — it's a once-a-season plan, not
+   live data, and keeping it here means the Apps Script stays a two-field
+   endpoint. If the delivery plan changes, update this file and the master. */
+const HAS_PROC = true;
+const y26 = r => SHEET[r.bv] != null ? SHEET[r.bv] : null;
+const dt  = r => DATES[r.bv] || null;
+const fdate = d => d ? d.toLocaleDateString("en-US",{month:"short",day:"numeric"}) : "";
+const proc = r => (r.pr || "").trim();
+const hull = r => (r.hl || "").trim();
+const yb  = r => r[S.basis];
+const nat = s => s.replace(/\d+/g, m => m.padStart(6,"0"));
+const fmt = n => n==null ? "—" : Math.round(n).toLocaleString("en-US");
+const ac2 = n => n.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
+const pc  = (d,b) => (b===0||b==null) ? "—" : (d/b>=0?"+":"") + (100*d/b).toFixed(1) + "%";
+const cls = n => n>0.5 ? "pos" : n<-0.5 ? "neg" : "";
+/* Anything this far off the basis is worth a second look; inside it is noise
+   you don't want shouting. Single knob — raise or lower to taste. */
 const MATERIAL_VAR = 5;
-function varRfHtml(v){
-  if(v == null) return "";
-  const cls = v < 0 ? "neg" : "pos";
-  const big = Math.abs(v) >= MATERIAL_VAR ? " big" : "";
-  return `<span class="chip ${cls}${big}">${pctTxt(v)}</span>`;
+const pcv = (d,b) => (d==null||b==null||b===0) ? null : 100*d/b;
+function chip(v){
+  if(v==null) return "";
+  const big = Math.abs(v)>=MATERIAL_VAR ? " big" : "";
+  return `<span class="chip ${v<0?"neg":"pos"}${big}">${(v>=0?"+":"")+v.toFixed(1)+"%"}</span>`;
+}
+const sign = d => (d>=0?"+":"−") + fmt(Math.abs(d));
+
+function rows(){
+  return DATA.filter(r=>{
+    if(S.fund && r.fd!==S.fund) return false;
+    if(S.am   && r.am!==S.am)   return false;
+    if(S.fm   && r.fm!==S.fm)   return false;
+    if(S.pr   && proc(r)!==S.pr) return false;
+    if(S.q){ const q=S.q.toLowerCase();
+      if(!(r.bv+" "+r.hb+" "+r.vr+" "+r.rn).toLowerCase().includes(q)) return false; }
+    return true;
+  });
+}
+/* Variance compares like with like: only blocks with a 2026 entry count on
+   BOTH sides. A part-entered book measured against a full-book plan would read
+   as a false collapse, which is the whole reason the seeded numbers came out. */
+function agg(list){
+  const a={ac:0,n:list.length,nEnt:0,acEnt:0,l26:0,lbEnt:0,lbAll:0,acb:0,
+           nReq:0,nReqEnt:0,dt:null};
+  list.forEach(r=>{
+    const v=y26(r), b=yb(r);
+    a.ac+=r.ac;
+    if(b>0){ a.lbAll+=b*r.ac; a.acb+=r.ac; a.nReq++; if(v!=null) a.nReqEnt++; }
+    if(v!=null){ a.nEnt++; a.acEnt+=r.ac; a.l26+=v*r.ac; a.lbEnt+=(b||0)*r.ac;
+      const d0=dt(r); if(d0 && (!a.dt || d0>a.dt)) a.dt=d0; }
+  });
+  /* A rollup is only comparable once every block that was expected to produce
+     has a weight. Blocks with no basis (0 planned) aren't expected to, so they
+     don't hold the group open. */
+  a.done = a.nReq ? a.nReqEnt===a.nReq : a.nEnt===a.n;
+  a.d   = a.nEnt ? a.l26-a.lbEnt : null;
+  a.y26 = a.acEnt ? a.l26/a.acEnt : null;
+  a.yb  = a.acb ? a.lbAll/a.acb : null;
+  a.lb  = a.lbAll;
+  return a;
 }
 
-/* per-acre variance vs '25 — also gated on tickets */
-function derive(r){
-  const fw = parseNum(r.fw), fw25 = parseNum(r.fw25), ac = parseNum(r.acres);
-  const ticketsDone = Number(r.tickets) === 2;
-  if(ticketsDone && fw!=null && fw25!=null && fw25!==0 && ac!=null && ac!==0){
-    const per26 = fw/ac, per25 = fw25/ac;
-    r.varAc = per25!==0 ? ((per26-per25)/per25*100) : "";
-  } else r.varAc = "";
+/* ---------- summary tiles ---------- */
+function tote(list){
+  const a=agg(list), B=BASIS[S.basis];
+  document.getElementById("tote").innerHTML = `
+    <div class="stat"><div class="k">2026 USDA harvest</div>
+      <div class="v">${a.nEnt?fmt(a.l26):"—"}${a.nEnt?"<small>lbs</small>":""}</div>
+      <div class="ysub">${a.nEnt
+        ? fmt(a.y26)+" lb/ac · "+a.nEnt+" of "+a.n+" blocks entered"
+        : "no weights entered · "+a.n+" blocks awaiting"}</div>
+      <div class="meter"><i style="width:${a.n?a.nEnt/a.n*100:0}%"></i></div></div>
+    <div class="stat"><div class="k">Compare with</div>
+      <div class="seg" id="basis" role="group" aria-label="Comparison basis">${
+        Object.entries(BASIS).map(([k,v])=>
+          `<button data-b="${k}" aria-pressed="${k===S.basis}">${v.short}</button>`).join("")}</div>
+      <div class="v mute">${fmt(a.lb)}<small>lbs</small></div>
+      <div class="ysub">${fmt(a.yb)} lb/ac on ${fmt(a.acb)} acres</div></div>
+    <div class="stat"><div class="k">Variance <small>vs ${B.short}</small></div>
+      <div class="v ${cls(a.d)}">${a.d==null?"—":pc(a.d,a.lbEnt)}</div>
+      <div class="ysub">${a.d==null
+        ? "waiting on 2026 weights"
+        : (a.done ? "on "+fmt(a.acEnt)+" acres, all blocks in"
+                  : a.nReqEnt+" of "+a.nReq+" blocks weighed · "+fmt(a.acEnt)+" acres")}</div></div>`;
 }
 
-function setNote(msg, isErr){
-  const el = document.getElementById("savenote");
-  el.textContent = msg || "";
-  el.classList.toggle("err", !!isErr);
+/* ---------- progress by crop group ----------
+   The ladder says which ranch is off and by how many lbs. It cannot say how far
+   along anything is — and a −2.5% read on a crop that's 20% picked means
+   something very different from the same number at 90%. So: share of planned
+   acres weighed, with the variance so far sitting next to it. A 0-100% axis is
+   the one axis on this page that's honest at full width. */
+const SHORT_CL = {
+  "Conventional Almonds":"Conventional almonds",
+  "Organic Almonds":"Organic almonds",
+  "Conventional Pistachios":"Conventional pistachios",
+  "Immature Conventional Almonds":"Immature almonds",
+  "Immature Conventional Pistachios":"Immature pistachios",
+  "Rollback Almonds":"Rollback almonds",
+  "Organic Dates":"Organic dates"
+};
+function dumbbell(list){
+  const by={};
+  list.forEach(r=>{ (by[r.cl]=by[r.cl]||[]).push(r); });
+  const arr=Object.entries(by).map(([cl,rs])=>{
+    const a=agg(rs);
+    return {cl, n:a.n, nEnt:a.nEnt, done:a.acb?a.acEnt/a.acb*100:0,
+            l26:a.l26, d:a.d, lbEnt:a.lbEnt};
+  }).filter(x=>x.n>0).sort((a,b)=>b.done-a.done || a.cl.localeCompare(b.cl));
+  const el=document.getElementById("dumb");
+  const all=agg(list);
+  document.getElementById("progCap").textContent =
+    all.acb ? Math.round(all.acEnt/all.acb*100)+"% weighed" : "";
+  if(!arr.length){ el.innerHTML=`<div class="empty" style="padding:0 0 6px">Nothing to show.</div>`; return; }
+  el.innerHTML=arr.map(x=>{
+    const pct = x.nEnt ? (x.d/x.lbEnt*100) : null;
+    return `<div class="drow">
+      <div class="dhead"><span class="dname">${SHORT_CL[x.cl]||x.cl}</span>
+        <span class="dpct ${pct==null?"":cls(x.d)}" style="${pct==null?"color:var(--secondary)":""}">${
+          pct==null?"—":(pct>=0?"+":"")+pct.toFixed(1)+"%"}</span></div>
+      <div class="dbar"><i style="width:${Math.min(100,x.done)}%"></i></div>
+      <div class="dsub">${Math.round(x.done)}% of acres · ${x.nEnt} of ${x.n} blocks${
+        x.nEnt?" · "+fmt(x.l26)+" lbs in":""}</div></div>`;
+  }).join("");
 }
-function showBanner(msg){
-  const b = document.getElementById("banner");
-  if(!msg){ b.classList.remove("show"); return; }
-  b.textContent = msg; b.classList.add("show");
+
+/* ---------- variance ladder ---------- */
+const LADDER_N = 10;
+const kk = d => (d>=0?"+":"\u2212") +
+  (Math.abs(d)>=10000 ? fmt(Math.abs(d)/1000) : (Math.abs(d)/1000).toFixed(1)) + "k";
+function ladder(list){
+  /* The table already ranks ranches, so this ranks the blocks inside them: the
+     N largest misses in lbs, either direction, worst first. That is the thing
+     you would actually go look at. */
+  const scored=list.filter(r=>y26(r)!=null).map(r=>{
+    const a=agg([r]); return {r,d:a.d,v:pcv(a.d,a.lbEnt)};
+  }).filter(x=>x.v!=null);          // no basis, no variance to rank
+  /* Ranked and sized by lbs — bar length is pounds at stake — while the chip
+     states how far off that block is in relative terms. */
+  const arr=scored.slice().sort((a,b)=>Math.abs(b.d)-Math.abs(a.d))
+                  .slice(0,LADDER_N).sort((a,b)=>a.d-b.d);
+  const max=Math.max(1,...arr.map(x=>Math.abs(x.d)));
+  const el=document.getElementById("ladder");
+  el.innerHTML = arr.length ? arr.map(x=>{
+    const w=Math.abs(x.d)/max*50, neg=x.d<0, flat=Math.abs(x.d)<1;
+    return `<button class="rung" data-i="${x.r.i}" title="${x.r.rn} \u00b7 ${x.r.vr} \u00b7 ${kk(x.d)} lbs">
+      <span class="code">${x.r.bv}</span>
+      <span class="track"><span class="bar" style="${neg?"right:50%":"left:50%"};width:${w}%;
+        background:${neg?"var(--red)":"var(--green)"};opacity:${flat?0:1}"></span></span>
+      <span class="num">${flat?"\u2014":chip(x.v)}</span></button>`;
+  }).join("") : `<div class="empty">Nothing to compare yet. The blocks furthest from ${BASIS[S.basis].short} appear here as weights come in.</div>`;
+  document.getElementById("ladderCount").textContent =
+    scored.length > arr.length ? "\u00b7 top "+arr.length+" of "+scored.length : (arr.length ? "\u00b7 "+arr.length : "");
+  const flat = arr.every(x=>Math.abs(x.d)<1);
+  document.getElementById("scaleL").textContent = flat||!arr.length ? "" : "\u2212"+fmt(max/1000)+"k lbs";
+  document.getElementById("scaleR").textContent = flat||!arr.length ? "" : "+"+fmt(max/1000)+"k lbs";
+  document.getElementById("ladderNote").textContent =
+    flat && arr.length ? "Flat \u2014 2026 still matches "+BASIS[S.basis].short : "";
+  el.querySelectorAll(".rung").forEach(b=>b.onclick=()=>openDetail(+b.dataset.i));
 }
+
+/* ---------- table ---------- */
+function line(level,key,name,a,opts={}){
+  const {toggle=false,tag="",pick=null,raw=false}=opts;
+  const chev = toggle ? `<span class="chev"></span>` : (level<3?`<span class="chev none"></span>`:"");
+  const open = toggle && S.open.has(key) ? " open" : "";
+  /* Rollup rows (ranch, block, Total) stay blank until the group is complete —
+     a part-entered total read against a whole-book plan is misleading. Single
+     block-varieties always show. */
+  const part = level<3 && !a.done;
+  const gate = part && !raw;      // the Total row opts out: it has to tie to the tile
+  const blank = a.nEnt && !gate ? "—" : "";
+  const ptag = part && a.nEnt ? `${a.nReq?a.nReqEnt:a.nEnt} of ${a.nReq||a.n} in` : tag;
+  return `<tr class="lv${level}${open}${a.nEnt?"":" pend"}${part?" part":""}" data-key="${key}"${toggle?' data-t="1"':""}${pick!=null?` data-pick="${pick}"`:""}>
+    <td>${chev}${name}${ptag?`<span class="tag">${ptag}</span>`:""}</td>
+    <td class="hold">${gate||a.y26==null?blank:fmt(a.y26)}</td>
+    <td>${a.yb==null?"—":fmt(a.yb)}</td>
+    <td class="hold">${gate||!a.nEnt?blank:fmt(a.l26)}</td>
+    <td>${gate?blank:(chip(pcv(a.d,a.lbEnt))||blank)}</td>
+    <td class="dtc">${gate?"":fdate(a.dt)}</td></tr>`;
+}
+const KEY={name:x=>nat(x.name),ac:x=>x.a.ac,dt:x=>(x.a.dt?+x.a.dt:-Infinity),y26:x=>x.a.y26,yb:x=>x.a.yb,
+           l26:x=>x.a.l26,dl:x=>(x.a.d==null?-Infinity:x.a.d),dp:x=>(x.a.d!=null&&x.a.lbEnt?x.a.d/x.a.lbEnt:-Infinity)};
+function sortBy(list){
+  const f=KEY[S.sort]||KEY.name;
+  return list.sort((a,b)=>{const x=f(a),y=f(b);
+    return (typeof x==="string"? x.localeCompare(y) : x-y)*S.dir;});
+}
+function table(list){
+  /* "Weighed only" changes which rows are DISPLAYED, never which rows a rollup
+     is computed from — otherwise every ranch would look complete. */
+  const keep = S.entOnly ? r=>y26(r)!=null : ()=>true;
+  const by={};
+  list.forEach(r=>{ (by[r.rn]=by[r.rn]||[]).push(r); });
+  let html="";
+  sortBy(Object.entries(by).map(([rn,rs])=>({name:rn,rs,a:agg(rs)})))
+    .filter(R=>R.rs.some(keep)).forEach(R=>{
+    html+=line(1,R.name,R.name,R.a,{toggle:true});
+    if(!S.open.has(R.name)) return;
+    const blocks={};
+    R.rs.forEach(r=>{ (blocks[r.hb]=blocks[r.hb]||[]).push(r); });
+    sortBy(Object.entries(blocks).map(([hb,rs])=>({name:hb,rs,a:agg(rs)})))
+      .filter(B=>B.rs.some(keep)).forEach(B=>{
+      const bk=R.name+"|"+B.name, multi=B.rs.length>1;
+      html+=line(2,bk,B.name,B.a,{toggle:multi});
+      if(multi && !S.open.has(bk)) return;
+      sortBy(B.rs.filter(keep).map(r=>({name:r.bv,r,a:agg([r])}))).forEach(V=>{
+        const r=V.r;
+        html+=line(3,r.bv,r.vr,V.a,{tag: yb(r)==null?"no basis":"", pick:r.i});
+      });
+    });
+  });
+  const b=document.getElementById("body");
+  b.innerHTML = html || `<tr><td colspan="6" class="empty">${S.entOnly && list.length ? "No weights in yet for these blocks. Untick \u201cWeighed only\u201d to see them." : "No blocks match these filters. Clear one and try again."}</td></tr>`;
+  document.getElementById("foot").innerHTML = list.length
+    ? line(1,"__t","Total",agg(list),{raw:true})
+        .replace(/class="lv1[^"]*"/,'class="tot"')
+        .replace('<span class="chev none"></span>','')
+    : "";
+  b.querySelectorAll("tr[data-pick]").forEach(tr=>tr.onclick=()=>openDetail(+tr.dataset.pick));
+  b.querySelectorAll("tr[data-t]").forEach(tr=>tr.onclick=()=>{
+    const k=tr.dataset.key, top=!k.includes("|");
+    if(S.open.has(k)){
+      S.open.delete(k);
+      if(top) [...S.open].forEach(x=>{ if(x.startsWith(k+"|")) S.open.delete(x); });
+    } else { if(top) S.open.clear(); S.open.add(k); }
+    render();
+  });
+}
+
+/* ---------- block detail ----------
+   The question this answers is "who is this weight sitting with". Processor comes
+   from the master; when the column is missing or blank the panel says so plainly
+   rather than implying nobody is responsible. */
+function openDetail(i){ S.sel=i; paintDetail(); }
+function closeDetail(){ S.sel=null; paintDetail(); }
+function paintDetail(){
+  const el=document.getElementById("detail"), sc=document.getElementById("scrim");
+  if(S.sel==null){ el.hidden=true; sc.hidden=true; el.innerHTML=""; return; }
+  const r=DATA[S.sel], v=y26(r), b=yb(r), p=proc(r), h=hull(r);
+  const lbs=v!=null?v*r.ac:null, plan=b!=null?b*r.ac:null;
+  const d=(lbs!=null&&plan!=null)?lbs-plan:null;
+  const B=BASIS[S.basis];
+
+  /* everything still outstanding with this same processor */
+  const peers=DATA.filter(x=>proc(x)===p && y26(x)==null && x.i!==r.i);
+  const pAc=peers.reduce((s,x)=>s+x.ac,0);
+  const pLbs=peers.reduce((s,x)=>s+((yb(x)||0)*x.ac),0);
+
+  let tail;
+  if(v!=null){
+    tail = p ? `Weight in. Hulled by <b>${h||"—"}</b>, delivered to <b>${p}</b>.`
+             : `Weight in. No delivery plan on file for this block.`;
+  }else if(!p){
+    tail = `<b>No processor in the 2026 delivery plan</b> for this block, so there's nobody named to chase. Worth adding it to the plan.`;
+  }else if(p==="TBD"){
+    tail = `Processor still <b>TBD</b> in the delivery plan${h && h!=="N/A" ? `, hulling at <b>${h}</b>` : ""}. Nothing to chase until the buyer is set.`;
+  }else{
+    tail = `Waiting on <b>${p}</b>${h && h!=="N/A" && h!=="TBD" ? ` via <b>${h}</b>` : ""}.` + (peers.length
+      ? ` ${peers.length} other block${peers.length>1?"s":""} with them ${peers.length>1?"are":"is"} also outstanding — ${fmt(pAc)} acres, about ${fmt(pLbs)} lbs at ${B.short}. <a id="prLink">See all ${p} blocks</a>`
+      : ` This is the last one outstanding with them.`);
+  }
+
+  el.innerHTML=`
+    <header><div><h3>${r.vr}</h3><div class="code">${r.bv} · ${r.hb}</div></div>
+      <button class="x" id="closeDetail" aria-label="Close">×</button></header>
+    <div class="pill ${v!=null?"done":"wait"}"><i></i>${v!=null?"Weighed":"Awaiting weights"}</div>
+    <div class="kv">
+      <div><span>Ranch</span><span>${r.rn}</span></div>
+      <div><span>Fund</span><span>${r.fd}</span></div>
+      <div><span>Classification</span><span>${r.cl}</span></div>
+      <div><span>Acres</span><span>${ac2(r.ac)}</span></div>
+      <div><span>Area / farm manager</span><span>${r.am} · ${r.fm}</span></div>
+      <div><span>Huller</span><span>${h || "not set"}</span></div>
+      <div><span>Processor</span><span>${p || "not set"}</span></div>
+    </div>
+    <div class="kv">
+      <div><span>2026 harvest</span><span>${lbs!=null?fmt(lbs)+" lbs":"—"}</span></div>
+      <div><span>USDA final</span><span>${fdate(dt(r))||"—"}</span></div>
+      <div><span>2026 lb/ac</span><span>${v!=null?fmt(v):"—"}</span></div>
+      <div><span>${B.lab} lb/ac</span><span>${b!=null?fmt(b):"—"}</span></div>
+      <div><span>${B.lab} lbs</span><span>${plan!=null?fmt(plan):"—"}</span></div>
+      <div><span>Variance</span><span class="${cls(d)}">${d==null?"—":sign(d)+" · "+pc(d,plan)}</span></div>
+    </div>
+    <div class="waiting">${tail}</div>`;
+  el.hidden=false; sc.hidden=false;
+  document.getElementById("closeDetail").onclick=closeDetail;
+  const link=document.getElementById("prLink");
+  if(link) link.onclick=()=>{ S.pr=p; document.getElementById("fProc").value=p;
+    S.open.clear(); closeDetail(); render(); };
+}
+document.getElementById("scrim").onclick=closeDetail;
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeDetail(); });
+
+/* ---------- chrome ---------- */
+function fillSelect(id,label,vals){
+  const s=document.getElementById(id);
+  s.innerHTML=`<option value="">${label}</option>`+
+    [...new Set(vals)].sort((a,b)=>nat(a).localeCompare(nat(b)))
+      .map(v=>`<option>${v}</option>`).join("");
+}
+function render(){
+  const list=rows();
+  const sel=document.getElementById("fProc");
+  sel.hidden=false;
+  tote(list); dumbbell(list); ladder(list); table(list);
+  const nF=[S.fund,S.am,S.fm,S.pr].filter(Boolean).length;
+  const badge=document.getElementById("fCount");
+  badge.hidden=!nF; badge.textContent=nF;
+  document.getElementById("fScope").textContent=list.length+" of "+DATA.length+" blocks";
+  if(S.sel!=null) paintDetail();
+  document.querySelectorAll("#basis button").forEach(b=>
+    b.setAttribute("aria-pressed", b.dataset.b===S.basis));
+  document.querySelectorAll("thead th").forEach(th=>{
+    th.innerHTML = (th.dataset.s==="yb" ? BASIS[S.basis].short+" lb/ac" : th.dataset.lab) +
+      (th.dataset.s===S.sort ? ` <span class="caret">${S.dir>0?"▲":"▼"}</span>` : "");
+  });
+}
+document.getElementById("tote").onclick=e=>{
+  const b=e.target.closest("#basis button"); if(!b) return; S.basis=b.dataset.b; render();
+};
+document.querySelectorAll("thead th").forEach(th=>th.onclick=()=>{
+  if(S.sort===th.dataset.s) S.dir*=-1; else {S.sort=th.dataset.s; S.dir = th.dataset.s==="name"?1:-1;}
+  render();
+});
+const bind=(id,key)=>document.getElementById(id).onchange=e=>{S[key]=e.target.value;S.open.clear();render();};
+bind("fFund","fund"); bind("fAM","am"); bind("fFM","fm"); bind("fProc","pr");
+document.getElementById("q").oninput=e=>{S.q=e.target.value;render();};
+const fPop=document.getElementById("fPop"), fBtn=document.getElementById("fToggle");
+function setPop(open){ fPop.hidden=!open; fBtn.setAttribute("aria-expanded",open?"true":"false"); }
+fBtn.onclick=e=>{ e.stopPropagation(); setPop(fPop.hidden); };
+fPop.onclick=e=>e.stopPropagation();
+document.addEventListener("click",()=>setPop(false));
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") setPop(false); });
+document.getElementById("fClear").onclick=()=>{
+  S.fund=S.am=S.fm=S.pr="";
+  ["fFund","fAM","fFM","fProc"].forEach(id=>document.getElementById(id).value="");
+  S.open.clear(); render();
+};
+document.getElementById("fEnt").onchange=e=>{S.entOnly=e.target.checked;S.open.clear();render();};
+document.getElementById("tExpand").onclick=e=>{
+  if(S.open.size){S.open.clear(); e.target.textContent="Expand all";}
+  else{ rows().forEach(r=>{S.open.add(r.rn); S.open.add(r.rn+"|"+r.hb);});
+        e.target.textContent="Collapse all"; }
+  render();
+};
+document.getElementById("dl").onclick=()=>{
+  const B=BASIS[S.basis], head=["Ranch","Harvest Block","Block-Variety","Variety","Fund",
+    "Reporting Classification","AM","FM","Acres","Yield 2026 lb/ac",B.lab+" lb/ac",
+    "Total 2026 lbs",B.lab+" lbs","Var lbs","Var %","USDA Final"];
+  const lines=[head.join(",")];
+  rows().forEach(r=>{
+    const v=y26(r),b=yb(r)||0,l=(v||0)*r.ac,lb=b*r.ac,d=v==null?null:l-lb;
+    lines.push([r.rn,r.hb,r.bv,r.vr,r.fd,r.cl,r.am,r.fm,r.ac.toFixed(2),
+      v==null?"":Math.round(v),b,v==null?"":l.toFixed(0),lb.toFixed(0),
+      d==null?"":d.toFixed(0),(d!=null&&lb)?(100*d/lb).toFixed(1):"",
+      dt(r)?dt(r).toISOString().slice(0,10):""]
+      .map(x=>/[",]/.test(x)?`"${x}"`:x).join(","));
+  });
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([lines.join("\n")],{type:"text/csv"}));
+  a.download=`GLF_2026_harvest_vs_${B.short.toLowerCase()}.csv`; a.click();
+  URL.revokeObjectURL(a.href);
+};
+/* ---------- sheet loading ---------- */
+function setStatus(msg,isErr){
+  const el=document.getElementById("status");
+  el.textContent=msg||""; el.classList.toggle("err",!!isErr);
+}
+function showBanner(html){
+  const b=document.getElementById("banner");
+  if(!html){ b.classList.remove("show"); return; }
+  b.innerHTML=html; b.classList.add("show");
+}
+function resolveUrl(u){ return (!u || u.indexOf("PASTE_")===0) ? null : u; }
+const num = v => {
+  if(v==null) return null;
+  const n=parseFloat(String(v).replace(/[,$%\s]/g,""));
+  return isFinite(n)?n:null;
+};
+const ACRES={}, BV={};
+DATA.forEach(r=>{ const k=r.bv.toUpperCase(); ACRES[k]=r.ac; BV[k]=r.bv; });
+const KEYS=new Set(Object.keys(ACRES));
+
+/* The feed arrives as [{ "Block-Variety": "GLF7-1-NP", "2026 Harvest lbs": 201000 }, ...].
+   lbs -> lb/ac happens here, against the block's acres held on this page.
+   A 0 is kept (harvested nothing); a missing row means not weighed yet and the
+   block simply stays out of the comparison. */
+function ingest(rows){
+  if(!Array.isArray(rows)) return {err:"no-key-column"};
+  if(!rows.length) return {map:{},dates:{},n:0,bad:[],stray:[]};
+  const first=rows[0];
+  if(!(KEY_HEADER in first)) return {err:"no-key-column"};
+  if(!(LBS_HEADER in first)) return {err:"no-lbs-column"};
+  const map={}, dates={}, bad=[], stray=[]; let n=0;
+  rows.forEach(row=>{
+    const k=String(row[KEY_HEADER]||"").trim().toUpperCase();
+    if(!k) return;
+    const lb=num(row[LBS_HEADER]);
+    if(OUT_OF_SCOPE.has(k)){ if(lb>0) stray.push(k); return; }
+    if(!KEYS.has(k)){ if(lb>0) bad.push(k); return; }
+    const bv=BV[k], ac=ACRES[k];
+    if(lb==null || !ac) return;              // not weighed yet
+    map[bv]=Math.max(0,lb/ac); n++;
+    const ds=row[DATE_HEADER];
+    if(ds){ const d0=new Date(ds); if(!isNaN(+d0)) dates[bv]=d0; }
+  });
+  return {map,dates,n,bad,stray};
+}
+function revive(o){ const d={}; Object.entries(o||{}).forEach(([k,v])=>{
+  const x=new Date(v); if(!isNaN(+x)) d[k]=x; }); return d; }
+function readCache(){ try{const r=localStorage.getItem(CACHE_KEY);return r?JSON.parse(r):null}catch(e){return null} }
+function writeCache(d){ try{localStorage.setItem(CACHE_KEY,JSON.stringify(d))}catch(e){} }
+
+async function loadSheet(initial){
+  const url=resolveUrl(API_URL);
+  if(initial){
+    const c=readCache();
+    if(c && c.map){ SHEET=c.map; DATES=revive(c.dates); render();
+      setStatus("As of "+new Date(c.updated).toLocaleTimeString()); }
+  }
+  if(!url){
+    showBanner("<b>No sheet connected yet.</b> In the GLF Yield Master sheet: Extensions \u25b8 Apps Script, paste <code>AppsScript_Code.gs</code>, Deploy \u25b8 Web app (Execute as: Me \u00b7 Access: Anyone), then paste the <code>/exec</code> URL into <code>API_URL</code> near the top of this file.");
+    setStatus(""); return;
+  }
+  if(!initial) setStatus("Refreshing\u2026");
+  try{
+    const who=getViewer();
+    const res=await fetch(url+(url.includes("?")?"&":"?")
+      +(who?"u="+encodeURIComponent(who)+"&":"")+"_="+Date.now(),{cache:"no-store"});
+    if(!res.ok) throw new Error("HTTP "+res.status);
+    const text=await res.text();
+    let data;
+    try{ data=JSON.parse(text); }
+    catch(e){ throw new Error("the URL didn't return JSON — check it ends in /exec and is deployed to \u201cAnyone\u201d"); }
+    /* the script reports its own failures rather than returning junk */
+    if(data.error) throw new Error(data.error);
+    const raw=data.rows||[];
+    const out=ingest(raw);
+    if(out.err==="no-key-column") throw new Error("the feed had no "+KEY_HEADER+" field");
+    if(out.err==="no-lbs-column") throw new Error("the feed had no \u201c"+LBS_HEADER+"\u201d field");
+    SHEET=out.map; DATES=out.dates;
+    const when=data.updated?new Date(data.updated):new Date();
+    writeCache({updated:when.toISOString(),map:out.map,dates:out.dates});
+    render();
+    setStatus((out.n?out.n+" weighed":"nothing weighed yet")+" \u00b7 "+when.toLocaleTimeString());
+    const warn=[];
+    if(out.bad.length) warn.push("<b>"+out.bad.length+" weighed row"+(out.bad.length>1?"s":"")+
+      " didn't match a block-variety</b> and "+(out.bad.length>1?"were":"was")+" skipped: <code>"+
+      out.bad.slice(0,6).join("</code> <code>")+"</code>"+(out.bad.length>6?" and more":"")+
+      ". Keys must match column G of the master exactly.");
+    if(out.stray.length) warn.push("<b>"+out.stray.length+" block"+(out.stray.length>1?"s":"")+
+      " outside this dashboard now ha"+(out.stray.length>1?"ve":"s")+" a 2026 weight</b>: <code>"+
+      out.stray.slice(0,6).join("</code> <code>")+"</code>. Those lbs are in the master but not counted here \u2014 "+
+      "worth adding them back to scope.");
+    showBanner(warn.join("<br>"));
+  }catch(err){
+    if(Object.keys(SHEET).length){ setStatus("Showing saved copy",true); }
+    else{
+      setStatus("Load failed",true);
+      showBanner("<b>Couldn't read the sheet.</b> "+err.message+
+        ". Opening the <code>/exec</code> URL in a browser shows what the script is returning; add <code>?diag=1</code> to see which columns it found.");
+    }
+  }
+}
+document.getElementById("refreshBtn").onclick=()=>loadSheet(false);
 
 /* ---------- who's viewing ----------
    Asked once per browser and kept in localStorage, then sent with every request
    so the sheet can log who opened the page and when. Not an auth check — nobody
-   signs in, and a determined person can type anything. It answers "has anyone
-   on the team looked at their numbers", which is the actual question. */
-const VIEWER_KEY = "glf-fw-2026-viewer";
-const LOGGED_KEY = "glf-fw-2026-logged";   // sessionStorage: one log per tab
+   signs in, and a determined person can type anything. It answers "has anyone on
+   the team looked at their numbers", which is the actual question. */
+const VIEWER_KEY = "glf-usda-2026-viewer";
+const LOGGED_KEY = "glf-usda-2026-logged";   // sessionStorage: one log per tab
+const OFFICE = ["Jack","Jackie","David","Carl","Santiago","Vasu"];
 
-function getViewer(){
-  try{ return localStorage.getItem(VIEWER_KEY) || ""; }catch(e){ return ""; }
-}
-function setViewer(name){
-  try{ localStorage.setItem(VIEWER_KEY, name); }catch(e){}
-  paintViewer();
-}
+function getViewer(){ try{ return localStorage.getItem(VIEWER_KEY)||""; }catch(e){ return ""; } }
+function setViewer(n){ try{ localStorage.setItem(VIEWER_KEY,n); }catch(e){} paintViewer(); }
 function paintViewer(){
-  const el = document.getElementById("whoami");
-  if(!el) return;
-  const v = getViewer();
-  el.innerHTML = v
-    ? `Viewing as ${v}<button type="button" id="notMe">Change</button>`
-    : "";
-  const btn = document.getElementById("notMe");
-  if(btn) btn.onclick = () => openSheet(true);
+  const el=document.getElementById("whoami");
+  const v=getViewer();
+  el.innerHTML = v ? `Viewing as ${v}<button type="button" id="notMe">Change</button>` : "";
+  const b=document.getElementById("notMe");
+  if(b) b.onclick=()=>openSheet(true);
 }
-
-/* Fire-and-forget view log. Once per tab, so a manager parked on the page all
+/* Names come from the data, so the list can't drift from the roster. */
+function fillIdSelect(){
+  const grp=(lab,vals)=>`<optgroup label="${lab}">`+
+    [...new Set(vals)].sort().map(v=>`<option>${v}</option>`).join("")+`</optgroup>`;
+  document.getElementById("idSelect").innerHTML =
+    `<option value="" selected>Select your name</option>`
+    + grp("AMs",DATA.map(r=>r.am))
+    + grp("FMs",DATA.map(r=>r.fm))
+    + grp("Office",OFFICE)
+    + `<option value="__other">Someone else\u2026</option>`;
+}
+/* Fire-and-forget view log. Once per tab, so someone parked on the page all
    morning is one row rather than one per refresh. Failure is silent — a logging
    problem should never keep the numbers off the screen. */
 function logView(){
-  const v = getViewer();
-  if(!v || API_URL === "PASTE_YOUR_WEB_APP_URL_HERE") return;
+  const v=getViewer(), url=resolveUrl(API_URL);
+  if(!v || !url) return;
   try{ if(sessionStorage.getItem(LOGGED_KEY)) return; }catch(e){}
-  const url = API_URL + (API_URL.includes("?") ? "&" : "?")
-    + "log=1&u=" + encodeURIComponent(v) + "&_=" + Date.now();
-  fetch(url, {cache:"no-store", mode:"no-cors"}).catch(()=>{});
-  try{ sessionStorage.setItem(LOGGED_KEY, "1"); }catch(e){}
+  fetch(url+(url.includes("?")?"&":"?")+"log=1&u="+encodeURIComponent(v)+"&_="+Date.now(),
+        {cache:"no-store",mode:"no-cors"}).catch(()=>{});
+  try{ sessionStorage.setItem(LOGGED_KEY,"1"); }catch(e){}
 }
-
 function openSheet(force){
-  const sheet = document.getElementById("idSheet");
-  const sel   = document.getElementById("idSelect");
-  const other = document.getElementById("idOther");
-  const save  = document.getElementById("idSave");
-  if(!sheet) return;
+  const sheet=document.getElementById("idSheet"), sel=document.getElementById("idSelect"),
+        other=document.getElementById("idOther"), save=document.getElementById("idSave");
   if(getViewer() && !force) return;
-
-  sel.value = ""; other.value = ""; other.hidden = true; save.disabled = true;
-  sheet.classList.add("show");
-  sel.focus();
-
-  const chosen = () => sel.value === "__other" ? other.value.trim() : sel.value;
-  const sync = () => {
-    other.hidden = sel.value !== "__other";
+  sel.value=""; other.value=""; other.hidden=true; save.disabled=true;
+  sheet.classList.add("show"); sel.focus();
+  const chosen=()=> sel.value==="__other" ? other.value.trim() : sel.value;
+  const sync=()=>{
+    other.hidden = sel.value!=="__other";
     save.disabled = !chosen();
-    if(sel.value === "__other" && document.activeElement === sel) other.focus();
+    if(sel.value==="__other" && document.activeElement===sel) other.focus();
   };
-  sel.onchange = sync;
-  other.oninput = sync;
-  other.onkeydown = e => { if(e.key === "Enter" && chosen()) save.click(); };
-  save.onclick = () => {
-    const name = chosen();
-    if(!name) return;
+  sel.onchange=sync; other.oninput=sync;
+  other.onkeydown=e=>{ if(e.key==="Enter" && chosen()) save.click(); };
+  save.onclick=()=>{
+    const name=chosen(); if(!name) return;
     setViewer(name);
     sheet.classList.remove("show");
     /* a fresh name is a fresh visit worth logging, even mid-session */
     try{ sessionStorage.removeItem(LOGGED_KEY); }catch(e){}
     logView();
-    loadData(false);
+    loadSheet(false);
   };
 }
 
-/* ---------- data loading (Apps Script JSON) ---------- */
-async function loadData(initial){
-  // 1) INSTANT: paint from cache and don't wait on anything.
-  let hadCache = false;
-  if(initial){
-    const cached = readCache();
-    if(cached && cached.rows && cached.rows.length){
-      ROWS = cached.rows; ROWS.forEach(derive); render();
-      hadCache = true;
-      // show when this cached copy is from, quietly — no "refreshing" spinner
-      if(cached.updated) setNote("As of " + new Date(cached.updated).toLocaleTimeString());
-    }
-  }
-
-  if(API_URL === "PASTE_YOUR_WEB_APP_URL_HERE"){
-    if(!hadCache) showBanner("No sheet connected yet — paste your Apps Script Web App URL into index.html (API_URL).");
-    return;
-  }
-
-  // 2) BACKGROUND: fetch fresh data without blocking the painted view.
-  //    Only a manual Refresh shows a working state; initial load stays silent.
-  if(!initial) setNote("Refreshing…");
-  try{
-    const who = getViewer();
-    const url = API_URL + (API_URL.includes("?") ? "&" : "?") + (initial ? "" : "bust=1&")
-      + (who ? "u=" + encodeURIComponent(who) + "&" : "") + "_=" + Date.now();
-    const res = await fetch(url, {cache:"no-store"});
-    if(!res.ok) throw new Error("HTTP "+res.status);
-    const data = await res.json();
-    const rows = data.rows || [];
-    if(!rows.length) throw new Error("empty");
-
-    // 3) Only touch the DOM if the data actually changed vs what's shown.
-    const fresh = JSON.stringify(rows);
-    const shown = JSON.stringify(ROWS.map(stripDerived));
-    writeCache({ updated: data.updated || new Date().toISOString(), rows, rfcstCol: data.rfcstCol });
-    if(fresh !== shown){
-      ROWS = rows; ROWS.forEach(derive); render();
-    }
-    /* a missing Rfcst column should say so, not read as "every block is on plan" */
-    showBanner(("rfcstCol" in data) && !data.rfcstCol
-      ? "No Rfcst/Acre column found in the FieldWeights header row (row 4). Add a column whose header contains \u201cRfcst\u201d — the Rfcst columns stay blank until then."
-      : "");
-    const when = data.updated ? new Date(data.updated).toLocaleTimeString() : new Date().toLocaleTimeString();
-    setNote("Updated " + when);
-  }catch(err){
-    if(ROWS.length){
-      // we're already showing cached data — keep it, note quietly, don't alarm
-      setNote("Showing saved copy", true);
-    }else{
-      showBanner("Couldn't load the sheet and no cached copy is available. Check the Web App URL and that it's deployed to \u201cAnyone\u201d.");
-      setNote("Load failed", true);
-    }
-  }
-}
-/* strip client-derived fields so cache-vs-fresh comparison is apples-to-apples */
-function stripDerived(r){
-  const {varAc, ...raw} = r;
-  return raw;
-}
-function readCache(){
-  try{ const raw = localStorage.getItem(CACHE_KEY); return raw ? JSON.parse(raw) : null; }
-  catch(e){ return null; }
-}
-function writeCache(data){
-  try{ localStorage.setItem(CACHE_KEY, JSON.stringify(data)); }catch(e){}
-}
-
-/* ---------- render ---------- */
-function render(){
-  const tbody = document.getElementById("tbody");
-  tbody.innerHTML = "";
-  const farms = [...new Set(ROWS.map(r=>r.farm))];
-
-  /* first time real data lands, open every ranch */
-  if(!expandedOnce && farms.length){
-    farms.forEach(f=>openFarms.add(f));
-    expandedOnce = true;
-  }
-
-  farms.forEach(farm => {
-    const ftr = document.createElement("tr");
-    ftr.className = "farm" + (openFarms.has(farm) ? " open" : "");
-    ftr.dataset.farm = farm;
-    ftr.innerHTML = `<td colspan="11">
-      <button class="band" aria-expanded="${openFarms.has(farm)}" aria-label="Toggle ${farm}">
-        <span class="chev" aria-hidden="true"></span>
-        <span class="fname">${farm}</span>
-        <span class="fbar" title="Share of blocks finished"><i data-fbar="${farm}"></i></span>
-        <span class="fright">
-          <span class="fdone" data-fdone="${farm}"></span>
-        </span>
-      </button></td>`;
-    tbody.appendChild(ftr);
-
-    ROWS.filter(r=>r.farm===farm).forEach(r => {
-      const c = calc(r);
-      const vn = parseNum(r.varAc);
-      const tr = document.createElement("tr");
-      const fin = isFin(r);
-      tr.className = "row" + (openFarms.has(farm) ? "" : " hide") + (fin ? "" : " unfin");
-      tr.dataset.farm = farm; tr.dataset.variety = r.variety;
-      tr.dataset.fin = fin ? "1" : "0";
-      tr.innerHTML = `
-        <td class="var">${r.variety}</td>
-        <td class="st"><span class="dot" data-state="${r.pickup}" title="${statusLabel(r.pickup)}"></span></td>
-        <td class="st"><span class="dot" data-state="${r.tickets}" title="${statusLabel(r.tickets)}"></span></td>
-        <td>${r.fw!=="" && r.fw!=null ? fmt0.format(r.fw) : ""}</td>
-        <td class="y25 prior">${r.fw25!=="" && r.fw25!=null ? fmt0.format(r.fw25) : ""}</td>
-        <td class="y25 ${signCls(vn)}">${r.varAc!=="" && r.varAc!=null ? fmt1.format(r.varAc)+"%" : ""}</td>
-        <td>${r.assump!=="" && r.assump!=null ? r.assump+"%" : ""}</td>
-        <td class="lbs calcv">${fmtLbs(c.fcst)}</td>
-        <td class="calcv">${c.fcstAc!=null ? fmt0.format(c.fcstAc) : ""}</td>
-        <td class="rf varrf">${varRfHtml(c.varRf)}</td>
-        <td class="rf grpL prior">${c.rf!=null ? fmt0.format(c.rf) : ""}</td>`;
-      tbody.appendChild(tr);
-    });
-  });
-  applyFilters();
-  refreshTotals();
-}
-function statusLabel(s){ return ["Not done","In progress","Done"][s] || "Not done"; }
-
-function refreshTotals(){
-  const n = ROWS.length || 1;
-  let pick=0, tick=0, closed=0, fw=0, fw25=0, fcst=0, acres=0;
-  let aFW=false, aFc=false, aAc=false, a25=false;
-  let fFW=0, fFW25=0, fFcst=0, fAc=0, fN=0;             // finished blocks only
-  /* Field weight per acre runs on ONE population: finished blocks that have
-     this year's field weight, FW '25, AND acres. Mixing populations lets acres
-     from blocks with no comparison dilute the denominator. */
-  let wFW=0, wFW25=0, wAc=0, wN=0;
-  /* Same discipline for the Rfcst read: finished blocks that have a forecast,
-     an Rfcst/acre, AND acres. Rfcst is per-acre, so it gets multiplied back up
-     by that block's acres before summing — otherwise big and small blocks
-     would carry equal weight. */
-  let rFcst=0, rRfLbs=0, rAc=0, rN=0;
-  /* per-farm counts only — the band shows progress, not figures */
-  const gDone={}, gN={};
-  ROWS.forEach(r => {
-    const c = calc(r), f = isFin(r);
-    const p25 = parseNum(r.fw25), ac = parseNum(r.acres);
-    gN[r.farm]=(gN[r.farm]||0)+1;
-    if(r.pickup==2) pick++;
-    if(r.tickets==2) tick++;
-    if(f){ closed++; gDone[r.farm]=(gDone[r.farm]||0)+1; }
-    if(ac!=null){acres+=ac;aAc=true}
-    if(c.fw!=null){fw+=c.fw;aFW=true}
-    if(p25!=null){fw25+=p25;a25=true}
-    if(c.fcst!=null){fcst+=c.fcst;aFc=true}
-    if(f){
-      fN++;
-      if(c.fw!=null) fFW+=c.fw;
-      if(p25!=null) fFW25+=p25;
-      if(c.fcst!=null) fFcst+=c.fcst;
-      if(ac!=null) fAc+=ac;
-      if(c.fw!=null && p25!=null && p25!==0 && ac!=null && ac!==0){
-        wFW += c.fw; wFW25 += p25; wAc += ac; wN++;
-      }
-      if(c.fcst!=null && c.rf!=null && c.rf!==0 && ac!=null && ac!==0){
-        rFcst += c.fcst; rRfLbs += c.rf*ac; rAc += ac; rN++;
-      }
-    }
-  });
-  const set=(id,v)=>{const e=document.getElementById(id); if(e) e.textContent=v;};
-  const bar=(id,p)=>{const e=document.getElementById(id); if(e) e.style.width=Math.max(0,Math.min(100,p))+"%";};
-
-  document.getElementById("sPick").innerHTML   = pick+`<small> / ${ROWS.length}</small>`;
-  document.getElementById("mPick").style.width = (pick/n*100)+"%";
-  document.getElementById("sTick").innerHTML   = tick+`<small> / ${ROWS.length}</small>`;
-  document.getElementById("sClosed").innerHTML = closed+`<small> / ${ROWS.length}</small>`;
-  bar("mTick", tick/n*100); bar("mClosed", closed/n*100);
-
-  /* totals + finished-only subtotal, both on FW '26 vs FW '25 */
-  /* variance only on the finished subtotal — comparing a part-finished '26 against
-     a full '25 would read as a false decline, so the Total row leaves it blank */
-  const vFin = (fFW25>0) ? (fFW-fFW25)/fFW25*100 : null;
-  set("tFW25", a25? fmtLbs(fw25):"");
-
-  /* Field weight per acre, '26 vs '25, finished blocks only. Same acres on both
-     sides. No turnout involved, so this is a pure volume read — it does not move
-     when an Assumption is edited. Field weight, not meats.
-     The subline is empty-state only now: a number needs no caption, but a blank
-     tile would read as broken, so the reason for the blank still gets said. */
-  const wv = document.getElementById("sFWAc");
-  const wsub = document.getElementById("sFWAcSub");
-  if(wv){
-    if(wN>0 && wAc>0 && wFW25>0){
-      const vW = (wFW/wAc - wFW25/wAc) / (wFW25/wAc) * 100;
-      wv.textContent = pctTxt(vW);
-      wv.className = "v " + (vW<0?"neg":"pos");
-      if(wsub) wsub.textContent = "";
-    }else{
-      wv.textContent = ""; wv.className = "v";
-      if(wsub) wsub.textContent = fN? "no FW '25 to compare" : "no finished blocks yet";
-    }
-  }
-
-  /* Turnout-adjusted forecast vs reforecast, finished blocks only, acre-weighted.
-     Unlike the FW read above, this DOES move with the Assumption — it's a meats
-     comparison, so a turnout edit is supposed to show up here. Kept up to date
-     even while the tile is hidden, so the compare toggle reveals a live number. */
-  const vRf = (rN>0 && rRfLbs>0) ? (rFcst - rRfLbs)/rRfLbs*100 : null;
-  const rv = document.getElementById("sRfVar");
-  const rsub = document.getElementById("sRfSub");
-  if(rv){
-    if(vRf!=null){
-      rv.textContent = pctTxt(vRf);
-      rv.className = "v " + (vRf<0?"neg":"pos");
-      if(rsub) rsub.textContent = "";
-    }else{
-      rv.textContent = ""; rv.className = "v";
-      if(rsub) rsub.textContent = fN? "no Rfcst to compare" : "no finished blocks yet";
-    }
-  }
-
-  set("tfFW",   fN? fmtLbs(fFW):"");
-  set("tfFW25", fFW25? fmtLbs(fFW25):"");
-  set("tfFcst", fFcst? fmtLbs(fFcst):"");
-  set("tfFcstAc", (fFcst&&fAc)? fmt0.format(fFcst/fAc):"");
-  set("tfRfAc", (rN>0 && rAc>0)? fmt0.format(rRfLbs/rAc):"");
-  const tv=document.getElementById("tfVar");
-  if(tv){ tv.textContent = vFin==null? "" : pctTxt(vFin); tv.className = "y25 " + (vFin==null? "" : (vFin<0?"neg":"pos")); }
-  /* the footer read gets the same chip treatment as the cells above it, so the
-     column reads consistently top to bottom */
-  const trv=document.getElementById("tfRfVar");
-  if(trv){ trv.innerHTML = varRfHtml(vRf); }
-
-  document.querySelectorAll("[data-fbar]").forEach(el=>{
-    const f = el.dataset.fbar; el.style.width = (gN[f]? (gDone[f]||0)/gN[f]*100 : 0)+"%";
-  });
-  document.getElementById("sFW").textContent = aFW? fmtLbs(fw):"";
-  document.getElementById("sFcst").textContent = aFc? fmtLbs(fcst):"";
-  const tAc = document.getElementById("tAc");
-  if(tAc) tAc.textContent = aAc? fmt1.format(acres):"";
-  document.getElementById("tFW").textContent = aFW? fmtLbs(fw):"";
-  document.getElementById("tFcst").textContent = aFc? fmtLbs(fcst):"";
-  document.querySelectorAll("[data-fdone]").forEach(el=>{
-    const f = el.dataset.fdone; el.textContent = (gDone[f]||0)+"/"+gN[f]+" done";
-  });
-}
-
-/* ---------- expand / collapse ---------- */
-function setOpen(ftr, open){
-  const farm = ftr.dataset.farm;
-  ftr.classList.toggle("open", open);
-  ftr.querySelector(".band").setAttribute("aria-expanded", open);
-  if(open) openFarms.add(farm); else openFarms.delete(farm);
-  document.querySelectorAll(`tr.row[data-farm="${farm}"]`)
-    .forEach(tr => tr.classList.toggle("hide", !open || tr.dataset.filtered === "1"));
-}
-document.getElementById("tbody").addEventListener("click", e => {
-  const band = e.target.closest(".band");
-  if(band){
-    const ftr = band.closest("tr.farm");
-    setOpen(ftr, !ftr.classList.contains("open"));
-  }
-});
-document.getElementById("expandAll").onclick = () =>
-  document.querySelectorAll("tr.farm").forEach(t=>setOpen(t,true));
-document.getElementById("collapseAll").onclick = () =>
-  document.querySelectorAll("tr.farm").forEach(t=>setOpen(t,false));
-
-/* ---------- filter ---------- */
-function applyFilters(){
-  const q = document.getElementById("filter").value.trim().toLowerCase();
-  document.querySelectorAll("tr.row").forEach(tr=>{
-    const textHit = !q || tr.dataset.farm.toLowerCase().includes(q) || tr.dataset.variety.toLowerCase().includes(q);
-    const finHit  = !onlyFinished || tr.dataset.fin === "1";
-    tr.dataset.filtered = (textHit && finHit) ? "0" : "1";
-  });
-  document.querySelectorAll("tr.farm").forEach(ftr=>{
-    const f = ftr.dataset.farm;
-    const rows = [...document.querySelectorAll(`tr.row[data-farm="${f}"]`)];
-    const anyHit = rows.some(tr=>tr.dataset.filtered!=="1");
-    ftr.style.display = anyHit ? "" : "none";
-    if(q && anyHit) openFarms.add(f);
-    const open = anyHit && openFarms.has(f);
-    ftr.classList.toggle("open", open);
-    ftr.querySelector(".band").setAttribute("aria-expanded", open);
-    rows.forEach(tr => tr.classList.toggle("hide", !open || tr.dataset.filtered === "1"));
-  });
-}
-document.getElementById("filter").addEventListener("input", applyFilters);
-document.getElementById("onlyFin").addEventListener("change", e => {
-  onlyFinished = e.target.checked; applyFilters();
-});
-
-/* ---------- column-group toggles ---------- */
-/* One helper for both switches. Each owns a body class (which columns show) and
-   optionally a label class (whether the control fills in) and a storage key
-   (whether the choice sticks between visits). Applied before the first paint,
-   so no flash. */
-function wireToggle(boxId, labelId, bodyClass, storageKey, defaultOn){
-  const box = document.getElementById(boxId);
-  /* labelId is optional — pass null for a plain checkbox that shouldn't fill in */
-  const label = labelId ? document.getElementById(labelId) : null;
-  /* storageKey is optional too — pass null for a toggle that shouldn't stick,
-     so every load starts from defaultOn */
-  const apply = on => {
-    document.body.classList.toggle(bodyClass, on);
-    if(label) label.classList.toggle("on", on);
-    if(storageKey){ try{ localStorage.setItem(storageKey, on ? "1" : "0"); }catch(e){} }
-  };
-  let saved = defaultOn;
-  if(storageKey){
-    try{
-      const v = localStorage.getItem(storageKey);
-      if(v !== null) saved = (v === "1");
-    }catch(e){}
-  }
-  box.checked = saved;
-  apply(saved);
-  box.addEventListener("change", e => apply(e.target.checked));
-}
-
-/* Total lbs starts unchecked every load — Forecast lb/acre is the everyday read,
-   and the pound column is a peek, not a working mode. Plain checkbox, no fill,
-   no persistence. The clear-out below drops any preference saved by an earlier
-   version of this page, so a stale "1" can't bring the column back. */
-try{ localStorage.removeItem("glf-fw-2026-total-lbs"); }catch(e){}
-wireToggle("cmpLbs", null, "lbs-on", null, false);
-/* Compare mode is on by default through harvest — Forecast vs Reforecast is the
-   everyday read, not the peek. Anyone who turns it off keeps it off. */
-wireToggle("cmpRf",  "cmpRfLabel",  "rf-on",  "glf-fw-2026-compare-rf", true);
-
-/* ---------- refresh ---------- */
-document.getElementById("refreshBtn").onclick = () => loadData(false);
-
+fillSelect("fFund","All funds",DATA.map(r=>r.fd));
+fillSelect("fAM","All AMs",DATA.map(r=>r.am));
+fillSelect("fFM","All FMs",DATA.map(r=>r.fm));
+fillSelect("fProc","All processors",DATA.map(r=>proc(r)).filter(Boolean));
+fillIdSelect();
 /* Data first, then the question. The table paints from cache behind the sheet,
    so the page never looks like it's gating the numbers behind a form. */
-loadData(true);
+render();
+loadSheet(true);
 paintViewer();
 if(getViewer()) logView(); else openSheet(false);
 </script>
