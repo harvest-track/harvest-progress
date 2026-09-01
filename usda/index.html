@@ -76,7 +76,7 @@
   /* variance ladder */
   .ladder{padding:8px 8px 6px}
   .rung{
-    all:unset;display:grid;grid-template-columns:106px 1fr 66px;align-items:center;gap:8px;
+    all:unset;display:grid;grid-template-columns:100px 1fr 76px;align-items:center;gap:8px;
     width:100%;box-sizing:border-box;padding:5px 12px;border-radius:8px;cursor:pointer;
   }
   .rung:hover{background:rgba(0,0,0,.03)}
@@ -87,6 +87,7 @@
   .track:before{content:"";position:absolute;left:50%;top:-6px;bottom:-6px;width:1px;background:var(--hairline-soft)}
   .bar{position:absolute;top:2px;height:8px;border-radius:4px;transition:width .4s cubic-bezier(.25,.1,.25,1)}
   .rung .num{font-size:12px;text-align:right;font-variant-numeric:tabular-nums;color:var(--secondary)}
+  .rung .num .chip{font-size:12px;padding:2px 7px}
   .ladfoot{display:flex;justify-content:space-between;font-size:11px;color:var(--secondary);
     padding:8px 20px 16px;font-variant-numeric:tabular-nums}
 
@@ -168,6 +169,18 @@
   tr.lv3 td:first-child{padding-left:58px;box-shadow:inset 2px 0 0 rgba(0,0,0,.07)}
   tr.lv3 td.hold{color:var(--text);font-weight:500}
   td.dtc{color:var(--secondary);font-size:12.5px}
+  /* Every variance is a chip, so the column reads as a row of verdicts rather
+     than more figures. Light fill for everything, heavier past the material
+     threshold, so real misses separate without the column shouting all the way
+     down. */
+  .chip{display:inline-block;padding:3px 9px;border-radius:7px;
+    font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+  .chip.neg{background:rgba(255,59,48,.10);color:#c9251c}
+  .chip.pos{background:rgba(52,199,89,.12);color:#1a7f37}
+  .chip.big{font-weight:700}
+  .chip.big.neg{background:rgba(255,59,48,.20)}
+  .chip.big.pos{background:rgba(52,199,89,.24)}
+  tr.lv3 td .chip{font-size:12.5px}
   tr.part td:first-child .tag{color:var(--amber)}
   tr.pend td{color:var(--secondary)}
   tr.pend td:first-child{font-weight:500}
@@ -192,6 +205,31 @@
   .banner code{background:rgba(0,0,0,.06);border-radius:4px;padding:1px 5px;font-size:12px}
   .savenote{font-size:12px;color:var(--secondary);white-space:nowrap}
   .savenote.err{color:var(--red)}
+  /* Identity sheet — asked once per browser, then remembered. Sits over the
+     page rather than blocking it, so the data is visible behind the question. */
+  .sheet{display:none;position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.28);
+    -webkit-backdrop-filter:saturate(120%) blur(6px);backdrop-filter:saturate(120%) blur(6px);
+    align-items:center;justify-content:center;padding:24px}
+  .sheet.show{display:flex}
+  .sheetCard{background:var(--card);border-radius:18px;box-shadow:0 8px 40px rgba(0,0,0,.18);
+    padding:26px 26px 22px;max-width:380px;width:100%}
+  .sheetCard h2{font-size:20px;font-weight:600;letter-spacing:-.02em}
+  .sheetCard p{font-size:13px;color:var(--secondary);line-height:1.5;margin:8px 0 18px}
+  .sheetCard select,.sheetCard input[type="text"]{font:inherit;font-size:15px;width:100%;max-width:none;
+    padding:10px 12px;border:1px solid var(--hairline);border-radius:10px;
+    background:var(--bg);color:var(--text);outline:none;-webkit-appearance:none;appearance:none}
+  .sheetCard select:focus,.sheetCard input[type="text"]:focus{
+    box-shadow:0 0 0 3px rgba(0,113,227,.3);border-color:transparent}
+  .sheetCard input[type="text"]{margin-top:10px}
+  .sheetCard button{font:inherit;font-size:15px;font-weight:500;width:100%;margin-top:18px;
+    padding:11px;border:none;border-radius:10px;cursor:pointer;background:var(--blue);color:#fff}
+  .sheetCard button:hover{background:#0062c4}
+  .sheetCard button:disabled{background:rgba(0,0,0,.12);color:var(--secondary);cursor:default}
+  .whoami{font-size:12px;color:var(--secondary);white-space:nowrap}
+  .whoami button{font:inherit;font-size:12px;color:var(--blue);background:none;border:none;
+    cursor:pointer;padding:0 0 0 4px}
+  .whoami button:hover{text-decoration:underline}
+
   /* block detail panel */
   .scrim{position:fixed;inset:0;background:rgba(0,0,0,.18);z-index:40;
     animation:fade .18s ease}
@@ -246,6 +284,16 @@
 </style>
 </head>
 <body>
+<div class="sheet" id="idSheet" role="dialog" aria-modal="true" aria-labelledby="idTitle">
+  <div class="sheetCard">
+    <h2 id="idTitle">2026 USDA Harvest Results</h2>
+    <p>Pick your name, you won't have to enter it again.</p>
+    <select id="idSelect" aria-label="Select your name"></select>
+    <input type="text" id="idOther" placeholder="Your name" hidden aria-label="Your name">
+    <button id="idSave" disabled>Continue</button>
+  </div>
+</div>
+
 <div class="wrap">
 
   <div class="head">
@@ -263,7 +311,7 @@
     </section>
 
     <section class="card">
-      <header><h2>Biggest misses <span id="ladderCount"></span></h2><div class="cap">by block</div></header>
+      <header><h2>Biggest misses <span id="ladderCount"></span></h2><div class="cap" id="ladderCap">by block · bars in lbs</div></header>
       <div class="ladder" id="ladder"></div>
       <div class="ladfoot"><span id="scaleL"></span><span id="ladderNote"></span><span id="scaleR"></span></div>
     </section></div>
@@ -284,6 +332,7 @@
         <button class="link" id="tExpand">Expand all</button>
         <label class="chk"><input type="checkbox" id="fEnt" checked>Weighed only</label>
         <span class="right">
+          <span class="whoami" id="whoami"></span>
           <span class="savenote" id="status"></span>
           <button class="link" id="refreshBtn">Refresh</button>
           <button class="link" id="dl">Export CSV</button>
@@ -360,6 +409,15 @@ const fmt = n => n==null ? "—" : Math.round(n).toLocaleString("en-US");
 const ac2 = n => n.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
 const pc  = (d,b) => (b===0||b==null) ? "—" : (d/b>=0?"+":"") + (100*d/b).toFixed(1) + "%";
 const cls = n => n>0.5 ? "pos" : n<-0.5 ? "neg" : "";
+/* Anything this far off the basis is worth a second look; inside it is noise
+   you don't want shouting. Single knob — raise or lower to taste. */
+const MATERIAL_VAR = 5;
+const pcv = (d,b) => (d==null||b==null||b===0) ? null : 100*d/b;
+function chip(v){
+  if(v==null) return "";
+  const big = Math.abs(v)>=MATERIAL_VAR ? " big" : "";
+  return `<span class="chip ${v<0?"neg":"pos"}${big}">${(v>=0?"+":"")+v.toFixed(1)+"%"}</span>`;
+}
 const sign = d => (d>=0?"+":"−") + fmt(Math.abs(d));
 
 function rows(){
@@ -414,11 +472,11 @@ function tote(list){
       <div class="v mute">${fmt(a.lb)}<small>lbs</small></div>
       <div class="ysub">${fmt(a.yb)} lb/ac on ${fmt(a.acb)} acres</div></div>
     <div class="stat"><div class="k">Variance <small>vs ${B.short}</small></div>
-      <div class="v ${a.done?cls(a.d):"mute"}">${a.done&&a.d!=null?pc(a.d,a.lbEnt):"—"}</div>
-      <div class="ysub">${a.done&&a.d!=null
-        ? "on "+fmt(a.acEnt)+" acres"
-        : (a.nReq?a.nReqEnt+" of "+a.nReq+" blocks weighed — shown once complete"
-                 :"waiting on 2026 weights")}</div></div>`;
+      <div class="v ${cls(a.d)}">${a.d==null?"—":pc(a.d,a.lbEnt)}</div>
+      <div class="ysub">${a.d==null
+        ? "waiting on 2026 weights"
+        : (a.done ? "on "+fmt(a.acEnt)+" acres, all blocks in"
+                  : a.nReqEnt+" of "+a.nReq+" blocks weighed · "+fmt(a.acEnt)+" acres")}</div></div>`;
 }
 
 /* ---------- progress by crop group ----------
@@ -469,18 +527,22 @@ function ladder(list){
   /* The table already ranks ranches, so this ranks the blocks inside them: the
      N largest misses in lbs, either direction, worst first. That is the thing
      you would actually go look at. */
-  const scored=list.filter(r=>y26(r)!=null).map(r=>({r,...agg([r])}));
+  const scored=list.filter(r=>y26(r)!=null).map(r=>{
+    const a=agg([r]); return {r,d:a.d,v:pcv(a.d,a.lbEnt)};
+  }).filter(x=>x.v!=null);          // no basis, no variance to rank
+  /* Ranked and sized by lbs — bar length is pounds at stake — while the chip
+     states how far off that block is in relative terms. */
   const arr=scored.slice().sort((a,b)=>Math.abs(b.d)-Math.abs(a.d))
                   .slice(0,LADDER_N).sort((a,b)=>a.d-b.d);
   const max=Math.max(1,...arr.map(x=>Math.abs(x.d)));
   const el=document.getElementById("ladder");
   el.innerHTML = arr.length ? arr.map(x=>{
     const w=Math.abs(x.d)/max*50, neg=x.d<0, flat=Math.abs(x.d)<1;
-    return `<button class="rung" data-i="${x.r.i}" title="${x.r.rn} \u00b7 ${x.r.vr}">
+    return `<button class="rung" data-i="${x.r.i}" title="${x.r.rn} \u00b7 ${x.r.vr} \u00b7 ${kk(x.d)} lbs">
       <span class="code">${x.r.bv}</span>
       <span class="track"><span class="bar" style="${neg?"right:50%":"left:50%"};width:${w}%;
         background:${neg?"var(--red)":"var(--green)"};opacity:${flat?0:1}"></span></span>
-      <span class="num ${cls(x.d)}">${flat?"\u2014":kk(x.d)}</span></button>`;
+      <span class="num">${flat?"\u2014":chip(x.v)}</span></button>`;
   }).join("") : `<div class="empty">Nothing to compare yet. The blocks furthest from ${BASIS[S.basis].short} appear here as weights come in.</div>`;
   document.getElementById("ladderCount").textContent =
     scored.length > arr.length ? "\u00b7 top "+arr.length+" of "+scored.length : (arr.length ? "\u00b7 "+arr.length : "");
@@ -494,22 +556,23 @@ function ladder(list){
 
 /* ---------- table ---------- */
 function line(level,key,name,a,opts={}){
-  const {toggle=false,tag="",pick=null}=opts;
+  const {toggle=false,tag="",pick=null,raw=false}=opts;
   const chev = toggle ? `<span class="chev"></span>` : (level<3?`<span class="chev none"></span>`:"");
   const open = toggle && S.open.has(key) ? " open" : "";
   /* Rollup rows (ranch, block, Total) stay blank until the group is complete —
      a part-entered total read against a whole-book plan is misleading. Single
      block-varieties always show. */
   const part = level<3 && !a.done;
-  const blank = a.nEnt && !part ? "—" : "";
+  const gate = part && !raw;      // the Total row opts out: it has to tie to the tile
+  const blank = a.nEnt && !gate ? "—" : "";
   const ptag = part && a.nEnt ? `${a.nReq?a.nReqEnt:a.nEnt} of ${a.nReq||a.n} in` : tag;
   return `<tr class="lv${level}${open}${a.nEnt?"":" pend"}${part?" part":""}" data-key="${key}"${toggle?' data-t="1"':""}${pick!=null?` data-pick="${pick}"`:""}>
     <td>${chev}${name}${ptag?`<span class="tag">${ptag}</span>`:""}</td>
-    <td class="hold">${part||a.y26==null?blank:fmt(a.y26)}</td>
+    <td class="hold">${gate||a.y26==null?blank:fmt(a.y26)}</td>
     <td>${a.yb==null?"—":fmt(a.yb)}</td>
-    <td class="hold">${part||!a.nEnt?blank:fmt(a.l26)}</td>
-    <td class="${part?"":cls(a.d)}">${part||a.d==null?blank:pc(a.d,a.lbEnt)}</td>
-    <td class="dtc">${part?"":fdate(a.dt)}</td></tr>`;
+    <td class="hold">${gate||!a.nEnt?blank:fmt(a.l26)}</td>
+    <td>${gate?blank:(chip(pcv(a.d,a.lbEnt))||blank)}</td>
+    <td class="dtc">${gate?"":fdate(a.dt)}</td></tr>`;
 }
 const KEY={name:x=>nat(x.name),ac:x=>x.a.ac,dt:x=>(x.a.dt?+x.a.dt:-Infinity),y26:x=>x.a.y26,yb:x=>x.a.yb,
            l26:x=>x.a.l26,dl:x=>(x.a.d==null?-Infinity:x.a.d),dp:x=>(x.a.d!=null&&x.a.lbEnt?x.a.d/x.a.lbEnt:-Infinity)};
@@ -545,7 +608,9 @@ function table(list){
   const b=document.getElementById("body");
   b.innerHTML = html || `<tr><td colspan="6" class="empty">${S.entOnly && list.length ? "No weights in yet for these blocks. Untick \u201cWeighed only\u201d to see them." : "No blocks match these filters. Clear one and try again."}</td></tr>`;
   document.getElementById("foot").innerHTML = list.length
-    ? line(1,"__t","Total",agg(list)).replace('class="lv1"','class="tot"').replace('<span class="chev none"></span>','')
+    ? line(1,"__t","Total",agg(list),{raw:true})
+        .replace(/class="lv1[^"]*"/,'class="tot"')
+        .replace('<span class="chev none"></span>','')
     : "";
   b.querySelectorAll("tr[data-pick]").forEach(tr=>tr.onclick=()=>openDetail(+tr.dataset.pick));
   b.querySelectorAll("tr[data-t]").forEach(tr=>tr.onclick=()=>{
@@ -732,13 +797,21 @@ function ingest(rows){
     const bv=BV[k], ac=ACRES[k];
     if(lb==null || !ac) return;              // not weighed yet
     map[bv]=Math.max(0,lb/ac); n++;
-    const ds=row[DATE_HEADER];
-    if(ds){ const d0=new Date(ds); if(!isNaN(+d0)) dates[bv]=d0; }
+    const d0=pdate(row[DATE_HEADER]);
+    if(d0) dates[bv]=d0;
   });
   return {map,dates,n,bad,stray};
 }
+/* A bare yyyy-MM-dd is parsed by JS as UTC midnight, which displays as the
+   PREVIOUS day anywhere west of Greenwich. Build it as a local date instead. */
+function pdate(v){
+  if(v==null||v==="") return null;
+  const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(v).trim());
+  const d=m?new Date(+m[1],+m[2]-1,+m[3]):new Date(v);
+  return isNaN(+d)?null:d;
+}
 function revive(o){ const d={}; Object.entries(o||{}).forEach(([k,v])=>{
-  const x=new Date(v); if(!isNaN(+x)) d[k]=x; }); return d; }
+  const x=pdate(v); if(x) d[k]=x; }); return d; }
 function readCache(){ try{const r=localStorage.getItem(CACHE_KEY);return r?JSON.parse(r):null}catch(e){return null} }
 function writeCache(d){ try{localStorage.setItem(CACHE_KEY,JSON.stringify(d))}catch(e){} }
 
@@ -755,7 +828,9 @@ async function loadSheet(initial){
   }
   if(!initial) setStatus("Refreshing\u2026");
   try{
-    const res=await fetch(url+(url.includes("?")?"&":"?")+"_="+Date.now(),{cache:"no-store"});
+    const who=getViewer();
+    const res=await fetch(url+(url.includes("?")?"&":"?")
+      +(who?"u="+encodeURIComponent(who)+"&":"")+"_="+Date.now(),{cache:"no-store"});
     if(!res.ok) throw new Error("HTTP "+res.status);
     const text=await res.text();
     let data;
@@ -793,12 +868,82 @@ async function loadSheet(initial){
 }
 document.getElementById("refreshBtn").onclick=()=>loadSheet(false);
 
+/* ---------- who's viewing ----------
+   Asked once per browser and kept in localStorage, then sent with every request
+   so the sheet can log who opened the page and when. Not an auth check — nobody
+   signs in, and a determined person can type anything. It answers "has anyone on
+   the team looked at their numbers", which is the actual question. */
+const VIEWER_KEY = "glf-usda-2026-viewer";
+const LOGGED_KEY = "glf-usda-2026-logged";   // sessionStorage: one log per tab
+const OFFICE = ["Jack","Jackie","David","Carl","Santiago","Vasu"];
+
+function getViewer(){ try{ return localStorage.getItem(VIEWER_KEY)||""; }catch(e){ return ""; } }
+function setViewer(n){ try{ localStorage.setItem(VIEWER_KEY,n); }catch(e){} paintViewer(); }
+function paintViewer(){
+  const el=document.getElementById("whoami");
+  const v=getViewer();
+  el.innerHTML = v ? `Viewing as ${v}<button type="button" id="notMe">Change</button>` : "";
+  const b=document.getElementById("notMe");
+  if(b) b.onclick=()=>openSheet(true);
+}
+/* Names come from the data, so the list can't drift from the roster. */
+function fillIdSelect(){
+  const grp=(lab,vals)=>`<optgroup label="${lab}">`+
+    [...new Set(vals)].sort().map(v=>`<option>${v}</option>`).join("")+`</optgroup>`;
+  document.getElementById("idSelect").innerHTML =
+    `<option value="" selected>Select your name</option>`
+    + grp("AMs",DATA.map(r=>r.am))
+    + grp("FMs",DATA.map(r=>r.fm))
+    + grp("Office",OFFICE)
+    + `<option value="__other">Someone else\u2026</option>`;
+}
+/* Fire-and-forget view log. Once per tab, so someone parked on the page all
+   morning is one row rather than one per refresh. Failure is silent — a logging
+   problem should never keep the numbers off the screen. */
+function logView(){
+  const v=getViewer(), url=resolveUrl(API_URL);
+  if(!v || !url) return;
+  try{ if(sessionStorage.getItem(LOGGED_KEY)) return; }catch(e){}
+  fetch(url+(url.includes("?")?"&":"?")+"log=1&u="+encodeURIComponent(v)+"&_="+Date.now(),
+        {cache:"no-store",mode:"no-cors"}).catch(()=>{});
+  try{ sessionStorage.setItem(LOGGED_KEY,"1"); }catch(e){}
+}
+function openSheet(force){
+  const sheet=document.getElementById("idSheet"), sel=document.getElementById("idSelect"),
+        other=document.getElementById("idOther"), save=document.getElementById("idSave");
+  if(getViewer() && !force) return;
+  sel.value=""; other.value=""; other.hidden=true; save.disabled=true;
+  sheet.classList.add("show"); sel.focus();
+  const chosen=()=> sel.value==="__other" ? other.value.trim() : sel.value;
+  const sync=()=>{
+    other.hidden = sel.value!=="__other";
+    save.disabled = !chosen();
+    if(sel.value==="__other" && document.activeElement===sel) other.focus();
+  };
+  sel.onchange=sync; other.oninput=sync;
+  other.onkeydown=e=>{ if(e.key==="Enter" && chosen()) save.click(); };
+  save.onclick=()=>{
+    const name=chosen(); if(!name) return;
+    setViewer(name);
+    sheet.classList.remove("show");
+    /* a fresh name is a fresh visit worth logging, even mid-session */
+    try{ sessionStorage.removeItem(LOGGED_KEY); }catch(e){}
+    logView();
+    loadSheet(false);
+  };
+}
+
 fillSelect("fFund","All funds",DATA.map(r=>r.fd));
 fillSelect("fAM","All AMs",DATA.map(r=>r.am));
 fillSelect("fFM","All FMs",DATA.map(r=>r.fm));
 fillSelect("fProc","All processors",DATA.map(r=>proc(r)).filter(Boolean));
+fillIdSelect();
+/* Data first, then the question. The table paints from cache behind the sheet,
+   so the page never looks like it's gating the numbers behind a form. */
 render();
 loadSheet(true);
+paintViewer();
+if(getViewer()) logView(); else openSheet(false);
 </script>
 </body>
 </html>
