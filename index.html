@@ -797,13 +797,21 @@ function ingest(rows){
     const bv=BV[k], ac=ACRES[k];
     if(lb==null || !ac) return;              // not weighed yet
     map[bv]=Math.max(0,lb/ac); n++;
-    const ds=row[DATE_HEADER];
-    if(ds){ const d0=new Date(ds); if(!isNaN(+d0)) dates[bv]=d0; }
+    const d0=pdate(row[DATE_HEADER]);
+    if(d0) dates[bv]=d0;
   });
   return {map,dates,n,bad,stray};
 }
+/* A bare yyyy-MM-dd is parsed by JS as UTC midnight, which displays as the
+   PREVIOUS day anywhere west of Greenwich. Build it as a local date instead. */
+function pdate(v){
+  if(v==null||v==="") return null;
+  const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(v).trim());
+  const d=m?new Date(+m[1],+m[2]-1,+m[3]):new Date(v);
+  return isNaN(+d)?null:d;
+}
 function revive(o){ const d={}; Object.entries(o||{}).forEach(([k,v])=>{
-  const x=new Date(v); if(!isNaN(+x)) d[k]=x; }); return d; }
+  const x=pdate(v); if(x) d[k]=x; }); return d; }
 function readCache(){ try{const r=localStorage.getItem(CACHE_KEY);return r?JSON.parse(r):null}catch(e){return null} }
 function writeCache(d){ try{localStorage.setItem(CACHE_KEY,JSON.stringify(d))}catch(e){} }
 
