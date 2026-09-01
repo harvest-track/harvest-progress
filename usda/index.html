@@ -571,13 +571,16 @@ function line(level,key,name,a,opts={}){
      a part-entered total read against a whole-book plan is misleading. Single
      block-varieties always show. */
   const part = level<3 && !a.done;
-  const gate = part && !raw;      // the Total row opts out: it has to tie to the tile
+  /* An incomplete rollup shows nothing but its progress tag — not even the
+     basis, since a whole-group plan next to a part-group actual is the exact
+     comparison that misleads. The Total row opts out: it has to tie to the tile. */
+  const gate = part && !raw;
   const blank = a.nEnt && !gate ? "—" : "";
   const ptag = part && a.nEnt ? `${a.nReq?a.nReqEnt:a.nEnt} of ${a.nReq||a.n} in` : tag;
   return `<tr class="lv${level}${open}${a.nEnt?"":" pend"}${part?" part":""}" data-key="${key}"${toggle?' data-t="1"':""}${pick!=null?` data-pick="${pick}"`:""}>
     <td>${chev}${name}${ptag?`<span class="tag">${ptag}</span>`:""}</td>
     <td class="hold">${gate||a.y26==null?blank:fmt(a.y26)}</td>
-    <td>${a.yb==null?"—":fmt(a.yb)}</td>
+    <td>${gate||a.yb==null?blank:fmt(a.yb)}</td>
     <td class="hold">${gate||!a.nEnt?blank:fmt(a.l26)}</td>
     <td>${gate?blank:(chip(pcv(a.d,a.lbEnt))||blank)}</td>
     <td class="dtc">${gate?"":fdate(a.dt)}</td></tr>`;
