@@ -329,7 +329,7 @@
             <div class="pfoot"><span id="fScope"></span><button class="link" id="fClear">Clear all</button></div>
           </div>
         </div>
-        <button class="link" id="tExpand">Expand all</button>
+        <button class="link" id="tExpand">Collapse all</button>
         <label class="chk"><input type="checkbox" id="fEnt" checked>Weighed only</label>
         <span class="right">
           <span class="whoami" id="whoami"></span>
@@ -391,6 +391,14 @@ const S = {basis:"yrf", fund:"", am:"", fm:"", pr:"", q:"", sort:"name", dir:1, 
            open:new Set()};
 
 DATA.forEach((r,i)=>r.i=i);
+/* Everything starts expanded. The accordion below still applies once you click:
+   collapsing one ranch leaves the rest alone, re-opening a closed one closes
+   the others. */
+function expandAll(list){
+  S.open.clear();
+  (list||DATA).forEach(r=>{ S.open.add(r.rn); S.open.add(r.rn+"|"+r.hb); });
+}
+expandAll();
 let SHEET = {};                // block-variety -> lb/ac, from the sheet. Read-only.
 let DATES = {};                // block-variety -> Date the USDA weight went final
 /* The 2026 huller/processor plan travels with this file (fields hl and pr on
@@ -703,6 +711,7 @@ function render(){
   const badge=document.getElementById("fCount");
   badge.hidden=!nF; badge.textContent=nF;
   document.getElementById("fScope").textContent=list.length+" of "+DATA.length+" blocks";
+  document.getElementById("tExpand").textContent=S.open.size?"Collapse all":"Expand all";
   if(S.sel!=null) paintDetail();
   document.querySelectorAll("#basis button").forEach(b=>
     b.setAttribute("aria-pressed", b.dataset.b===S.basis));
@@ -718,7 +727,8 @@ document.querySelectorAll("thead th").forEach(th=>th.onclick=()=>{
   if(S.sort===th.dataset.s) S.dir*=-1; else {S.sort=th.dataset.s; S.dir = th.dataset.s==="name"?1:-1;}
   render();
 });
-const bind=(id,key)=>document.getElementById(id).onchange=e=>{S[key]=e.target.value;S.open.clear();render();};
+const bind=(id,key)=>document.getElementById(id).onchange=e=>{
+  S[key]=e.target.value; expandAll(rows()); render(); };
 bind("fFund","fund"); bind("fAM","am"); bind("fFM","fm"); bind("fProc","pr");
 document.getElementById("q").oninput=e=>{S.q=e.target.value;render();};
 const fPop=document.getElementById("fPop"), fBtn=document.getElementById("fToggle");
@@ -730,13 +740,12 @@ document.addEventListener("keydown",e=>{ if(e.key==="Escape") setPop(false); });
 document.getElementById("fClear").onclick=()=>{
   S.fund=S.am=S.fm=S.pr="";
   ["fFund","fAM","fFM","fProc"].forEach(id=>document.getElementById(id).value="");
-  S.open.clear(); render();
+  expandAll(rows()); render();
 };
-document.getElementById("fEnt").onchange=e=>{S.entOnly=e.target.checked;S.open.clear();render();};
-document.getElementById("tExpand").onclick=e=>{
-  if(S.open.size){S.open.clear(); e.target.textContent="Expand all";}
-  else{ rows().forEach(r=>{S.open.add(r.rn); S.open.add(r.rn+"|"+r.hb);});
-        e.target.textContent="Collapse all"; }
+document.getElementById("fEnt").onchange=e=>{
+  S.entOnly=e.target.checked; expandAll(rows()); render(); };
+document.getElementById("tExpand").onclick=()=>{
+  if(S.open.size) S.open.clear(); else expandAll(rows());
   render();
 };
 document.getElementById("dl").onclick=()=>{
