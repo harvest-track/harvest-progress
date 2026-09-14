@@ -190,6 +190,13 @@
   tr.open>td .chev{transform:rotate(45deg)}
   .chev.none{border:none}
   .tag{font-size:11px;color:var(--secondary);margin-left:8px;font-weight:400}
+  /* Folder link — sits on the ranch row once at least one block in it has a
+     USDA final date. Small and quiet: it's a way out to Drive, not a number. */
+  .flink{font-size:11px;font-weight:500;color:var(--blue);text-decoration:none;
+    margin-left:9px;padding:2px 7px;border-radius:6px;background:rgba(0,113,227,.1);
+    vertical-align:1px;white-space:nowrap}
+  .flink:hover{background:rgba(0,113,227,.18)}
+  .flink:focus-visible{outline:2px solid var(--blue);outline-offset:1px}
   tfoot td{padding:14px;font-weight:600;border-top:1px solid var(--hairline);background:rgba(0,0,0,.015)}
   tfoot td:first-child{padding-left:20px}
   .empty{padding:34px 20px;color:var(--secondary)}
@@ -256,6 +263,8 @@
   .kv div:last-child{border-bottom:none}
   .kv span:first-child{color:var(--secondary)}
   .kv span:last-child{font-variant-numeric:tabular-nums;text-align:right}
+  .kv a{color:var(--blue);text-decoration:none}
+  .kv a:hover{text-decoration:underline}
   .waiting{margin:10px 22px 22px;padding:13px 15px;background:rgba(0,0,0,.03);
     border-radius:12px;font-size:12.5px;line-height:1.55;color:var(--secondary)}
   .waiting b{color:var(--text);font-weight:600}
@@ -367,8 +376,8 @@
       AppsScript_Code.gs, Deploy ▸ Web app (Execute as: Me · Access: Anyone),
       copy the /exec URL.
 
-      The script exposes Block-Variety and 2026 Harvest lbs, plus an optional
-      "2026 Final Date" column if you add one to the master.
+      The script exposes Block-Variety and 2026 Harvest lbs, plus optional
+      "2026 Final Date" and "Folder Link" columns if you add them to the master.
       Acres, budget, reforecast, the huller/processor plan and everything else
       stay in this file or in the workbook; the feed carries weights only.
    ============================================================ */
@@ -378,6 +387,10 @@ const LBS_HEADER = "2026 Harvest lbs";
 /* Optional third field. If the sheet doesn't have this column the date column
    just stays blank — nothing else changes. */
 const DATE_HEADER = "2026 Final Date";
+/* Optional fourth field. A Drive folder URL per block-variety; the ranch row
+   shows one link as soon as any block under it has gone final. Fill it on a
+   single row per ranch if that's easier — the first non-empty one wins. */
+const LINK_HEADER = "Folder Link";
 const CACHE_KEY = "glf-usda-harvest-2026-v1";
 
 /* Block-varieties that live in the master but not on this dashboard: the
@@ -401,13 +414,15 @@ function expandAll(list){
 expandAll();
 let SHEET = {};                // block-variety -> lb/ac, from the sheet. Read-only.
 let DATES = {};                // block-variety -> Date the USDA weight went final
+let LINKS = {};                // block-variety -> Drive folder URL
 /* The 2026 huller/processor plan travels with this file (fields hl and pr on
    each row) rather than coming down the feed — it's a once-a-season plan, not
-   live data, and keeping it here means the Apps Script stays a two-field
-   endpoint. If the delivery plan changes, update this file and the master. */
+   live data, and keeping it here means the Apps Script stays a thin endpoint.
+   If the delivery plan changes, update this file and the master. */
 const HAS_PROC = true;
 const y26 = r => SHEET[r.bv] != null ? SHEET[r.bv] : null;
 const dt  = r => DATES[r.bv] || null;
+const lnk = r => LINKS[r.bv] || null;
 const fdate = d => d ? d.toLocaleDateString("en-US",{month:"short",day:"numeric"}) : "";
 const proc = r => (r.pr || "").trim();
 const hull = r => (r.hl || "").trim();
@@ -427,6 +442,9 @@ function chip(v){
   return `<span class="chip ${v<0?"neg":"pos"}${big}">${(v>=0?"+":"")+v.toFixed(1)+"%"}</span>`;
 }
 const sign = d => (d>=0?"+":"−") + fmt(Math.abs(d));
+/* URLs land in innerHTML, so anything that isn't plainly an http(s) link is
+   dropped rather than escaped — a folder link is either a URL or it's nothing. */
+const safeUrl = u => /^https?:\/\/[^\s"'<>]+$/i.test(String(u||"").trim()) ? String(u).trim() : null;
 
 function rows(){
   return DATA.filter(r=>{
@@ -461,6 +479,12 @@ function agg(list){
   a.yb  = a.acb ? a.lbAll/a.acb : null;
   a.lb  = a.lbAll;
   return a;
+}
+/* First folder link found under a ranch. Fill the column on every row or just
+   one per ranch — either way the ranch gets a single link. */
+function folderFor(list){
+  for(const r of list){ const u=safeUrl(lnk(r)); if(u) return u; }
+  return null;
 }
 
 /* ---------- summary tiles ---------- */
@@ -564,7 +588,7 @@ function ladder(list){
 
 /* ---------- table ---------- */
 function line(level,key,name,a,opts={}){
-  const {toggle=false,tag="",pick=null,raw=false}=opts;
+  const {toggle=false,tag="",pick=null,raw=false,link=null}=opts;
   const chev = toggle ? `<span class="chev"></span>` : (level<3?`<span class="chev none"></span>`:"");
   const open = toggle && S.open.has(key) ? " open" : "";
   /* Rollup rows (ranch, block, Total) stay blank until the group is complete —
@@ -577,8 +601,9 @@ function line(level,key,name,a,opts={}){
   const gate = part && !raw;
   const blank = a.nEnt && !gate ? "—" : "";
   const ptag = part && a.nEnt ? `${a.nReq?a.nReqEnt:a.nEnt} of ${a.nReq||a.n} in` : tag;
+  const flink = link ? `<a class="flink" href="${link}" target="_blank" rel="noopener">Folder</a>` : "";
   return `<tr class="lv${level}${open}${a.nEnt?"":" pend"}${part?" part":""}" data-key="${key}"${toggle?' data-t="1"':""}${pick!=null?` data-pick="${pick}"`:""}>
-    <td>${chev}${name}${ptag?`<span class="tag">${ptag}</span>`:""}</td>
+    <td>${chev}${name}${flink}${ptag?`<span class="tag">${ptag}</span>`:""}</td>
     <td class="hold">${gate||a.y26==null?blank:fmt(a.y26)}</td>
     <td>${gate||a.yb==null?blank:fmt(a.yb)}</td>
     <td class="hold">${gate||!a.nEnt?blank:fmt(a.l26)}</td>
@@ -601,7 +626,10 @@ function table(list){
   let html="";
   sortBy(Object.entries(by).map(([rn,rs])=>({name:rn,rs,a:agg(rs)})))
     .filter(R=>R.rs.some(keep)).forEach(R=>{
-    html+=line(1,R.name,R.name,R.a,{toggle:true});
+    /* a.dt is the latest USDA final date across the weighed blocks in this
+       ranch, so it's non-null exactly when at least one block has gone final —
+       which is when the folder link should appear. */
+    html+=line(1,R.name,R.name,R.a,{toggle:true, link: R.a.dt ? folderFor(R.rs) : null});
     if(!S.open.has(R.name)) return;
     const blocks={};
     R.rs.forEach(r=>{ (blocks[r.hb]=blocks[r.hb]||[]).push(r); });
@@ -624,7 +652,10 @@ function table(list){
         .replace('<span class="chev none"></span>','')
     : "";
   b.querySelectorAll("tr[data-pick]").forEach(tr=>tr.onclick=()=>openDetail(+tr.dataset.pick));
-  b.querySelectorAll("tr[data-t]").forEach(tr=>tr.onclick=()=>{
+  b.querySelectorAll("tr[data-t]").forEach(tr=>tr.onclick=e=>{
+    /* the folder link lives inside a clickable row — let it open the tab
+       instead of collapsing the ranch under it */
+    if(e.target.closest("a")) return;
     const k=tr.dataset.key, top=!k.includes("|");
     if(S.open.has(k)){
       S.open.delete(k);
@@ -644,6 +675,7 @@ function paintDetail(){
   const el=document.getElementById("detail"), sc=document.getElementById("scrim");
   if(S.sel==null){ el.hidden=true; sc.hidden=true; el.innerHTML=""; return; }
   const r=DATA[S.sel], v=y26(r), b=yb(r), p=proc(r), h=hull(r);
+  const fu=safeUrl(lnk(r));
   const lbs=v!=null?v*r.ac:null, plan=b!=null?b*r.ac:null;
   const d=(lbs!=null&&plan!=null)?lbs-plan:null;
   const B=BASIS[S.basis];
@@ -679,6 +711,7 @@ function paintDetail(){
       <div><span>Area / farm manager</span><span>${r.am} · ${r.fm}</span></div>
       <div><span>Huller</span><span>${h || "not set"}</span></div>
       <div><span>Processor</span><span>${p || "not set"}</span></div>
+      <div><span>Folder</span><span>${fu?`<a href="${fu}" target="_blank" rel="noopener">Open</a>`:"not set"}</span></div>
     </div>
     <div class="kv">
       <div><span>2026 harvest</span><span>${lbs!=null?fmt(lbs)+" lbs":"—"}</span></div>
@@ -754,14 +787,14 @@ document.getElementById("tExpand").onclick=()=>{
 document.getElementById("dl").onclick=()=>{
   const B=BASIS[S.basis], head=["Ranch","Harvest Block","Block-Variety","Variety","Fund",
     "Reporting Classification","AM","FM","Acres","Yield 2026 lb/ac",B.lab+" lb/ac",
-    "Total 2026 lbs",B.lab+" lbs","Var lbs","Var %","USDA Final"];
+    "Total 2026 lbs",B.lab+" lbs","Var lbs","Var %","USDA Final","Folder Link"];
   const lines=[head.join(",")];
   rows().forEach(r=>{
     const v=y26(r),b=yb(r)||0,l=(v||0)*r.ac,lb=b*r.ac,d=v==null?null:l-lb;
     lines.push([r.rn,r.hb,r.bv,r.vr,r.fd,r.cl,r.am,r.fm,r.ac.toFixed(2),
       v==null?"":Math.round(v),b,v==null?"":l.toFixed(0),lb.toFixed(0),
       d==null?"":d.toFixed(0),(d!=null&&lb)?(100*d/lb).toFixed(1):"",
-      dt(r)?dt(r).toISOString().slice(0,10):""]
+      dt(r)?dt(r).toISOString().slice(0,10):"", lnk(r)||""]
       .map(x=>/[",]/.test(x)?`"${x}"`:x).join(","));
   });
   const a=document.createElement("a");
@@ -795,11 +828,11 @@ const KEYS=new Set(Object.keys(ACRES));
    block simply stays out of the comparison. */
 function ingest(rows){
   if(!Array.isArray(rows)) return {err:"no-key-column"};
-  if(!rows.length) return {map:{},dates:{},n:0,bad:[],stray:[]};
+  if(!rows.length) return {map:{},dates:{},links:{},n:0,bad:[],stray:[]};
   const first=rows[0];
   if(!(KEY_HEADER in first)) return {err:"no-key-column"};
   if(!(LBS_HEADER in first)) return {err:"no-lbs-column"};
-  const map={}, dates={}, bad=[], stray=[]; let n=0;
+  const map={}, dates={}, links={}, bad=[], stray=[]; let n=0;
   rows.forEach(row=>{
     const k=String(row[KEY_HEADER]||"").trim().toUpperCase();
     if(!k) return;
@@ -807,12 +840,15 @@ function ingest(rows){
     if(OUT_OF_SCOPE.has(k)){ if(lb>0) stray.push(k); return; }
     if(!KEYS.has(k)){ if(lb>0) bad.push(k); return; }
     const bv=BV[k], ac=ACRES[k];
+    /* the folder link is independent of the weight — keep it either way */
+    const u=safeUrl(row[LINK_HEADER]);
+    if(u) links[bv]=u;
     if(lb==null || !ac) return;              // not weighed yet
     map[bv]=Math.max(0,lb/ac); n++;
     const d0=pdate(row[DATE_HEADER]);
     if(d0) dates[bv]=d0;
   });
-  return {map,dates,n,bad,stray};
+  return {map,dates,links,n,bad,stray};
 }
 /* A bare yyyy-MM-dd is parsed by JS as UTC midnight, which displays as the
    PREVIOUS day anywhere west of Greenwich. Build it as a local date instead. */
@@ -831,7 +867,7 @@ async function loadSheet(initial){
   const url=resolveUrl(API_URL);
   if(initial){
     const c=readCache();
-    if(c && c.map){ SHEET=c.map; DATES=revive(c.dates); render();
+    if(c && c.map){ SHEET=c.map; DATES=revive(c.dates); LINKS=c.links||{}; render();
       setStatus("As of "+new Date(c.updated).toLocaleTimeString()); }
   }
   if(!url){
@@ -854,9 +890,9 @@ async function loadSheet(initial){
     const out=ingest(raw);
     if(out.err==="no-key-column") throw new Error("the feed had no "+KEY_HEADER+" field");
     if(out.err==="no-lbs-column") throw new Error("the feed had no \u201c"+LBS_HEADER+"\u201d field");
-    SHEET=out.map; DATES=out.dates;
+    SHEET=out.map; DATES=out.dates; LINKS=out.links;
     const when=data.updated?new Date(data.updated):new Date();
-    writeCache({updated:when.toISOString(),map:out.map,dates:out.dates});
+    writeCache({updated:when.toISOString(),map:out.map,dates:out.dates,links:out.links});
     render();
     setStatus((out.n?out.n+" weighed":"nothing weighed yet")+" \u00b7 "+when.toLocaleTimeString());
     const warn=[];
