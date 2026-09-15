@@ -376,6 +376,7 @@
           <th>Forecast lb/acre</th>
           <th class="rf varrf">Var vs Rfcst</th>
           <th class="rf grpL">Rfcst lb/acre</th>
+          <th class="c">Final</th>
         </tr>
       </thead>
       <tbody id="tbody"></tbody>
@@ -387,6 +388,7 @@
           <td class="lbs" id="tFcst"></td>
           <td></td>
           <td class="rf varrf"></td><td class="rf grpL"></td>
+          <td></td>
         </tr>
         <tr class="sub">
           <td colspan="3">Finished blocks only</td>
@@ -395,6 +397,7 @@
           <td class="lbs" id="tfFcst"></td>
           <td id="tfFcstAc"></td>
           <td class="rf varrf" id="tfRfVar"></td><td class="rf grpL" id="tfRfAc"></td>
+          <td id="tfFinalCount"></td>
         </tr>
       </tfoot>
     </table>
@@ -438,9 +441,19 @@ function calc(r){
   const ticketsDone = Number(r.tickets) === 2;
   const fcst = (ticketsDone && fw!=null && a!=null) ? fw*a/100 : null;
   const fcstAc = (fcst!=null && ac!=null && ac!==0) ? fcst/ac : null;
+
+  /* Once USDA settles a block, its Final Lbs figure takes over the
+     "Forecast lb/acre" cell directly (not divided by acres — it's a
+     straight swap-in), and Var vs Rfcst compares against that instead
+     of the modeled per-acre forecast. isFinal is the switch everything
+     below reads off of. */
+  const finalLbs = parseNum(r.finalLbsUsda);
+  const isFinal = finalLbs != null;
+  const effFcstAc = isFinal ? finalLbs : fcstAc;
   /* both sides are turnout-adjusted meats per acre, so this is apples-to-apples */
-  const varRf = (fcstAc!=null && rf!=null && rf!==0) ? (fcstAc-rf)/rf*100 : null;
-  return { fw, fcst, fcstAc, rf, varRf, ticketsDone };
+  const varRf = (effFcstAc!=null && rf!=null && rf!==0) ? (effFcstAc-rf)/rf*100 : null;
+
+  return { fw, fcst, fcstAc, rf, varRf, ticketsDone, finalLbs, isFinal, effFcstAc };
 }
 /* a block is finished when both lights are green */
 function isFin(r){ return Number(r.pickup) === 2 && Number(r.tickets) === 2; }
@@ -634,7 +647,7 @@ function render(){
     const ftr = document.createElement("tr");
     ftr.className = "farm" + (openFarms.has(farm) ? " open" : "");
     ftr.dataset.farm = farm;
-    ftr.innerHTML = `<td colspan="12">
+    ftr.innerHTML = `<td colspan="13">
       <button class="band" aria-expanded="${openFarms.has(farm)}" aria-label="Toggle ${farm}">
         <span class="chev" aria-hidden="true"></span>
         <span class="fname">${farm}</span>
@@ -663,9 +676,10 @@ function render(){
         <td>${r.assump!=="" && r.assump!=null ? r.assump+"%" : ""}</td>
         <td></td>
         <td class="lbs calcv">${fmtLbs(c.fcst)}</td>
-        <td class="calcv">${c.fcstAc!=null ? fmt0.format(c.fcstAc) : ""}</td>
+        <td class="calcv">${c.effFcstAc!=null ? fmt0.format(c.effFcstAc) : ""}</td>
         <td class="rf varrf">${varRfHtml(c.varRf)}</td>
-        <td class="rf grpL prior">${c.rf!=null ? fmt0.format(c.rf) : ""}</td>`;
+        <td class="rf grpL prior">${c.rf!=null ? fmt0.format(c.rf) : ""}</td>
+        <td class="st">${c.isFinal ? '<span class="chip pos">Final</span>' : ""}</td>`;
       tbody.appendChild(tr);
     });
   });
@@ -688,6 +702,8 @@ function refreshTotals(){
      by that block's acres before summing — otherwise big and small blocks
      would carry equal weight. */
   let rFcst=0, rRfLbs=0, rAc=0, rN=0;
+  /* how many finished blocks have USDA-final numbers in yet */
+  let finalN=0, fFinalN=0;
   /* per-farm counts only — the band shows progress, not figures */
   const gDone={}, gN={};
   ROWS.forEach(r => {
@@ -701,17 +717,19 @@ function refreshTotals(){
     if(c.fw!=null){fw+=c.fw;aFW=true}
     if(p25!=null){fw25+=p25;a25=true}
     if(c.fcst!=null){fcst+=c.fcst;aFc=true}
+    if(c.isFinal) finalN++;
     if(f){
       fN++;
       if(c.fw!=null) fFW+=c.fw;
       if(p25!=null) fFW25+=p25;
       if(c.fcst!=null) fFcst+=c.fcst;
       if(ac!=null) fAc+=ac;
+      if(c.isFinal) fFinalN++;
       if(c.fw!=null && p25!=null && p25!==0 && ac!=null && ac!==0){
         wFW += c.fw; wFW25 += p25; wAc += ac; wN++;
       }
-      if(c.fcst!=null && c.rf!=null && c.rf!==0 && ac!=null && ac!==0){
-        rFcst += c.fcst; rRfLbs += c.rf*ac; rAc += ac; rN++;
+      if(c.effFcstAc!=null && c.rf!=null && c.rf!==0 && ac!=null && ac!==0){
+        rFcst += c.effFcstAc*ac; rRfLbs += c.rf*ac; rAc += ac; rN++;
       }
     }
   });
@@ -772,6 +790,7 @@ function refreshTotals(){
   set("tfFcst", fFcst? fmtLbs(fFcst):"");
   set("tfFcstAc", (fFcst&&fAc)? fmt0.format(fFcst/fAc):"");
   set("tfRfAc", (rN>0 && rAc>0)? fmt0.format(rRfLbs/rAc):"");
+  set("tfFinalCount", fN? fFinalN+"/"+fN+" final" : "");
   const tv=document.getElementById("tfVar");
   if(tv){ tv.textContent = vFin==null? "" : pctTxt(vFin); tv.className = "y25 " + (vFin==null? "" : (vFin<0?"neg":"pos")); }
   /* the footer read gets the same chip treatment as the cells above it, so the
